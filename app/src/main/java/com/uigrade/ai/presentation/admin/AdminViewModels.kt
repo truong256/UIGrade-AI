@@ -64,3 +64,61 @@ class SystemLogsViewModel @Inject constructor(private val statsRepository: Stats
     val uiState: StateFlow<LogsUiState> = _uiState.asStateFlow()
     init { viewModelScope.launch { try { _uiState.value = LogsUiState(logs = statsRepository.getSystemLogs(), isLoading = false) } catch (e: Exception) { _uiState.value = LogsUiState(isLoading = false, error = e.message) } } }
 }
+
+data class RuleManagementUiState(
+    val rules: List<Rule> = emptyList(),
+    val isLoading: Boolean = true,
+    val error: String? = null
+)
+
+@HiltViewModel
+class RuleManagementViewModel @Inject constructor(
+    private val getAllRubricsUseCase: GetAllRubricsUseCase
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(RuleManagementUiState())
+    val uiState: StateFlow<RuleManagementUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _uiState.value = try {
+                RuleManagementUiState(
+                    rules = getAllRubricsUseCase()
+                        .flatMap { rubric -> rubric.criteria.flatMap { it.rules } }
+                        .distinctBy { it.id },
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                RuleManagementUiState(isLoading = false, error = e.message)
+            }
+        }
+    }
+}
+
+data class MetricManagementUiState(
+    val metrics: List<Metric> = emptyList(),
+    val isLoading: Boolean = true,
+    val error: String? = null
+)
+
+@HiltViewModel
+class MetricManagementViewModel @Inject constructor(
+    private val getAllGradingResultsUseCase: GetAllGradingResultsUseCase
+) : ViewModel() {
+    private val _uiState = MutableStateFlow(MetricManagementUiState())
+    val uiState: StateFlow<MetricManagementUiState> = _uiState.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            _uiState.value = try {
+                MetricManagementUiState(
+                    metrics = getAllGradingResultsUseCase()
+                        .flatMap { result -> result.criteriaScores.flatMap { it.metrics } }
+                        .distinctBy { it.id },
+                    isLoading = false
+                )
+            } catch (e: Exception) {
+                MetricManagementUiState(isLoading = false, error = e.message)
+            }
+        }
+    }
+}

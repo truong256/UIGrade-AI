@@ -99,14 +99,21 @@ fun AssignmentDetailScreen(
                     }
 
                     item {
+                        val canViewResult = uiState.status == AssignmentStatus.GRADED && uiState.submissionId != null
                         Button(
-                            onClick = onNavigateToSubmit,
+                            onClick = {
+                                if (canViewResult) onNavigateToResult(uiState.submissionId!!)
+                                else onNavigateToSubmit()
+                            },
                             modifier = Modifier.fillMaxWidth().height(52.dp),
                             shape = MaterialTheme.shapes.medium
                         ) {
                             Icon(Icons.Default.Send, contentDescription = null)
                             Spacer(Modifier.width(8.dp))
-                            Text("Nộp bài tập", fontWeight = FontWeight.SemiBold)
+                            Text(
+                                if (canViewResult) "Xem kết quả" else "Nộp bài tập",
+                                fontWeight = FontWeight.SemiBold
+                            )
                         }
                         Spacer(Modifier.height(8.dp))
                     }

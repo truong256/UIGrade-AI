@@ -1,6 +1,6 @@
 package com.uigrade.ai.data.repository
 
-import com.uigrade.ai.data.mock.MockData
+import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.User
 import com.uigrade.ai.domain.model.UserRole
 import com.uigrade.ai.domain.repository.UserRepository
@@ -9,9 +9,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MockUserRepository @Inject constructor() : UserRepository {
+class MockUserRepository @Inject constructor(
+    private val dataStore: MockDataStore
+) : UserRepository {
 
-    private val users = MockData.allUsers.toMutableList()
+    private val users get() = dataStore.users
 
     override suspend fun getAllUsers(): List<User> {
         delay(400)

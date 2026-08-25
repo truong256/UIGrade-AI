@@ -42,5 +42,8 @@ jobs:
       - name: Unit tests
         run: ./gradlew testDebugUnitTest --stacktrace
 
+      - name: Compile Compose UI tests
+        run: ./gradlew assembleDebugAndroidTest --stacktrace
+
       - name: Assemble debug APK
         run: ./gradlew assembleDebug --stacktrace

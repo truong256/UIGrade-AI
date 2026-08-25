@@ -1,6 +1,6 @@
 package com.uigrade.ai.data.repository
 
-import com.uigrade.ai.data.mock.MockData
+import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.Submission
 import com.uigrade.ai.domain.model.SubmissionStatus
 import com.uigrade.ai.domain.repository.SubmissionRepository
@@ -11,9 +11,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MockSubmissionRepository @Inject constructor() : SubmissionRepository {
+class MockSubmissionRepository @Inject constructor(
+    private val dataStore: MockDataStore
+) : SubmissionRepository {
 
-    private val submissions = MockData.submissions.toMutableList()
+    private val submissions get() = dataStore.submissions
 
     override suspend fun getSubmissionsForStudent(studentId: String): List<Submission> {
         delay(500)
@@ -41,19 +43,51 @@ class MockSubmissionRepository @Inject constructor() : SubmissionRepository {
         fileUri: String?
     ): Submission {
         delay(1200) // Simulate upload
-        val studentName = MockData.allUsers.find { it.id == studentId }?.name ?: "Unknown"
+        require(dataStore.assignments.any { it.id == assignmentId }) { "Bài tập không tồn tại" }
+        require(!fileUri.isNullOrBlank()) { "Vui lòng chọn file bài tập" }
+
+        val studentName = dataStore.users.find { it.id == studentId }?.name
+            ?: error("Người dùng không tồn tại")
+        val submissionId = UUID.randomUUID().toString()
+        val gradingResultId = "grade-$submissionId"
+        val feedbackId = "feedback-$submissionId"
         val newSubmission = Submission(
-            id = UUID.randomUUID().toString(),
+            id = submissionId,
             assignmentId = assignmentId,
             studentId = studentId,
             studentName = studentName,
             fileUri = fileUri,
             submittedAt = LocalDateTime.now(),
-            status = SubmissionStatus.PENDING,
-            gradingResultId = null,
+            status = SubmissionStatus.COMPLETED,
+            gradingResultId = gradingResultId,
             attemptNumber = submissions.count { it.studentId == studentId && it.assignmentId == assignmentId } + 1
         )
         submissions.add(newSubmission)
+
+        // The mock app simulates the deterministic engine completing immediately so
+        // the submit -> result demo flow remains meaningful without a backend worker.
+        val templateResult = dataStore.gradingResults.firstOrNull { it.assignmentId == assignmentId }
+            ?: dataStore.gradingResults.first()
+        val newResult = templateResult.copy(
+            id = gradingResultId,
+            submissionId = submissionId,
+            assignmentId = assignmentId,
+            studentId = studentId,
+            gradedAt = LocalDateTime.now(),
+            feedbackId = feedbackId
+        )
+        dataStore.gradingResults.add(newResult)
+
+        val templateFeedback = dataStore.feedbacks.firstOrNull {
+            it.gradingResultId == templateResult.id
+        } ?: dataStore.feedbacks.first()
+        dataStore.feedbacks.add(
+            templateFeedback.copy(
+                id = feedbackId,
+                gradingResultId = gradingResultId,
+                generatedAt = LocalDateTime.now().toString()
+            )
+        )
         return newSubmission
     }
 }

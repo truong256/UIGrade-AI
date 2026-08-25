@@ -1,6 +1,6 @@
 package com.uigrade.ai.data.repository
 
-import com.uigrade.ai.data.mock.MockData
+import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.Rubric
 import com.uigrade.ai.domain.repository.RubricRepository
 import kotlinx.coroutines.delay
@@ -8,9 +8,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MockRubricRepository @Inject constructor() : RubricRepository {
+class MockRubricRepository @Inject constructor(
+    private val dataStore: MockDataStore
+) : RubricRepository {
 
-    private val rubrics = MockData.allRubrics.toMutableList()
+    private val rubrics get() = dataStore.rubrics
 
     override suspend fun getRubricById(id: String): Rubric? {
         delay(300)
