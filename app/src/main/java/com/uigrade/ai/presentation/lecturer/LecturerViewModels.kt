@@ -23,6 +23,7 @@ class LecturerDashboardViewModel @Inject constructor(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getAllSubmissionsUseCase: GetAllSubmissionsUseCase,
     private val getAssignmentsForLecturerUseCase: GetAssignmentsForLecturerUseCase,
+    private val getAllGradingResultsUseCase: GetAllGradingResultsUseCase,
     private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
@@ -40,7 +41,11 @@ class LecturerDashboardViewModel @Inject constructor(
                 val lecturerAssignments = if (user != null) getAssignmentsForLecturerUseCase(user.id) else emptyList()
                 val assignmentIds = lecturerAssignments.map { it.id }.toSet()
                 val mySubs = allSubs.filter { it.assignmentId in assignmentIds }
-                val avgScore = 78.4f // mock aggregate
+                val results = getAllGradingResultsUseCase().filter { it.assignmentId in assignmentIds }
+                val avgScore = if (results.isEmpty()) 0f else results
+                    .map { it.percentage * 100 }
+                    .average()
+                    .toFloat()
                 _uiState.value = LecturerDashboardUiState(
                     user = user,
                     stats = LecturerStats(lecturerAssignments.size, mySubs.size, avgScore, mySubs.count { it.status == SubmissionStatus.PENDING }),
@@ -123,6 +128,7 @@ data class SubmissionDetailUiState(
 
 @HiltViewModel
 class SubmissionDetailViewModel @Inject constructor(
+    private val getSubmissionByIdUseCase: GetSubmissionByIdUseCase,
     private val getGradingResultForSubmissionUseCase: GetGradingResultForSubmissionUseCase,
     private val getFeedbackForResultUseCase: GetFeedbackForResultUseCase
 ) : ViewModel() {
@@ -134,9 +140,16 @@ class SubmissionDetailViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = SubmissionDetailUiState(isLoading = true)
             try {
+                val submission = getSubmissionByIdUseCase(submissionId)
                 val result = getGradingResultForSubmissionUseCase(submissionId)
                 val feedback = result?.id?.let { getFeedbackForResultUseCase(it) }
-                _uiState.value = SubmissionDetailUiState(gradingResult = result, feedback = feedback, isLoading = false)
+                _uiState.value = SubmissionDetailUiState(
+                    submission = submission,
+                    gradingResult = result,
+                    feedback = feedback,
+                    isLoading = false,
+                    error = if (submission == null) "Không tìm thấy bài nộp" else null
+                )
             } catch (e: Exception) {
                 _uiState.value = SubmissionDetailUiState(isLoading = false, error = e.message)
             }

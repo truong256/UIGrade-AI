@@ -13,7 +13,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.uigrade.ai.data.mock.MockData
 import com.uigrade.ai.domain.model.UserRole
 import com.uigrade.ai.ui.components.*
 
@@ -80,12 +79,20 @@ fun RubricAdminScreen(onNavigateBack: () -> Unit, viewModel: com.uigrade.ai.pres
 // ─── Rule Management ──────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RuleManagementScreen(onNavigateBack: () -> Unit) {
-    val allRules = remember { MockData.typographyRules + MockData.colorRules + MockData.layoutRules + MockData.spacingRules + MockData.accessibilityRules }
+fun RuleManagementScreen(
+    onNavigateBack: () -> Unit,
+    viewModel: RuleManagementViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     Scaffold(topBar = { TopAppBar(title = { Text("Quản lý Rules") }, navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, "Back") } }) }) { padding ->
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            item { Text("${allRules.size} rules tổng cộng", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
-            items(allRules) { rule -> RuleCard(rule) }
+        when {
+            uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
+            uiState.error != null -> ErrorScreen(uiState.error!!, modifier = Modifier.padding(padding))
+            uiState.rules.isEmpty() -> EmptyScreen("Không có rule", modifier = Modifier.padding(padding))
+            else -> LazyColumn(modifier = Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                item { Text("${uiState.rules.size} rules tổng cộng", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
+                items(uiState.rules) { rule -> RuleCard(rule) }
+            }
         }
     }
 }
@@ -93,12 +100,20 @@ fun RuleManagementScreen(onNavigateBack: () -> Unit) {
 // ─── Metric Management ────────────────────────────────────────────────────────
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MetricManagementScreen(onNavigateBack: () -> Unit) {
-    val allMetrics = remember { MockData.gradingResult1.criteriaScores.flatMap { it.metrics } }
+fun MetricManagementScreen(
+    onNavigateBack: () -> Unit,
+    viewModel: MetricManagementViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     Scaffold(topBar = { TopAppBar(title = { Text("Quản lý Metrics") }, navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, "Back") } }) }) { padding ->
-        LazyColumn(modifier = Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            item { Text("${allMetrics.size} metrics", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
-            items(allMetrics) { metric -> MetricCard(metric) }
+        when {
+            uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
+            uiState.error != null -> ErrorScreen(uiState.error!!, modifier = Modifier.padding(padding))
+            uiState.metrics.isEmpty() -> EmptyScreen("Không có metric", modifier = Modifier.padding(padding))
+            else -> LazyColumn(modifier = Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                item { Text("${uiState.metrics.size} metrics", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
+                items(uiState.metrics) { metric -> MetricCard(metric) }
+            }
         }
     }
 }

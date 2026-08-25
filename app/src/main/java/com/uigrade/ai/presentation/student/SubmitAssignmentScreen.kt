@@ -1,5 +1,8 @@
 package com.uigrade.ai.presentation.student
 
+import android.provider.OpenableColumns
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
@@ -8,6 +11,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -25,6 +29,22 @@ fun SubmitAssignmentScreen(
     viewModel: SubmitAssignmentViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
+    val filePicker = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.OpenDocument()
+    ) { uri ->
+        uri ?: return@rememberLauncherForActivityResult
+        val displayName = context.contentResolver.query(
+            uri,
+            arrayOf(OpenableColumns.DISPLAY_NAME),
+            null,
+            null,
+            null
+        )?.use { cursor ->
+            if (cursor.moveToFirst()) cursor.getString(0) else null
+        } ?: uri.lastPathSegment ?: "Tệp bài tập"
+        viewModel.onFileSelected(displayName, uri.toString())
+    }
 
     LaunchedEffect(uiState.success) {
         uiState.success?.let { onSubmitSuccess(it.id) }
@@ -66,9 +86,16 @@ fun SubmitAssignmentScreen(
                         }
                     }
 
-                    // Mock file picker — in real app, use ActivityResultContracts.GetContent
                     OutlinedButton(
-                        onClick = { viewModel.onFileSelected("MyAndroidApp_v1.apk") }
+                        onClick = {
+                            filePicker.launch(
+                                arrayOf(
+                                    "application/vnd.android.package-archive",
+                                    "application/zip",
+                                    "application/octet-stream"
+                                )
+                            )
+                        }
                     ) {
                         Icon(Icons.Default.FolderOpen, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
@@ -102,7 +129,7 @@ fun SubmitAssignmentScreen(
             Button(
                 onClick = { viewModel.submit(assignmentId) },
                 modifier = Modifier.fillMaxWidth().height(52.dp),
-                enabled = !uiState.isSubmitting,
+                enabled = !uiState.isSubmitting && uiState.selectedFileUri != null,
                 shape = MaterialTheme.shapes.medium
             ) {
                 if (uiState.isSubmitting) {

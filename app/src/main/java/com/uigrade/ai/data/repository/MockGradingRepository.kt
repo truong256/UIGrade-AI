@@ -1,6 +1,6 @@
 package com.uigrade.ai.data.repository
 
-import com.uigrade.ai.data.mock.MockData
+import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.GradingResult
 import com.uigrade.ai.domain.repository.GradingRepository
 import kotlinx.coroutines.delay
@@ -8,9 +8,11 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MockGradingRepository @Inject constructor() : GradingRepository {
+class MockGradingRepository @Inject constructor(
+    private val dataStore: MockDataStore
+) : GradingRepository {
 
-    private val results = MockData.allGradingResults
+    private val results get() = dataStore.gradingResults
 
     override suspend fun getGradingResultForSubmission(submissionId: String): GradingResult? {
         delay(400)

@@ -55,7 +55,7 @@ Package structure:
 ```
 app/src/main/java/com/uigrade/ai/
 ├── data/
-│   ├── mock/          MockData.kt (demo dataset)
+│   ├── mock/          MockData.kt + MockDataStore.kt (shared in-memory state)
 │   └── repository/    Mock implementations of domain interfaces
 │
 ├── domain/
@@ -84,8 +84,8 @@ app/src/main/java/com/uigrade/ai/
 ## Android Setup
 
 **Requirements:**
-- Android Studio Hedgehog or later
-- JDK 11+
+- Android Studio Ladybug or later
+- JDK 17
 - Android SDK 35
 
 **Dependencies (key):**
@@ -102,8 +102,8 @@ app/src/main/java/com/uigrade/ai/
 
 ```bash
 # Clone the project
-git clone <repo-url>
-cd UIGrade AI
+git clone https://github.com/truong256/UIGrade-AI.git
+cd UIGrade-AI
 
 # Open in Android Studio and sync Gradle
 # Run on emulator or device (API 26+)
@@ -250,7 +250,10 @@ The UI always displays: *"AI generated feedback · Score was calculated by deter
 # Unit tests
 ./gradlew test
 
-# Instrumentation tests (requires emulator/device)
+# Build the Compose UI-test APK (no emulator required)
+./gradlew assembleDebugAndroidTest
+
+# Execute instrumentation tests (requires emulator/device)
 ./gradlew connectedAndroidTest
 ```
 
@@ -260,6 +263,22 @@ Key test: `GradingEngineTest.kt` verifies:
 - Passing metrics earn full rule score
 - Feedback object has no score-modifying fields
 - Data integrity of mock dataset
+
+`MockRepositoryTest.kt` verifies authentication, shared submission state,
+deterministic result creation, rubric/user mutations, and dashboard statistics.
+
+`CriticalFlowsTest.kt` contains seven Compose integration tests covering Student,
+Lecturer, and Admin navigation. These tests compile in CI; executing them still
+requires an Android emulator or device.
+
+---
+
+## Current Limitations
+
+- All data is stored in memory and resets when the application process restarts.
+- Authentication uses the documented demo accounts; no Firebase/JWT backend is connected.
+- Submission analysis and AI feedback are deterministic mock simulations for the demo flow.
+- The Compose UI tests require an emulator/device for runtime execution.
 
 ---
 

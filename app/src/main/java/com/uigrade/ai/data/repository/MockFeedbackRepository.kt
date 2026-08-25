@@ -1,6 +1,6 @@
 package com.uigrade.ai.data.repository
 
-import com.uigrade.ai.data.mock.MockData
+import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.Feedback
 import com.uigrade.ai.domain.model.GradingResult
 import com.uigrade.ai.domain.repository.FeedbackRepository
@@ -16,9 +16,11 @@ import javax.inject.Singleton
  * recommendations). It cannot modify or produce score values.
  */
 @Singleton
-class MockFeedbackRepository @Inject constructor() : FeedbackRepository {
+class MockFeedbackRepository @Inject constructor(
+    private val dataStore: MockDataStore
+) : FeedbackRepository {
 
-    private val feedbacks = MockData.allFeedbacks.toMutableList()
+    private val feedbacks get() = dataStore.feedbacks
 
     override suspend fun getFeedbackForResult(gradingResultId: String): Feedback? {
         delay(400)

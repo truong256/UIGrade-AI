@@ -25,6 +25,12 @@ class GetAllSubmissionsUseCase @Inject constructor(
         repository.getAllSubmissions()
 }
 
+class GetSubmissionByIdUseCase @Inject constructor(
+    private val repository: SubmissionRepository
+) {
+    suspend operator fun invoke(id: String): Submission? = repository.getSubmissionById(id)
+}
+
 class SubmitAssignmentUseCase @Inject constructor(
     private val repository: SubmissionRepository
 ) {
@@ -33,6 +39,7 @@ class SubmitAssignmentUseCase @Inject constructor(
         studentId: String,
         fileUri: String?
     ): Result<Submission> = runCatching {
+        require(!fileUri.isNullOrBlank()) { "Vui lòng chọn file bài tập" }
         repository.submitAssignment(assignmentId, studentId, fileUri)
     }
 }

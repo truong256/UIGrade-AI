@@ -1,6 +1,6 @@
 package com.uigrade.ai.data.repository
 
-import com.uigrade.ai.data.mock.MockData
+import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.Assignment
 import com.uigrade.ai.domain.model.AssignmentStatus
 import com.uigrade.ai.domain.model.AssignmentWithStatus
@@ -10,18 +10,20 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MockAssignmentRepository @Inject constructor() : AssignmentRepository {
+class MockAssignmentRepository @Inject constructor(
+    private val dataStore: MockDataStore
+) : AssignmentRepository {
 
-    private val assignments = MockData.assignments.toMutableList()
+    private val assignments get() = dataStore.assignments
 
     override suspend fun getAssignmentsForStudent(studentId: String): List<AssignmentWithStatus> {
         delay(600)
         return assignments.map { assignment ->
-            val submission = MockData.submissions.find {
+            val submission = dataStore.submissions.find {
                 it.assignmentId == assignment.id && it.studentId == studentId
             }
             val result = if (submission?.gradingResultId != null) {
-                MockData.allGradingResults.find { it.id == submission.gradingResultId }
+                dataStore.gradingResults.find { it.id == submission.gradingResultId }
             } else null
 
             val status = when {

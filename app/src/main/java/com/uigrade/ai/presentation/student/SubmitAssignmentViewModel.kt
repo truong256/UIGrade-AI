@@ -16,7 +16,8 @@ data class SubmitUiState(
     val isSubmitting: Boolean = false,
     val success: Submission? = null,
     val error: String? = null,
-    val selectedFileName: String? = null
+    val selectedFileName: String? = null,
+    val selectedFileUri: String? = null
 )
 
 @HiltViewModel
@@ -28,8 +29,12 @@ class SubmitAssignmentViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(SubmitUiState())
     val uiState: StateFlow<SubmitUiState> = _uiState.asStateFlow()
 
-    fun onFileSelected(name: String) {
-        _uiState.value = _uiState.value.copy(selectedFileName = name, error = null)
+    fun onFileSelected(name: String, uri: String) {
+        _uiState.value = _uiState.value.copy(
+            selectedFileName = name,
+            selectedFileUri = uri,
+            error = null
+        )
     }
 
     fun submit(assignmentId: String) {
@@ -40,7 +45,11 @@ class SubmitAssignmentViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(isSubmitting = false, error = "Không tìm thấy thông tin người dùng")
                 return@launch
             }
-            val result = submitAssignmentUseCase(assignmentId, user.id, _uiState.value.selectedFileName)
+            val result = submitAssignmentUseCase(
+                assignmentId,
+                user.id,
+                _uiState.value.selectedFileUri
+            )
             result.fold(
                 onSuccess = { sub -> _uiState.value = _uiState.value.copy(isSubmitting = false, success = sub) },
                 onFailure = { e -> _uiState.value = _uiState.value.copy(isSubmitting = false, error = e.message) }

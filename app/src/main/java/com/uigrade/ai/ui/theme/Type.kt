@@ -6,9 +6,14 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
+import com.uigrade.ai.R
 
-// Inter font family (bundled as downloadable — falls back to system sans-serif)
-val InterFontFamily = FontFamily.Default
+val InterFontFamily = FontFamily(
+    Font(R.font.inter_variable, FontWeight.Normal),
+    Font(R.font.inter_variable, FontWeight.Medium),
+    Font(R.font.inter_variable, FontWeight.SemiBold),
+    Font(R.font.inter_variable, FontWeight.Bold)
+)
 
 val UIGradeTypography = Typography(
     displayLarge = TextStyle(

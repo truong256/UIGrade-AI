@@ -24,3 +24,9 @@ class GetGradingResultsForAssignmentUseCase @Inject constructor(
     suspend operator fun invoke(assignmentId: String): List<GradingResult> =
         repository.getGradingResultsForAssignment(assignmentId)
 }
+
+class GetAllGradingResultsUseCase @Inject constructor(
+    private val repository: GradingRepository
+) {
+    suspend operator fun invoke(): List<GradingResult> = repository.getAllGradingResults()
+}

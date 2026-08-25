@@ -109,4 +109,29 @@ class GradingEngineTest {
             assertNotNull("GradingResult ${result.id} references non-existent submission ${result.submissionId}", submission)
         }
     }
+
+    @Test
+    fun `assignments reference valid lecturers and rubrics`() {
+        MockData.assignments.forEach { assignment ->
+            assertTrue(
+                "Assignment ${assignment.id} references an unknown lecturer",
+                MockData.lecturers.any { it.id == assignment.lecturerId }
+            )
+            assertTrue(
+                "Assignment ${assignment.id} references an unknown rubric",
+                MockData.allRubrics.any { it.id == assignment.rubricId }
+            )
+        }
+    }
+
+    @Test
+    fun `submissions and feedback preserve referential integrity`() {
+        MockData.submissions.forEach { submission ->
+            assertTrue(MockData.assignments.any { it.id == submission.assignmentId })
+            assertTrue(MockData.students.any { it.id == submission.studentId })
+        }
+        MockData.allFeedbacks.forEach { feedback ->
+            assertTrue(MockData.allGradingResults.any { it.id == feedback.gradingResultId })
+        }
+    }
 }

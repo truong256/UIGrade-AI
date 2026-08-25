@@ -1,6 +1,7 @@
 package com.uigrade.ai.data.repository
 
 import com.uigrade.ai.data.mock.MockData
+import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.*
 import com.uigrade.ai.domain.repository.StatsRepository
 import kotlinx.coroutines.delay
@@ -8,30 +9,36 @@ import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
-class MockStatsRepository @Inject constructor() : StatsRepository {
-
-    private var aiEnabled = true
+class MockStatsRepository @Inject constructor(
+    private val dataStore: MockDataStore
+) : StatsRepository {
 
     override suspend fun getAdminStats(): AdminStats {
         delay(500)
-        val completed = MockData.allGradingResults.size
-        val failed = 12
+        val completed = dataStore.gradingResults.size
+        val failed = dataStore.submissions.count { it.status == SubmissionStatus.FAILED }
         return AdminStats(
-            totalStudents = MockData.students.size,
-            totalLecturers = MockData.lecturers.size,
-            totalAdmins = MockData.admins.size,
-            gradingJobs = GradingJobStats(completed = completed + 1244, failed = failed, pending = 2),
-            feedbackStats = FeedbackStats(generated = MockData.allFeedbacks.size + 1178, failed = 7),
-            aiEnabled = aiEnabled
+            totalStudents = dataStore.users.count { it.role == UserRole.STUDENT },
+            totalLecturers = dataStore.users.count { it.role == UserRole.LECTURER },
+            totalAdmins = dataStore.users.count { it.role == UserRole.ADMIN },
+            gradingJobs = GradingJobStats(
+                completed = completed,
+                failed = failed,
+                pending = dataStore.submissions.count {
+                    it.status == SubmissionStatus.PENDING || it.status == SubmissionStatus.PROCESSING
+                }
+            ),
+            feedbackStats = FeedbackStats(generated = dataStore.feedbacks.size, failed = 0),
+            aiEnabled = dataStore.aiFeedbackEnabled
         )
     }
 
     override suspend fun getLecturerStats(lecturerId: String): LecturerStats {
         delay(400)
-        val assignments = MockData.assignments.filter { it.lecturerId == lecturerId }
+        val assignments = dataStore.assignments.filter { it.lecturerId == lecturerId }
         val assignmentIds = assignments.map { it.id }.toSet()
-        val submissions = MockData.submissions.filter { it.assignmentId in assignmentIds }
-        val results = MockData.allGradingResults.filter { it.assignmentId in assignmentIds }
+        val submissions = dataStore.submissions.filter { it.assignmentId in assignmentIds }
+        val results = dataStore.gradingResults.filter { it.assignmentId in assignmentIds }
         val avg = if (results.isEmpty()) 0f
         else results.map { it.totalScore.toFloat() / it.maxScore * 100 }.average().toFloat()
         return LecturerStats(
@@ -49,6 +56,6 @@ class MockStatsRepository @Inject constructor() : StatsRepository {
 
     override suspend fun setAiFeedbackEnabled(enabled: Boolean) {
         delay(300)
-        aiEnabled = enabled
+        dataStore.aiFeedbackEnabled = enabled
     }
 }
