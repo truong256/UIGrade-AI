@@ -34,9 +34,15 @@ fun SubmissionStatusBadge(status: SubmissionStatus, modifier: Modifier = Modifie
         SubmissionStatus.PROCESSING -> Triple("Đang chấm", Info, Icons.Default.Sync)
         SubmissionStatus.COMPLETED  -> Triple("Hoàn thành", Success, Icons.Default.CheckCircle)
         SubmissionStatus.FAILED     -> Triple("Lỗi", Error, Icons.Default.Error)
+        SubmissionStatus.SUBMITTED  -> Triple("Đã nộp", Info, Icons.Default.CheckCircle)
+        SubmissionStatus.LATE       -> Triple("Nộp muộn", Warning, Icons.Default.Schedule)
+        SubmissionStatus.GRADING    -> Triple("Đang chấm", Warning, Icons.Default.HourglassBottom)
+        SubmissionStatus.GRADED     -> Triple("Đã chấm", Success, Icons.Default.Grading)
+        SubmissionStatus.RELEASED   -> Triple("Đã công bố", Success, Icons.Default.Verified)
     }
     StatusChip(label = label, color = color, icon = { Icon(icon, contentDescription = label, tint = color, modifier = Modifier.size(14.dp)) }, modifier = modifier)
 }
+
 
 // ─── Log Level Badge ──────────────────────────────────────────────────────────
 @Composable
