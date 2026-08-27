@@ -48,4 +48,9 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindStatsRepository(impl: MockStatsRepository): StatsRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindClassroomRepository(impl: MockClassroomRepository): ClassroomRepository
 }
+
