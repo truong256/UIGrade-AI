@@ -19,6 +19,40 @@
     <string name="title_classroom_assignments">Bài tập của lớp</string>
     <string name="title_grading_result">Kết quả chấm điểm</string>
 
+    <!-- Registration Screen Strings -->
+    <string name="register_title">Tạo tài khoản mới</string>
+    <string name="register_subtitle">Đăng ký để bắt đầu sử dụng UIGrade AI</string>
+    <string name="register_who_are_you">Bạn là ai?</string>
+    <string name="role_student">Sinh viên</string>
+    <string name="role_lecturer">Giảng viên</string>
+    <string name="label_full_name">Họ và tên</string>
+    <string name="placeholder_full_name">Nhập họ và tên của bạn</string>
+    <string name="label_email">Email</string>
+    <string name="placeholder_email">Nhập địa chỉ email</string>
+    <string name="label_password">Mật khẩu</string>
+    <string name="placeholder_password">Nhập mật khẩu</string>
+    <string name="label_confirm_password">Xác nhận mật khẩu</string>
+    <string name="placeholder_confirm_password">Nhập lại mật khẩu</string>
+    <string name="btn_register">Đăng ký</string>
+    <string name="btn_registering">Đang tạo tài khoản...</string>
+    <string name="already_have_account">Đã có tài khoản?</string>
+    <string name="login_action">Đăng nhập</string>
+    <string name="register_success_msg">Đăng ký tài khoản thành công</string>
+    <string name="dont_have_account">Chưa có tài khoản?</string>
+    <string name="register_action">Đăng ký</string>
+
+    <!-- Registration Validation Error Strings -->
+    <string name="error_role_required">Vui lòng chọn vai trò</string>
+    <string name="error_name_empty">Vui lòng nhập họ và tên</string>
+    <string name="error_name_too_short">Họ và tên phải có ít nhất 2 ký tự</string>
+    <string name="error_email_empty">Vui lòng nhập địa chỉ email</string>
+    <string name="error_email_invalid">Email không hợp lệ</string>
+    <string name="error_password_empty">Vui lòng nhập mật khẩu</string>
+    <string name="error_password_too_short">Mật khẩu phải có ít nhất 8 ký tự</string>
+    <string name="error_confirm_password_mismatch">Mật khẩu xác nhận không khớp</string>
+    <string name="error_email_already_registered">Email này đã được sử dụng</string>
+    <string name="error_register_failed">Không thể tạo tài khoản. Vui lòng thử lại</string>
+
     <!-- Feedback & Messages -->
     <string name="msg_classroom_created_success">Đã tạo lớp học thành công</string>
     <string name="msg_join_classroom_success">Bạn đã tham gia lớp học thành công</string>

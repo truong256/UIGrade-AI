@@ -8,64 +8,55 @@ import androidx.compose.foundation.gestures.detectHorizontalDragGestures
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowForward
-import androidx.compose.material.icons.rounded.AutoAwesome
 import androidx.compose.material.icons.rounded.School
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.uigrade.ai.ui.components.UIGradeButton
-import com.uigrade.ai.ui.components.mascot.CatMascotPose
-import com.uigrade.ai.ui.components.mascot.GuideBubble
-import com.uigrade.ai.ui.components.mascot.UIGradeCatMascot
-import com.uigrade.ai.ui.theme.BackgroundAltLight
-import com.uigrade.ai.ui.theme.BackgroundLight
-import com.uigrade.ai.ui.theme.Primary
-import com.uigrade.ai.ui.theme.Secondary
+import com.uigrade.ai.ui.components.button.GradePrimaryButton
+import com.uigrade.ai.ui.components.mascot.CatMascot
+import com.uigrade.ai.ui.components.mascot.CatMascotState
+import com.uigrade.ai.ui.components.mascot.CatMascotStyle
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun GetStartedScreen(
     onNavigateToSignUp: () -> Unit,
     onNavigateToLogin: () -> Unit
 ) {
+    val coroutineScope = rememberCoroutineScope()
     var contentVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { contentVisible = true }
+
+    var mascotState by remember { mutableStateOf(CatMascotState.Greeting) }
+    var mascotMessage by remember { mutableStateOf("Chào bạn! Mình là Mèo UIGrade, trợ lý đồng hành học tập cùng bạn ✨") }
+    var isNavigating by remember { mutableStateOf(false) }
 
     var totalDrag by remember { mutableFloatStateOf(0f) }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                        MaterialTheme.colorScheme.background
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
             .pointerInput(Unit) {
                 detectHorizontalDragGestures(
                     onDragEnd = {
-                        if (totalDrag < -100f) {
-                            // Swiped left -> Go to Sign Up
+                        if (totalDrag < -100f && !isNavigating) {
+                            isNavigating = true
                             onNavigateToSignUp()
                         }
                         totalDrag = 0f
@@ -94,27 +85,27 @@ fun GetStartedScreen(
                 // ─── Header: App Branding ──────────────────────────────────────────
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(top = 16.dp)
+                    modifier = Modifier.padding(top = 12.dp)
                 ) {
                     Row(
                         verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier
                             .clip(RoundedCornerShape(20.dp))
-                            .background(MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.7f))
+                            .background(MaterialTheme.colorScheme.primaryContainer)
                             .padding(horizontal = 14.dp, vertical = 6.dp)
                     ) {
                         Icon(
                             imageVector = Icons.Rounded.School,
                             contentDescription = null,
-                            tint = Primary,
+                            tint = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.size(16.dp)
                         )
                         Text(
                             text = "UIGrade AI",
                             style = MaterialTheme.typography.labelMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = Primary,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer,
                                 letterSpacing = 0.5.sp
                             )
                         )
@@ -124,22 +115,18 @@ fun GetStartedScreen(
                 // ─── Center: Cat Mascot & Guide Bubble ─────────────────────────────
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(vertical = 24.dp)
+                    modifier = Modifier.padding(vertical = 20.dp)
                 ) {
-                    UIGradeCatMascot(
-                        pose = CatMascotPose.WELCOME,
-                        size = 180.dp,
-                        showAura = true
+                    CatMascot(
+                        state = mascotState,
+                        style = CatMascotStyle.Default.copy(size = 175.dp),
+                        message = mascotMessage,
+                        onClick = {
+                            mascotState = CatMascotState.Excited
+                        }
                     )
 
                     Spacer(Modifier.height(18.dp))
-
-                    GuideBubble(
-                        text = "Chào bạn! Mình là Mèo UIGrade, trợ lý đồng hành học tập cùng bạn ✨",
-                        modifier = Modifier.fillMaxWidth(0.92f)
-                    )
-
-                    Spacer(Modifier.height(24.dp))
 
                     Text(
                         text = "Học tập thông minh cùng\ntrợ lý AI thân thiện",
@@ -172,14 +159,26 @@ fun GetStartedScreen(
                         .fillMaxWidth()
                         .padding(bottom = 16.dp)
                 ) {
-                    UIGradeButton(
+                    GradePrimaryButton(
                         text = "Bắt đầu ngay",
-                        onClick = onNavigateToSignUp,
+                        isLoading = isNavigating,
+                        onClick = {
+                            if (!isNavigating) {
+                                coroutineScope.launch {
+                                    isNavigating = true
+                                    mascotState = CatMascotState.Excited
+                                    mascotMessage = "Tuyệt vời! Cùng bắt đầu hành trình nào 🐾"
+                                    delay(400)
+                                    onNavigateToSignUp()
+                                    isNavigating = false
+                                }
+                            }
+                        },
                         trailingIcon = {
                             Icon(
                                 imageVector = Icons.AutoMirrored.Rounded.ArrowForward,
                                 contentDescription = null,
-                                tint = Color.White,
+                                tint = MaterialTheme.colorScheme.onPrimary,
                                 modifier = Modifier.size(18.dp)
                             )
                         },
@@ -202,7 +201,7 @@ fun GetStartedScreen(
                             text = "Đăng nhập",
                             style = MaterialTheme.typography.bodyMedium.copy(
                                 fontWeight = FontWeight.Bold,
-                                color = Primary
+                                color = MaterialTheme.colorScheme.primary
                             ),
                             modifier = Modifier.clickable(
                                 interactionSource = remember { MutableInteractionSource() },

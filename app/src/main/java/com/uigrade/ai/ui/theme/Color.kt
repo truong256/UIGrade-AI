@@ -2,62 +2,108 @@ package com.uigrade.ai.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// ─── Calming Brand Palette (Soft Lavender / Muted Periwinkle & Pastel Blue) ───
-val Primary = Color(0xFF7E69E0)           // Soft periwinkle-lavender
-val PrimaryLight = Color(0xFF9885EB)
-val PrimaryDark = Color(0xFFAFA0FC)
-val PrimaryContainerLight = Color(0xFFEDE8FD)
-val PrimaryContainerDark = Color(0xFF2E2756)
+// ─── Modern Calming Blue Palette (Light Theme) ───────────────────────────────
+val BluePrimaryLight = Color(0xFF2563EB)
+val BlueOnPrimaryLight = Color(0xFFFFFFFF)
+val BluePrimaryContainerLight = Color(0xFFDCE9FF)
+val BlueOnPrimaryContainerLight = Color(0xFF102A56)
+val BlueSecondaryLight = Color(0xFF4F75B9)
+val BlueOnSecondaryLight = Color(0xFFFFFFFF)
+val BlueBackgroundLight = Color(0xFFF6F9FF)
+val BlueOnBackgroundLight = Color(0xFF172033)
+val BlueSurfaceLight = Color(0xFFFFFFFF)
+val BlueOnSurfaceLight = Color(0xFF172033)
+val BlueSurfaceVariantLight = Color(0xFFEAF1FB)
+val BlueOnSurfaceVariantLight = Color(0xFF4A5568)
+val BlueOutlineLight = Color(0xFFA9B8CD)
+val BlueErrorLight = Color(0xFFBA1A1A)
 
-val Secondary = Color(0xFF6B8FD6)         // Calming pastel sky blue
-val SecondaryLight = Color(0xFF8FAEEA)
-val SecondaryDark = Color(0xFFA5C2F8)
-val SecondaryContainerLight = Color(0xFFE9F0FD)
-val SecondaryContainerDark = Color(0xFF223254)
+// ─── Modern Calming Blue Palette (Dark Theme) ────────────────────────────────
+val BluePrimaryDark = Color(0xFFA9C7FF)
+val BlueOnPrimaryDark = Color(0xFF003062)
+val BluePrimaryContainerDark = Color(0xFF164A8A)
+val BlueOnPrimaryContainerDark = Color(0xFFD8E7FF)
+val BlueSecondaryDark = Color(0xFF8EB2F5)
+val BlueOnSecondaryDark = Color(0xFF002E69)
+val BlueBackgroundDark = Color(0xFF0E1523)
+val BlueOnBackgroundDark = Color(0xFFE3EAF5)
+val BlueSurfaceDark = Color(0xFF151E2D)
+val BlueOnSurfaceDark = Color(0xFFE3EAF5)
+val BlueSurfaceVariantDark = Color(0xFF253247)
+val BlueOnSurfaceVariantDark = Color(0xFFA0B3CC)
+val BlueOutlineDark = Color(0xFF8998AE)
+val BlueErrorDark = Color(0xFFFFB4AB)
 
-val AccentMint = Color(0xFF5AB697)        // Soft refreshing mint
-val AccentMintContainer = Color(0xFFD7F4E9)
-val AccentPeach = Color(0xFFF7AB8A)       // Warm gentle peach
+// ─── Backwards Compatibility & Semantic Color Aliases ────────────────────────
+val Primary = BluePrimaryLight
+val PrimaryLight = Color(0xFF60A5FA)
+val PrimaryDark = BluePrimaryDark
+val PrimaryContainerLight = BluePrimaryContainerLight
+val PrimaryContainerDark = BluePrimaryContainerDark
 
-// ─── Semantic Colors ──────────────────────────────────────────────────────────
-val Success = Color(0xFF2BB580)           // Gentle emerald
-val SuccessContainer = Color(0xFFD6F5E8)
-val Warning = Color(0xFFF09A32)           // Soft amber
-val WarningContainer = Color(0xFFFEF0DB)
-val Error = Color(0xFFE85555)             // Soft red
-val ErrorContainer = Color(0xFFFDE8E8)
-val Info = Color(0xFF5EA6E6)              // Soft cyan-blue
+val Secondary = BlueSecondaryLight
+val SecondaryLight = Color(0xFF7BA0E6)
+val SecondaryDark = BlueSecondaryDark
+val SecondaryContainerLight = Color(0xFFE6F0FD)
+val SecondaryContainerDark = Color(0xFF1A2B47)
 
-// ─── Neutral Tones ────────────────────────────────────────────────────────────
-val Neutral50  = Color(0xFFFAF9FD)
-val Neutral100 = Color(0xFFF4F2F9)
-val Neutral200 = Color(0xFFE7E4F0)
-val Neutral300 = Color(0xFFD1CCE0)
-val Neutral400 = Color(0xFFA29CB8)
-val Neutral500 = Color(0xFF746F8C)
-val Neutral600 = Color(0xFF534F6A)
-val Neutral700 = Color(0xFF3B384F)
-val Neutral800 = Color(0xFF272538)
-val Neutral900 = Color(0xFF181724)
+val AccentMint = Color(0xFF10B981)
+val AccentMintContainer = Color(0xFFD1FAE5)
+val AccentPeach = Color(0xFFF97316)
 
-// ─── Light Theme Surface & Background ──────────────────────────────────────────
-val SurfaceLight = Color(0xFFFFFFFF)
-val SurfaceVariantLight = Color(0xFFF3F0FA)
-val BackgroundLight = Color(0xFFF7F5FC)
-val BackgroundAltLight = Color(0xFFEEEAFE)
-val OnSurfaceLight = Color(0xFF2F3142)
-val OnSurfaceVariantLight = Color(0xFF6D7187)
+val Success = Color(0xFF16A34A)
+val SuccessContainer = Color(0xFFDCFCE7)
+val Warning = Color(0xFFD97706)
+val WarningContainer = Color(0xFFFEF3C7)
+val Error = BlueErrorLight
+val ErrorContainer = Color(0xFFFFDAD6)
+val Info = Color(0xFF0284C7)
 
-// ─── Dark Theme Surface & Background (Soft, soothing dark mode) ───────────────
-val SurfaceDark = Color(0xFF232336)
-val SurfaceVariantDark = Color(0xFF2E2E44)
-val BackgroundDark = Color(0xFF181824)
-val BackgroundAltDark = Color(0xFF1E1E2F)
-val OnSurfaceDark = Color(0xFFEDEAF8)
-val OnSurfaceVariantDark = Color(0xFFA2A5B8)
+val SurfaceLight = BlueSurfaceLight
+val SurfaceVariantLight = BlueSurfaceVariantLight
+val BackgroundLight = BlueBackgroundLight
+val OnSurfaceLight = BlueOnSurfaceLight
+val OnSurfaceVariantLight = BlueOnSurfaceVariantLight
 
-// ─── Score Gradient Colors ─────────────────────────────────────────────────────
-val ScoreExcellent = Color(0xFF2BB580)    // >= 90%
-val ScoreGood      = Color(0xFF6B8FD6)    // >= 70%
-val ScoreFair      = Color(0xFFF09A32)    // >= 50%
-val ScorePoor      = Color(0xFFE85555)    // < 50%
+val SurfaceDark = BlueSurfaceDark
+val SurfaceVariantDark = BlueSurfaceVariantDark
+val BackgroundDark = BlueBackgroundDark
+val OnSurfaceDark = BlueOnSurfaceDark
+val OnSurfaceVariantDark = BlueOnSurfaceVariantDark
+
+val Neutral50  = Color(0xFFF8FAFC)
+val Neutral100 = Color(0xFFF1F5F9)
+val Neutral200 = Color(0xFFE2E8F0)
+val Neutral300 = Color(0xFFCBD5E1)
+val Neutral400 = Color(0xFF94A3B8)
+val Neutral500 = Color(0xFF64748B)
+val Neutral600 = Color(0xFF475569)
+val Neutral700 = Color(0xFF334155)
+val Neutral800 = Color(0xFF1E293B)
+val Neutral900 = Color(0xFF0F172A)
+
+// ─── Score Gradient Colors ───────────────────────────────────────────────────
+val ScoreExcellent = Color(0xFF16A34A)
+val ScoreGood      = Color(0xFF2563EB)
+val ScoreFair      = Color(0xFFD97706)
+val ScorePoor      = Color(0xFFDC2626)
+
+// ─── Blue Auth / Registration Theme Palette ─────────────────────────────────
+val AuthBluePrimary = BluePrimaryLight
+val AuthBluePrimaryDark = Color(0xFF1D4ED8)
+val AuthBluePrimaryLight = BluePrimaryContainerLight
+val AuthBlueBackgroundLight = BlueBackgroundLight
+val AuthBlueSurface = BlueSurfaceLight
+val AuthBlueTextPrimary = BlueOnSurfaceLight
+val AuthBlueTextSecondary = Color(0xFF64748B)
+val AuthBlueBorder = BlueOutlineLight
+val AuthBlueBorderFocused = BluePrimaryLight
+val AuthBlueError = BlueErrorLight
+val AuthBlueSuccess = Success
+
+val AuthBluePrimaryDarkTheme = BluePrimaryDark
+val AuthBlueBackgroundDarkTheme = BlueBackgroundDark
+val AuthBlueSurfaceDarkTheme = BlueSurfaceDark
+val AuthBlueTextPrimaryDarkTheme = BlueOnSurfaceDark
+val AuthBlueTextSecondaryDarkTheme = BlueOnSurfaceVariantDark
+val AuthBlueBorderDarkTheme = BlueOutlineDark

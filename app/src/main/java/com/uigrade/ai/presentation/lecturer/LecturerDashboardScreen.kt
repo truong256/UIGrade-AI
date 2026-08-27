@@ -69,8 +69,39 @@ fun LecturerDashboardScreen(
                 contentPadding = PaddingValues(16.dp),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
+                // Greeting with Cat Mascot Companion Card
                 item {
-                    Text("Xin chào, ${uiState.user?.name ?: "Giảng viên"} 👋", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
+                    Card(
+                        shape = RoundedCornerShape(20.dp),
+                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(14.dp)
+                        ) {
+                            com.uigrade.ai.ui.components.mascot.CatMascot(
+                                state = com.uigrade.ai.ui.components.mascot.CatMascotState.Excited,
+                                style = com.uigrade.ai.ui.components.mascot.CatMascotStyle.Default.copy(size = 82.dp, showSpeechBubble = false)
+                            )
+                            Column(modifier = Modifier.weight(1f)) {
+                                Text(
+                                    "Xin chào, ${uiState.user?.name ?: "Giảng viên"} 👋",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Spacer(Modifier.height(2.dp))
+                                Text(
+                                    "Chúc Thầy/Cô một ngày giảng dạy và làm việc hiệu quả!",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    }
                 }
 
                 // Stats
