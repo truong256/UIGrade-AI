@@ -2,19 +2,29 @@ package com.uigrade.ai.presentation.lecturer
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.uigrade.ai.domain.model.Submission
+import com.uigrade.ai.domain.model.SubmissionStatus
 import com.uigrade.ai.ui.components.*
-import com.uigrade.ai.ui.components.scoreColor
+import com.uigrade.ai.ui.theme.Info
+import com.uigrade.ai.ui.theme.Primary
+import com.uigrade.ai.ui.theme.Success
+import com.uigrade.ai.ui.theme.Warning
 import java.time.format.DateTimeFormatter
 
 // ─── Submission List ──────────────────────────────────────────────────────────
@@ -24,39 +34,238 @@ fun SubmissionListScreen(
     assignmentId: String,
     onNavigateBack: () -> Unit,
     onNavigateToSubmission: (String) -> Unit,
+    onNavigateToGrading: (String) -> Unit = onNavigateToSubmission,
     viewModel: SubmissionListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     LaunchedEffect(assignmentId) { viewModel.load(assignmentId) }
     val fmt = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
 
+    var sortDropdownExpanded by remember { mutableStateOf(false) }
+
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Bài nộp") }, navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, "Back") } })
+            TopAppBar(
+                title = { Text(uiState.assignment?.title ?: "Danh sách bài nộp", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                },
+                actions = {
+                    Box {
+                        IconButton(onClick = { sortDropdownExpanded = true }) {
+                            Icon(Icons.Default.Sort, contentDescription = "Sắp xếp")
+                        }
+                        DropdownMenu(
+                            expanded = sortDropdownExpanded,
+                            onDismissRequest = { sortDropdownExpanded = false }
+                        ) {
+                            SubmissionSortOption.values().forEach { option ->
+                                DropdownMenuItem(
+                                    text = {
+                                        Text(
+                                            option.displayName,
+                                            fontWeight = if (uiState.sortOption == option) FontWeight.Bold else FontWeight.Normal
+                                        )
+                                    },
+                                    onClick = {
+                                        viewModel.onSortChange(option)
+                                        sortDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
+            )
         }
     ) { padding ->
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
             uiState.error != null -> ErrorScreen(uiState.error!!, modifier = Modifier.padding(padding))
-            uiState.submissions.isEmpty() -> EmptyScreen("Chưa có bài nộp nào", Modifier.padding(padding))
-            else -> LazyColumn(
-                modifier = Modifier.fillMaxSize().padding(padding),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(10.dp)
-            ) {
-                item { Text("${uiState.submissions.size} bài nộp", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
-                items(uiState.submissions) { sub ->
-                    Card(onClick = { onNavigateToSubmission(sub.id) }, modifier = Modifier.fillMaxWidth()) {
-                        Row(modifier = Modifier.padding(12.dp, 10.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Column(modifier = Modifier.weight(1f)) {
-                                Text(sub.studentName, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Medium)
-                                Text(sub.submittedAt.format(fmt), style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+            else -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                ) {
+                    // Summary Stats Row
+                    val s = uiState.summary
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item { SubmissionStatBadge("Tổng SV", "${s.totalStudents}", Primary) }
+                        item { SubmissionStatBadge("Đã nộp", "${s.submitted}", Info) }
+                        item { SubmissionStatBadge("Chưa nộp", "${s.notSubmitted}", Color.Gray) }
+                        item { SubmissionStatBadge("Nộp muộn", "${s.late}", MaterialTheme.colorScheme.error) }
+                        item { SubmissionStatBadge("Đang chấm", "${s.grading}", Warning) }
+                        item { SubmissionStatBadge("Đã chấm", "${s.graded}", Success) }
+                    }
+
+                    // Search Bar
+                    OutlinedTextField(
+                        value = uiState.searchQuery,
+                        onValueChange = { viewModel.onSearchChange(it) },
+                        placeholder = { Text("Tìm theo tên sinh viên hoặc tên file...") },
+                        leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                        trailingIcon = {
+                            if (uiState.searchQuery.isNotBlank()) {
+                                IconButton(onClick = { viewModel.onSearchChange("") }) {
+                                    Icon(Icons.Default.Clear, contentDescription = "Xóa")
+                                }
                             }
-                            SubmissionStatusBadge(sub.status)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = 4.dp),
+                        shape = RoundedCornerShape(12.dp),
+                        singleLine = true
+                    )
+
+                    // Status Filter Chips
+                    LazyRow(
+                        modifier = Modifier.fillMaxWidth(),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            FilterChip(
+                                selected = uiState.selectedStatus == null,
+                                onClick = { viewModel.onStatusFilterChange(null) },
+                                label = { Text("Tất cả (${uiState.allSubmissions.size})") }
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = uiState.selectedStatus == SubmissionStatus.SUBMITTED,
+                                onClick = { viewModel.onStatusFilterChange(SubmissionStatus.SUBMITTED) },
+                                label = { Text("Đã nộp") }
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = uiState.selectedStatus == SubmissionStatus.LATE,
+                                onClick = { viewModel.onStatusFilterChange(SubmissionStatus.LATE) },
+                                label = { Text("Nộp muộn") }
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = uiState.selectedStatus == SubmissionStatus.GRADING,
+                                onClick = { viewModel.onStatusFilterChange(SubmissionStatus.GRADING) },
+                                label = { Text("Đang chấm") }
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = uiState.selectedStatus == SubmissionStatus.GRADED || uiState.selectedStatus == SubmissionStatus.COMPLETED,
+                                onClick = { viewModel.onStatusFilterChange(SubmissionStatus.GRADED) },
+                                label = { Text("Đã chấm") }
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = uiState.selectedStatus == SubmissionStatus.RELEASED,
+                                onClick = { viewModel.onStatusFilterChange(SubmissionStatus.RELEASED) },
+                                label = { Text("Đã công bố") }
+                            )
+                        }
+                    }
+
+                    Spacer(Modifier.height(4.dp))
+
+                    if (uiState.filteredSubmissions.isEmpty()) {
+                        EmptyScreen(
+                            message = if (uiState.searchQuery.isNotBlank()) "Không có kết quả phù hợp" else "Chưa có sinh viên nộp bài",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            items(uiState.filteredSubmissions, key = { it.id }) { sub ->
+                                val gradeResult = uiState.gradingResults[sub.id]
+                                Card(
+                                    onClick = { onNavigateToGrading(sub.id) },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    shape = RoundedCornerShape(12.dp)
+                                ) {
+                                    Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(sub.studentName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                            SubmissionStatusBadge(sub.status)
+                                        }
+
+                                        if (sub.fileName.isNotBlank()) {
+                                            Text("Tệp: ${sub.fileName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                        }
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                "Nộp lúc: ${sub.submittedAt.format(fmt)} (Lần ${sub.attemptNumber})",
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                            if (gradeResult != null) {
+                                                Text(
+                                                    "Điểm: ${gradeResult.totalScore}/${gradeResult.maxScore}",
+                                                    style = MaterialTheme.typography.titleSmall,
+                                                    fontWeight = FontWeight.Bold,
+                                                    color = scoreColor(gradeResult.totalScore, gradeResult.maxScore)
+                                                )
+                                            }
+                                        }
+
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.End
+                                        ) {
+                                            Button(
+                                                onClick = { onNavigateToGrading(sub.id) },
+                                                contentPadding = PaddingValues(horizontal = 12.dp, vertical = 6.dp)
+                                            ) {
+                                                Icon(Icons.Default.Grading, contentDescription = null, modifier = Modifier.size(16.dp))
+                                                Spacer(Modifier.width(4.dp))
+                                                Text(if (gradeResult != null) "Xem / Sửa điểm" else "Chấm điểm", fontSize = 13.sp)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun SubmissionStatBadge(label: String, count: String, color: Color) {
+    Surface(
+        color = color.copy(alpha = 0.12f),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            Text(label, style = MaterialTheme.typography.labelSmall, color = color)
+            Text(count, style = MaterialTheme.typography.labelMedium, fontWeight = FontWeight.Bold, color = color)
         }
     }
 }
@@ -67,6 +276,7 @@ fun SubmissionListScreen(
 fun SubmissionDetailScreen(
     submissionId: String,
     onNavigateBack: () -> Unit,
+    onNavigateToGrading: (String) -> Unit = {},
     viewModel: SubmissionDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -74,13 +284,37 @@ fun SubmissionDetailScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Chi tiết bài nộp") }, navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, "Back") } })
+            TopAppBar(
+                title = { Text("Chi tiết bài nộp", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                }
+            )
         }
     ) { padding ->
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
             uiState.error != null -> ErrorScreen(uiState.error!!, modifier = Modifier.padding(padding))
-            uiState.gradingResult == null -> EmptyScreen("Chưa có kết quả chấm điểm", Modifier.padding(padding))
+            uiState.gradingResult == null -> {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding)
+                        .padding(16.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text("Bài nộp chưa được chấm điểm", style = MaterialTheme.typography.titleMedium)
+                    Spacer(Modifier.height(16.dp))
+                    Button(onClick = { onNavigateToGrading(submissionId) }) {
+                        Icon(Icons.Default.Grading, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Bắt đầu chấm bài")
+                    }
+                }
+            }
             else -> {
                 val result = uiState.gradingResult!!
                 LazyColumn(modifier = Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -101,11 +335,34 @@ fun SubmissionDetailScreen(
                                     Text("${cs.earned}/${cs.maxScore}", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, color = scoreColor(cs.earned, cs.maxScore))
                                 }
                                 LinearProgressIndicator(progress = { cs.percentage }, modifier = Modifier.fillMaxWidth(), color = scoreColor(cs.earned, cs.maxScore), trackColor = MaterialTheme.colorScheme.surfaceVariant)
+                                if (cs.lecturerComment.isNotBlank()) {
+                                    Text("Ghi chú: ${cs.lecturerComment}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    }
+                    if (result.lecturerComment.isNotBlank()) {
+                        item {
+                            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+                                Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Text("Nhận xét chung của giảng viên", fontWeight = FontWeight.Bold)
+                                    Text(result.lecturerComment, style = MaterialTheme.typography.bodyMedium)
+                                }
                             }
                         }
                     }
                     uiState.feedback?.let { feedback ->
                         item { AIFeedbackCard(feedback) }
+                    }
+                    item {
+                        Button(
+                            onClick = { onNavigateToGrading(submissionId) },
+                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Chỉnh sửa điểm & nhận xét")
+                        }
                     }
                 }
             }
@@ -123,7 +380,14 @@ fun LecturerStatisticsScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Thống kê lớp") }, navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, "Back") } })
+            TopAppBar(
+                title = { Text("Thống kê lớp học", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                }
+            )
         }
     ) { padding ->
         Column(modifier = Modifier.fillMaxSize().padding(padding).padding(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {

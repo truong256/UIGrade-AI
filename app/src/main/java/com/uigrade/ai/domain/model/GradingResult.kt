@@ -4,6 +4,7 @@ import java.time.LocalDateTime
 
 /**
  * Score earned for a single rubric criterion.
+ * lecturerComment allows the lecturer to add a per-criterion note.
  */
 data class CriterionScore(
     val criterionId: String,
@@ -11,7 +12,8 @@ data class CriterionScore(
     val earned: Int,
     val maxScore: Int,
     val metrics: List<Metric> = emptyList(),
-    val rules: List<Rule> = emptyList()
+    val rules: List<Rule> = emptyList(),
+    val lecturerComment: String = ""
 ) {
     val percentage: Float get() = if (maxScore > 0) earned.toFloat() / maxScore else 0f
 }
@@ -22,7 +24,10 @@ data class CriterionScore(
  * IMPORTANT: totalScore is the SUM of criterion scores, computed deterministically.
  * AI does NOT produce or modify totalScore.
  *
- * This model mirrors the Python Baseline JSON contract exactly.
+ * isDraft: true when grading is saved but not yet finalized
+ * isReleased: true when the lecturer has published the score to the student
+ * lecturerComment: overall comment written by the lecturer
+ * lecturerId: the lecturer who graded this submission
  */
 data class GradingResult(
     val id: String,
@@ -34,7 +39,12 @@ data class GradingResult(
     val criteriaScores: List<CriterionScore>,
     val gradedAt: LocalDateTime,
     val engineVersion: String,      // Grading engine version for audit trail
-    val feedbackId: String? = null  // Reference to AI-generated feedback (separate)
+    val feedbackId: String? = null, // Reference to AI-generated feedback (separate)
+    // Classroom grading lifecycle
+    val isDraft: Boolean = false,
+    val isReleased: Boolean = false,
+    val lecturerComment: String = "",
+    val lecturerId: String = ""
 ) {
     val percentage: Float get() = if (maxScore > 0) totalScore.toFloat() / maxScore else 0f
 }

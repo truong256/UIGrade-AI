@@ -13,6 +13,7 @@ import javax.inject.Inject
 data class LecturerDashboardUiState(
     val user: User? = null,
     val stats: LecturerStats? = null,
+    val classrooms: List<Classroom> = emptyList(),
     val recentSubmissions: List<Submission> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null
@@ -24,6 +25,7 @@ class LecturerDashboardViewModel @Inject constructor(
     private val getAllSubmissionsUseCase: GetAllSubmissionsUseCase,
     private val getAssignmentsForLecturerUseCase: GetAssignmentsForLecturerUseCase,
     private val getAllGradingResultsUseCase: GetAllGradingResultsUseCase,
+    private val getLecturerClassroomsUseCase: GetLecturerClassroomsUseCase,
     private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
@@ -39,6 +41,7 @@ class LecturerDashboardViewModel @Inject constructor(
                 val user = getCurrentUserUseCase()
                 val allSubs = getAllSubmissionsUseCase()
                 val lecturerAssignments = if (user != null) getAssignmentsForLecturerUseCase(user.id) else emptyList()
+                val classrooms = getLecturerClassroomsUseCase()
                 val assignmentIds = lecturerAssignments.map { it.id }.toSet()
                 val mySubs = allSubs.filter { it.assignmentId in assignmentIds }
                 val results = getAllGradingResultsUseCase().filter { it.assignmentId in assignmentIds }
@@ -48,7 +51,8 @@ class LecturerDashboardViewModel @Inject constructor(
                     .toFloat()
                 _uiState.value = LecturerDashboardUiState(
                     user = user,
-                    stats = LecturerStats(lecturerAssignments.size, mySubs.size, avgScore, mySubs.count { it.status == SubmissionStatus.PENDING }),
+                    stats = LecturerStats(lecturerAssignments.size, mySubs.size, avgScore, mySubs.count { it.status == SubmissionStatus.PENDING || it.status == SubmissionStatus.SUBMITTED || it.status == SubmissionStatus.LATE }),
+                    classrooms = classrooms,
                     recentSubmissions = mySubs.takeLast(5).reversed(),
                     isLoading = false
                 )
@@ -94,12 +98,45 @@ class RubricManagementViewModel @Inject constructor(
     }
 }
 
-// ─── Submission List VM ───────────────────────────────────────────────────────
-data class SubmissionListUiState(val submissions: List<Submission> = emptyList(), val isLoading: Boolean = true, val error: String? = null)
+// ─── Submission List VM (Upgraded) ────────────────────────────────────────────
+
+enum class SubmissionSortOption(val displayName: String) {
+    NAME_AZ("Tên A–Z"),
+    NEWEST("Mới nộp nhất"),
+    OLDEST("Cũ nhất"),
+    SCORE_HIGH("Điểm cao nhất"),
+    SCORE_LOW("Điểm thấp nhất")
+}
+
+data class SubmissionSummary(
+    val totalStudents: Int = 0,
+    val submitted: Int = 0,
+    val notSubmitted: Int = 0,
+    val late: Int = 0,
+    val grading: Int = 0,
+    val graded: Int = 0
+)
+
+data class SubmissionListUiState(
+    val assignment: Assignment? = null,
+    val allSubmissions: List<Submission> = emptyList(),
+    val filteredSubmissions: List<Submission> = emptyList(),
+    val students: List<User> = emptyList(),
+    val gradingResults: Map<String, GradingResult> = emptyMap(), // submissionId -> result
+    val summary: SubmissionSummary = SubmissionSummary(),
+    val searchQuery: String = "",
+    val selectedStatus: SubmissionStatus? = null,
+    val sortOption: SubmissionSortOption = SubmissionSortOption.NEWEST,
+    val isLoading: Boolean = true,
+    val error: String? = null
+)
 
 @HiltViewModel
 class SubmissionListViewModel @Inject constructor(
-    private val getSubmissionsForAssignmentUseCase: GetSubmissionsForAssignmentUseCase
+    private val getSubmissionsForAssignmentUseCase: GetSubmissionsForAssignmentUseCase,
+    private val getAssignmentByIdUseCase: GetAssignmentByIdUseCase,
+    private val getClassroomStudentsUseCase: GetClassroomStudentsUseCase,
+    private val getAllGradingResultsUseCase: GetAllGradingResultsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(SubmissionListUiState())
@@ -107,12 +144,110 @@ class SubmissionListViewModel @Inject constructor(
 
     fun load(assignmentId: String) {
         viewModelScope.launch {
-            _uiState.value = SubmissionListUiState(isLoading = true)
+            _uiState.value = _uiState.value.copy(isLoading = true)
             try {
-                _uiState.value = SubmissionListUiState(submissions = getSubmissionsForAssignmentUseCase(assignmentId), isLoading = false)
+                val assignment = getAssignmentByIdUseCase(assignmentId)
+                val subs = getSubmissionsForAssignmentUseCase(assignmentId)
+                val students = if (assignment?.classroomId?.isNotBlank() == true) {
+                    getClassroomStudentsUseCase(assignment.classroomId)
+                } else emptyList()
+
+                val allResults = getAllGradingResultsUseCase().filter { it.assignmentId == assignmentId }
+                val resultsMap = allResults.associateBy { it.submissionId }
+
+                val submittedStudentIds = subs.map { it.studentId }.toSet()
+                val totalStudents = if (students.isNotEmpty()) students.size else submittedStudentIds.size
+                val submittedCount = subs.size
+                val notSubmittedCount = (totalStudents - submittedStudentIds.size).coerceAtLeast(0)
+                val lateCount = subs.count { it.isLate }
+                val gradingCount = subs.count { it.status == SubmissionStatus.GRADING || it.status == SubmissionStatus.PENDING }
+                val gradedCount = subs.count { it.status == SubmissionStatus.GRADED || it.status == SubmissionStatus.RELEASED || it.status == SubmissionStatus.COMPLETED }
+
+                val summary = SubmissionSummary(
+                    totalStudents = totalStudents,
+                    submitted = submittedCount,
+                    notSubmitted = notSubmittedCount,
+                    late = lateCount,
+                    grading = gradingCount,
+                    graded = gradedCount
+                )
+
+                val filtered = applyFilterAndSort(subs, resultsMap, _uiState.value.searchQuery, _uiState.value.selectedStatus, _uiState.value.sortOption)
+
+                _uiState.value = SubmissionListUiState(
+                    assignment = assignment,
+                    allSubmissions = subs,
+                    filteredSubmissions = filtered,
+                    students = students,
+                    gradingResults = resultsMap,
+                    summary = summary,
+                    searchQuery = _uiState.value.searchQuery,
+                    selectedStatus = _uiState.value.selectedStatus,
+                    sortOption = _uiState.value.sortOption,
+                    isLoading = false
+                )
             } catch (e: Exception) {
                 _uiState.value = SubmissionListUiState(isLoading = false, error = e.message)
             }
+        }
+    }
+
+    fun onSearchChange(query: String) {
+        val filtered = applyFilterAndSort(
+            _uiState.value.allSubmissions,
+            _uiState.value.gradingResults,
+            query,
+            _uiState.value.selectedStatus,
+            _uiState.value.sortOption
+        )
+        _uiState.value = _uiState.value.copy(searchQuery = query, filteredSubmissions = filtered)
+    }
+
+    fun onStatusFilterChange(status: SubmissionStatus?) {
+        val filtered = applyFilterAndSort(
+            _uiState.value.allSubmissions,
+            _uiState.value.gradingResults,
+            _uiState.value.searchQuery,
+            status,
+            _uiState.value.sortOption
+        )
+        _uiState.value = _uiState.value.copy(selectedStatus = status, filteredSubmissions = filtered)
+    }
+
+    fun onSortChange(sort: SubmissionSortOption) {
+        val filtered = applyFilterAndSort(
+            _uiState.value.allSubmissions,
+            _uiState.value.gradingResults,
+            _uiState.value.searchQuery,
+            _uiState.value.selectedStatus,
+            sort
+        )
+        _uiState.value = _uiState.value.copy(sortOption = sort, filteredSubmissions = filtered)
+    }
+
+    private fun applyFilterAndSort(
+        list: List<Submission>,
+        results: Map<String, GradingResult>,
+        query: String,
+        status: SubmissionStatus?,
+        sort: SubmissionSortOption
+    ): List<Submission> {
+        var res = list
+        if (query.isNotBlank()) {
+            res = res.filter {
+                it.studentName.contains(query, ignoreCase = true) ||
+                        it.fileName.contains(query, ignoreCase = true)
+            }
+        }
+        if (status != null) {
+            res = res.filter { it.status == status }
+        }
+        return when (sort) {
+            SubmissionSortOption.NAME_AZ -> res.sortedBy { it.studentName }
+            SubmissionSortOption.NEWEST -> res.sortedByDescending { it.submittedAt }
+            SubmissionSortOption.OLDEST -> res.sortedBy { it.submittedAt }
+            SubmissionSortOption.SCORE_HIGH -> res.sortedByDescending { results[it.id]?.totalScore ?: -1 }
+            SubmissionSortOption.SCORE_LOW -> res.sortedBy { results[it.id]?.totalScore ?: 999 }
         }
     }
 }
