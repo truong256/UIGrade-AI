@@ -1,6 +1,7 @@
 package com.uigrade.ai.domain.repository
 
 import com.uigrade.ai.domain.model.User
+import com.uigrade.ai.domain.model.UserRole
 
 /**
  * Authentication repository interface.
@@ -14,10 +15,15 @@ interface AuthRepository {
     suspend fun login(email: String, password: String): User?
 
     /**
-     * Register a new user account (Student by default).
+     * Register a new user account with specified role (Student or Lecturer).
      * @return the newly registered User on success, null on error.
      */
-    suspend fun signUp(name: String, email: String, password: String): User?
+    suspend fun signUp(
+        name: String,
+        email: String,
+        password: String,
+        role: UserRole = UserRole.STUDENT
+    ): User?
 
     /**
      * Returns the currently authenticated user, or null if not logged in.

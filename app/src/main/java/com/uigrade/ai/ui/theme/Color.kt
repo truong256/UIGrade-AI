@@ -61,3 +61,24 @@ val ScoreExcellent = Color(0xFF2BB580)    // >= 90%
 val ScoreGood      = Color(0xFF6B8FD6)    // >= 70%
 val ScoreFair      = Color(0xFFF09A32)    // >= 50%
 val ScorePoor      = Color(0xFFE85555)    // < 50%
+
+// ─── Blue Auth / Registration Theme Palette ─────────────────────────────────
+val AuthBluePrimary = Color(0xFF2563EB)
+val AuthBluePrimaryDark = Color(0xFF1D4ED8)
+val AuthBluePrimaryLight = Color(0xFFDBEAFE)
+val AuthBlueBackgroundLight = Color(0xFFF8FAFC)
+val AuthBlueSurface = Color(0xFFFFFFFF)
+val AuthBlueTextPrimary = Color(0xFF0F172A)
+val AuthBlueTextSecondary = Color(0xFF64748B)
+val AuthBlueBorder = Color(0xFFCBD5E1)
+val AuthBlueBorderFocused = Color(0xFF2563EB)
+val AuthBlueError = Color(0xFFDC2626)
+val AuthBlueSuccess = Color(0xFF16A34A)
+
+val AuthBluePrimaryDarkTheme = Color(0xFF60A5FA)
+val AuthBlueBackgroundDarkTheme = Color(0xFF0F172A)
+val AuthBlueSurfaceDarkTheme = Color(0xFF1E293B)
+val AuthBlueTextPrimaryDarkTheme = Color(0xFFF8FAFC)
+val AuthBlueTextSecondaryDarkTheme = Color(0xFFCBD5E1)
+val AuthBlueBorderDarkTheme = Color(0xFF334155)
+
