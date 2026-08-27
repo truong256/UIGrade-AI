@@ -1,5 +1,9 @@
 package com.uigrade.ai.presentation.navigation
 
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
 import androidx.navigation.NavType
@@ -13,7 +17,9 @@ import com.uigrade.ai.presentation.admin.RubricAdminScreen
 import com.uigrade.ai.presentation.admin.RuleManagementScreen
 import com.uigrade.ai.presentation.admin.SystemLogsScreen
 import com.uigrade.ai.presentation.admin.UserManagementScreen
+import com.uigrade.ai.presentation.auth.GetStartedScreen
 import com.uigrade.ai.presentation.auth.LoginScreen
+import com.uigrade.ai.presentation.auth.SignUpScreen
 import com.uigrade.ai.presentation.auth.SplashScreen
 import com.uigrade.ai.presentation.lecturer.AssignmentManagementScreen
 import com.uigrade.ai.presentation.lecturer.LecturerDashboardScreen
@@ -35,14 +41,18 @@ fun UIGradeNavGraph(
 ) {
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route
+        startDestination = Screen.Splash.route,
+        enterTransition = { fadeIn(tween(260)) + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(260)) },
+        exitTransition = { fadeOut(tween(260)) + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Left, tween(260)) },
+        popEnterTransition = { fadeIn(tween(260)) + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(260)) },
+        popExitTransition = { fadeOut(tween(260)) + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.Right, tween(260)) }
     ) {
 
-        // ── Auth ──────────────────────────────────────────────────────────
+        // ── Auth & Onboarding Flow ──────────────────────────────────────────
         composable(Screen.Splash.route) {
             SplashScreen(
-                onNavigateToLogin = {
-                    navController.navigate(Screen.Login.route) {
+                onNavigateToGetStarted = {
+                    navController.navigate(Screen.GetStarted.route) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
                 },
@@ -59,8 +69,50 @@ fun UIGradeNavGraph(
             )
         }
 
+        composable(Screen.GetStarted.route) {
+            GetStartedScreen(
+                onNavigateToSignUp = {
+                    navController.navigate(Screen.SignUp.route)
+                },
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route)
+                }
+            )
+        }
+
+        composable(Screen.SignUp.route) {
+            SignUpScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToLogin = {
+                    navController.navigate(Screen.Login.route) {
+                        popUpTo(Screen.GetStarted.route)
+                    }
+                },
+                onSignUpSuccess = { role ->
+                    val dest = when (role) {
+                        "STUDENT" -> Screen.StudentDashboard.route
+                        "LECTURER" -> Screen.LecturerDashboard.route
+                        else -> Screen.AdminDashboard.route
+                    }
+                    navController.navigate(dest) {
+                        popUpTo(Screen.GetStarted.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
         composable(Screen.Login.route) {
             LoginScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onNavigateToSignUp = {
+                    navController.navigate(Screen.SignUp.route) {
+                        popUpTo(Screen.GetStarted.route)
+                    }
+                },
                 onLoginSuccess = { role ->
                     val dest = when (role) {
                         "STUDENT" -> Screen.StudentDashboard.route
@@ -68,7 +120,7 @@ fun UIGradeNavGraph(
                         else -> Screen.AdminDashboard.route
                     }
                     navController.navigate(dest) {
-                        popUpTo(Screen.Login.route) { inclusive = true }
+                        popUpTo(Screen.GetStarted.route) { inclusive = true }
                     }
                 }
             )
@@ -81,7 +133,7 @@ fun UIGradeNavGraph(
                 onNavigateToAssignment = { id -> navController.navigate(Screen.AssignmentDetail.createRoute(id)) },
                 onNavigateToProfile = { navController.navigate(Screen.StudentProfile.route) },
                 onLogout = {
-                    navController.navigate(Screen.Login.route) {
+                    navController.navigate(Screen.GetStarted.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 }
@@ -139,7 +191,7 @@ fun UIGradeNavGraph(
             StudentProfileScreen(
                 onNavigateBack = { navController.popBackStack() },
                 onLogout = {
-                    navController.navigate(Screen.Login.route) {
+                    navController.navigate(Screen.GetStarted.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 }
@@ -154,7 +206,7 @@ fun UIGradeNavGraph(
                 onNavigateToSubmissions = { id -> navController.navigate(Screen.LecturerSubmissions.createRoute(id)) },
                 onNavigateToStatistics = { navController.navigate(Screen.LecturerStatistics.route) },
                 onLogout = {
-                    navController.navigate(Screen.Login.route) {
+                    navController.navigate(Screen.GetStarted.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 }
@@ -224,7 +276,7 @@ fun UIGradeNavGraph(
                 onNavigateToMetrics = { navController.navigate(Screen.MetricManagement.route) },
                 onNavigateToLogs = { navController.navigate(Screen.SystemLogs.route) },
                 onLogout = {
-                    navController.navigate(Screen.Login.route) {
+                    navController.navigate(Screen.GetStarted.route) {
                         popUpTo(0) { inclusive = true }
                     }
                 }

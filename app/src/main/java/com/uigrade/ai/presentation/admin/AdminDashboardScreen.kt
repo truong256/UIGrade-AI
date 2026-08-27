@@ -33,8 +33,8 @@ fun AdminDashboardScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Admin Dashboard", fontWeight = FontWeight.Bold) },
-                actions = { IconButton(onClick = { viewModel.logout(onLogout) }) { Icon(Icons.Default.Logout, "Logout") } }
+                title = { Text("Bảng điều khiển", fontWeight = FontWeight.Bold) },
+                actions = { IconButton(onClick = { viewModel.logout(onLogout) }) { Icon(Icons.Default.Logout, "Đăng xuất") } }
             )
         }
     ) { padding ->
@@ -59,7 +59,7 @@ fun AdminDashboardScreen(
 
                     // Grading jobs
                     item {
-                        SectionHeader("Grading Jobs")
+                        SectionHeader("Công việc chấm điểm")
                         Spacer(Modifier.height(8.dp))
                         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                             AdminStatCard("Hoàn thành", "${stats.gradingJobs.completed}", Icons.Default.CheckCircle, Success, Modifier.weight(1f))
@@ -78,7 +78,7 @@ fun AdminDashboardScreen(
                         }
                         Spacer(Modifier.height(8.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                            Text("AI Feedback enabled", style = MaterialTheme.typography.bodyMedium)
+                            Text("Bật AI Feedback", style = MaterialTheme.typography.bodyMedium)
                             Switch(checked = stats.aiEnabled, onCheckedChange = { viewModel.toggleAiFeedback(it) })
                         }
                     }
@@ -89,9 +89,9 @@ fun AdminDashboardScreen(
                         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                             AdminNavRow("Quản lý người dùng", Icons.Default.People, onNavigateToUsers)
                             AdminNavRow("Quản lý Rubric", Icons.Default.Grading, onNavigateToRubrics)
-                            AdminNavRow("Quản lý Rule", Icons.Default.Rule, onNavigateToRules)
-                            AdminNavRow("Quản lý Metric", Icons.Default.Analytics, onNavigateToMetrics)
-                            AdminNavRow("System Logs", Icons.Default.Article, onNavigateToLogs)
+                            AdminNavRow("Quản lý Quy tắc", Icons.Default.Rule, onNavigateToRules)
+                            AdminNavRow("Quản lý Chỉ số", Icons.Default.Analytics, onNavigateToMetrics)
+                            AdminNavRow("Nhật ký hệ thống", Icons.Default.Article, onNavigateToLogs)
                         }
                     }
                 }

@@ -1,0 +1,158 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    
+    <!-- Outer Soft Glow / Blob -->
+    <path
+        android:fillColor="#D7F4E9"
+        android:pathData="M100,18 C155,18 185,55 185,100 C185,150 145,182 100,182 C55,182 15,148 15,100 C15,52 45,18 100,18 Z" />
+
+    <!-- Tail (Excited upright curl) -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M58,135 C32,125 20,95 28,75 C34,60 48,64 48,74 C48,85 38,105 56,120" />
+
+    <!-- Body -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M65,110 C62,145 68,170 78,172 C88,174 92,158 100,158 C108,158 112,174 122,172 C132,170 138,145 135,110 Z" />
+
+    <!-- Feet -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M70,172 C68,178 72,184 82,184 C90,184 92,178 90,172 Z" />
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M110,172 C108,178 110,184 118,184 C128,184 132,178 130,172 Z" />
+
+    <!-- Scholar Coat / Apron -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#C6EFE1"
+        android:pathData="M78,118 L122,118 L126,155 L74,155 Z" />
+    <!-- Coat Buttons -->
+    <path
+        android:fillColor="#2BB580"
+        android:pathData="M88,127 A2.5,2.5 0 1,0 88,132 A2.5,2.5 0 1,0 88,127" />
+    <path
+        android:fillColor="#2BB580"
+        android:pathData="M88,137 A2.5,2.5 0 1,0 88,142 A2.5,2.5 0 1,0 88,137" />
+    <path
+        android:fillColor="#2BB580"
+        android:pathData="M88,147 A2.5,2.5 0 1,0 88,152 A2.5,2.5 0 1,0 88,147" />
+
+    <!-- Head -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M65,75 C60,42 75,32 82,46 C90,44 110,44 118,46 C125,32 140,42 135,75 C142,88 138,108 100,108 C62,108 58,88 65,75 Z" />
+
+    <!-- Ears Inner -->
+    <path
+        android:fillColor="#FFD1DF"
+        android:pathData="M72,50 C74,42 80,45 81,54 C78,56 74,54 72,50 Z" />
+    <path
+        android:fillColor="#FFD1DF"
+        android:pathData="M128,50 C126,42 120,45 119,54 C122,56 126,54 128,50 Z" />
+
+    <!-- Left Paw (cheering up!) -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M70,118 C55,110 44,90 52,78 C58,70 66,75 62,88" />
+
+    <!-- Right Paw (cheering up!) -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M130,118 C145,110 156,90 148,78 C142,70 134,75 138,88" />
+
+    <!-- Joyful Eyes (^ ᵕ ^) -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M80,75 Q85,68 90,75" />
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="3.5"
+        android:strokeLineCap="round"
+        android:pathData="M110,75 Q115,68 120,75" />
+
+    <!-- Joyful Smile -->
+    <path
+        android:fillColor="#FF8FA3"
+        android:pathData="M98,78 L102,78 L100,81 Z" />
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:fillColor="#FF9EB5"
+        android:pathData="M94,82 Q100,92 106,82 Z" />
+
+    <!-- Whiskers -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M58,74 L74,77" />
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M56,83 L73,81" />
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M142,74 L126,77" />
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M144,83 L127,81" />
+
+    <!-- Cheeks (Big Happy Blush) -->
+    <path
+        android:fillColor="#FFA8BA"
+        android:pathData="M72,80 A6,4 0 1,0 72,88 A6,4 0 1,0 72,80" />
+    <path
+        android:fillColor="#FFA8BA"
+        android:pathData="M128,80 A6,4 0 1,0 128,88 A6,4 0 1,0 128,80" />
+
+    <!-- Celebration Stars -->
+    <path
+        android:fillColor="#F09A32"
+        android:pathData="M34,44 L36,36 L38,44 L46,46 L38,48 L36,56 L34,48 L26,46 Z" />
+    <path
+        android:fillColor="#7E69E0"
+        android:pathData="M164,44 L166,36 L168,44 L176,46 L168,48 L166,56 L164,48 L156,46 Z" />
+</vector>

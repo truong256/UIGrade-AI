@@ -6,9 +6,11 @@ package com.uigrade.ai.presentation.navigation
  */
 sealed class Screen(val route: String) {
 
-    // ─── Auth ──────────────────────────────────────────────────────────────
-    object Splash : Screen("splash")
-    object Login  : Screen("login")
+    // ─── Auth & Onboarding ──────────────────────────────────────────────────
+    object Splash      : Screen("splash")
+    object GetStarted  : Screen("get_started")
+    object SignUp      : Screen("sign_up")
+    object Login       : Screen("login")
 
     // ─── Student ──────────────────────────────────────────────────────────
     object StudentDashboard    : Screen("student/dashboard")

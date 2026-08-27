@@ -14,11 +14,10 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.AdminPanelSettings
 import androidx.compose.material.icons.rounded.Email
 import androidx.compose.material.icons.rounded.Lock
+import androidx.compose.material.icons.rounded.LockReset
 import androidx.compose.material.icons.rounded.Person
-import androidx.compose.material.icons.rounded.School
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -26,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
@@ -41,17 +41,15 @@ import com.uigrade.ai.ui.components.UIGradePasswordTextField
 import com.uigrade.ai.ui.components.UIGradeTextField
 import com.uigrade.ai.ui.components.mascot.GuideBubble
 import com.uigrade.ai.ui.components.mascot.UIGradeCatMascot
-import com.uigrade.ai.ui.theme.AccentMintContainer
 import com.uigrade.ai.ui.theme.Primary
-import com.uigrade.ai.ui.theme.SecondaryContainerLight
 import kotlinx.coroutines.delay
 
 @Composable
-fun LoginScreen(
+fun SignUpScreen(
     onNavigateBack: () -> Unit,
-    onNavigateToSignUp: () -> Unit,
-    onLoginSuccess: (role: String) -> Unit,
-    viewModel: LoginViewModel = hiltViewModel()
+    onNavigateToLogin: () -> Unit,
+    onSignUpSuccess: (role: String) -> Unit,
+    viewModel: SignUpViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
@@ -60,10 +58,10 @@ fun LoginScreen(
     var contentVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { contentVisible = true }
 
-    LaunchedEffect(uiState.loggedInUser) {
-        uiState.loggedInUser?.let { user ->
-            delay(900)
-            onLoginSuccess(user.role.name)
+    LaunchedEffect(uiState.registeredUser) {
+        uiState.registeredUser?.let { user ->
+            delay(1200) // Let user see the happy mascot pose and guide message
+            onSignUpSuccess(user.role.name)
         }
     }
 
@@ -133,22 +131,22 @@ fun LoginScreen(
 
                     GuideBubble(
                         text = uiState.guideText,
-                        isError = uiState.isGuideError || uiState.error != null,
-                        isSuccess = uiState.loggedInUser != null,
+                        isError = uiState.isGuideError,
+                        isSuccess = uiState.isSuccess,
                         modifier = Modifier.fillMaxWidth(0.95f)
                     )
                 }
 
                 // ─── Header Titles ─────────────────────────────────────────────────
                 Text(
-                    text = "Đăng nhập",
+                    text = "Tạo tài khoản",
                     style = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold,
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 )
                 Text(
-                    text = "Chào mừng bạn quay trở lại với UIGrade AI",
+                    text = "Mèo UIGrade sẽ giúp bạn bắt đầu chỉ trong vài bước",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
@@ -166,6 +164,27 @@ fun LoginScreen(
                         modifier = Modifier.padding(20.dp),
                         verticalArrangement = Arrangement.spacedBy(14.dp)
                     ) {
+                        // Name Field
+                        UIGradeTextField(
+                            value = uiState.name,
+                            onValueChange = viewModel::onNameChange,
+                            label = "Tên người dùng",
+                            placeholder = "Nhập tên của bạn",
+                            leadingIcon = Icons.Rounded.Person,
+                            errorMessage = uiState.nameError,
+                            isValid = uiState.name.trim().length >= 2,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Text,
+                                imeAction = ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                            ),
+                            modifier = Modifier.onFocusChanged {
+                                if (it.isFocused) viewModel.onFieldFocused("name")
+                            }
+                        )
+
                         // Email Field
                         UIGradeTextField(
                             value = uiState.email,
@@ -181,7 +200,10 @@ fun LoginScreen(
                             ),
                             keyboardActions = KeyboardActions(
                                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                            )
+                            ),
+                            modifier = Modifier.onFocusChanged {
+                                if (it.isFocused) viewModel.onFieldFocused("email")
+                            }
                         )
 
                         // Password Field
@@ -189,10 +211,31 @@ fun LoginScreen(
                             value = uiState.password,
                             onValueChange = viewModel::onPasswordChange,
                             label = "Mật khẩu",
-                            placeholder = "Nhập mật khẩu",
+                            placeholder = "Tối thiểu 8 ký tự",
                             leadingIcon = Icons.Rounded.Lock,
                             errorMessage = uiState.passwordError,
-                            isValid = uiState.password.isNotEmpty(),
+                            isValid = uiState.password.length >= 8,
+                            keyboardOptions = KeyboardOptions(
+                                keyboardType = KeyboardType.Password,
+                                imeAction = ImeAction.Next
+                            ),
+                            keyboardActions = KeyboardActions(
+                                onNext = { focusManager.moveFocus(FocusDirection.Down) }
+                            ),
+                            modifier = Modifier.onFocusChanged {
+                                if (it.isFocused) viewModel.onFieldFocused("password")
+                            }
+                        )
+
+                        // Confirm Password Field
+                        UIGradePasswordTextField(
+                            value = uiState.confirmPassword,
+                            onValueChange = viewModel::onConfirmPasswordChange,
+                            label = "Xác nhận mật khẩu",
+                            placeholder = "Nhập lại mật khẩu",
+                            leadingIcon = Icons.Rounded.LockReset,
+                            errorMessage = uiState.confirmPasswordError,
+                            isValid = uiState.confirmPassword.isNotEmpty() && uiState.confirmPassword == uiState.password,
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Password,
                                 imeAction = ImeAction.Done
@@ -200,94 +243,26 @@ fun LoginScreen(
                             keyboardActions = KeyboardActions(
                                 onDone = {
                                     focusManager.clearFocus()
-                                    viewModel.login()
+                                    viewModel.signUp()
                                 }
-                            )
+                            ),
+                            modifier = Modifier.onFocusChanged {
+                                if (it.isFocused) viewModel.onFieldFocused("confirmPassword")
+                            }
                         )
-
-                        // General Error Text
-                        AnimatedVisibility(visible = uiState.error != null) {
-                            Text(
-                                text = uiState.error ?: "",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
-                            )
-                        }
 
                         Spacer(Modifier.height(4.dp))
 
                         // Submit Button
                         UIGradeButton(
-                            text = "Đăng nhập",
+                            text = "Tạo tài khoản",
                             onClick = {
                                 focusManager.clearFocus()
-                                viewModel.login()
+                                viewModel.signUp()
                             },
                             isLoading = uiState.isLoading,
                             modifier = Modifier.fillMaxWidth()
                         )
-                    }
-                }
-
-                Spacer(Modifier.height(16.dp))
-
-                // ─── Quick Demo Accounts Selector ──────────────────────────────────
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp)
-                    ) {
-                        Text(
-                            text = "Tài khoản mẫu (chạm để điền nhanh):",
-                            style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            modifier = Modifier.padding(bottom = 8.dp)
-                        )
-
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            // Student Quick Fill
-                            FilterChip(
-                                selected = uiState.email == "student@uigrade.ai",
-                                onClick = { viewModel.selectDemoAccount("student@uigrade.ai", "Sinh viên") },
-                                label = { Text("Sinh viên", fontSize = 12.sp) },
-                                leadingIcon = {
-                                    Icon(Icons.Rounded.Person, contentDescription = null, modifier = Modifier.size(14.dp))
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            // Lecturer Quick Fill
-                            FilterChip(
-                                selected = uiState.email == "lecturer@uigrade.ai",
-                                onClick = { viewModel.selectDemoAccount("lecturer@uigrade.ai", "Giảng viên") },
-                                label = { Text("Giảng viên", fontSize = 12.sp) },
-                                leadingIcon = {
-                                    Icon(Icons.Rounded.School, contentDescription = null, modifier = Modifier.size(14.dp))
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-
-                            // Admin Quick Fill
-                            FilterChip(
-                                selected = uiState.email == "admin@uigrade.ai",
-                                onClick = { viewModel.selectDemoAccount("admin@uigrade.ai", "Admin") },
-                                label = { Text("Admin", fontSize = 12.sp) },
-                                leadingIcon = {
-                                    Icon(Icons.Rounded.AdminPanelSettings, contentDescription = null, modifier = Modifier.size(14.dp))
-                                },
-                                modifier = Modifier.weight(1f)
-                            )
-                        }
                     }
                 }
 
@@ -298,13 +273,13 @@ fun LoginScreen(
                     horizontalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = "Chưa có tài khoản? ",
+                        text = "Đã có tài khoản? ",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     )
                     Text(
-                        text = "Đăng ký ngay",
+                        text = "Đăng nhập",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Bold,
                             color = Primary
@@ -312,7 +287,7 @@ fun LoginScreen(
                         modifier = Modifier.clickable(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null,
-                            onClick = onNavigateToSignUp
+                            onClick = onNavigateToLogin
                         )
                     )
                 }

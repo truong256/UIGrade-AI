@@ -1,0 +1,168 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    
+    <!-- Outer Soft Glow / Blob -->
+    <path
+        android:fillColor="#E9F0FD"
+        android:pathData="M100,20 C150,20 180,55 180,100 C180,145 145,180 100,180 C55,180 20,145 20,100 C20,55 50,20 100,20 Z" />
+
+    <!-- Tail -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M58,135 C35,130 25,105 32,88 C38,72 50,75 52,83 C54,92 45,105 56,120" />
+
+    <!-- Body -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M65,110 C62,145 68,170 78,172 C88,174 92,158 100,158 C108,158 112,174 122,172 C132,170 138,145 135,110 Z" />
+
+    <!-- Feet -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M70,172 C68,178 72,184 82,184 C90,184 92,178 90,172 Z" />
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M110,172 C108,178 110,184 118,184 C128,184 132,178 130,172 Z" />
+
+    <!-- Scholar Coat / Apron -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#D8E7FD"
+        android:pathData="M78,118 L122,118 L126,155 L74,155 Z" />
+    <!-- Coat Buttons -->
+    <path
+        android:fillColor="#6B8FD6"
+        android:pathData="M88,127 A2.5,2.5 0 1,0 88,132 A2.5,2.5 0 1,0 88,127" />
+    <path
+        android:fillColor="#6B8FD6"
+        android:pathData="M88,137 A2.5,2.5 0 1,0 88,142 A2.5,2.5 0 1,0 88,137" />
+    <path
+        android:fillColor="#6B8FD6"
+        android:pathData="M88,147 A2.5,2.5 0 1,0 88,152 A2.5,2.5 0 1,0 88,147" />
+
+    <!-- Head -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M65,75 C60,42 75,32 82,46 C90,44 110,44 118,46 C125,32 140,42 135,75 C142,88 138,108 100,108 C62,108 58,88 65,75 Z" />
+
+    <!-- Ears Inner -->
+    <path
+        android:fillColor="#FFD1DF"
+        android:pathData="M72,50 C74,42 80,45 81,54 C78,56 74,54 72,50 Z" />
+    <path
+        android:fillColor="#FFD1DF"
+        android:pathData="M128,50 C126,42 120,45 119,54 C122,56 126,54 128,50 Z" />
+
+    <!-- Left Hand (Pointing down / to the form) -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M70,118 C56,128 50,146 62,152 C70,156 74,142 74,136" />
+
+    <!-- Right Hand (holding a cute digital smart pen / wand) -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="6"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#FFF6E9"
+        android:pathData="M130,118 C144,120 152,110 148,98" />
+    <!-- Pen / Wand -->
+    <path
+        android:strokeColor="#7E69E0"
+        android:strokeWidth="4"
+        android:strokeLineCap="round"
+        android:pathData="M142,106 L164,74" />
+    <path
+        android:fillColor="#5AB697"
+        android:pathData="M164,74 L169,67 L163,68 Z" />
+
+    <!-- Face Details -->
+    <!-- Attentive Eyes -->
+    <path
+        android:fillColor="#2B2D42"
+        android:pathData="M84,72 A3.5,3.5 0 1,0 84,79 A3.5,3.5 0 1,0 84,72" />
+    <path
+        android:fillColor="#2B2D42"
+        android:pathData="M116,72 A3.5,3.5 0 1,0 116,79 A3.5,3.5 0 1,0 116,72" />
+
+    <!-- Eye sparkles -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M85,73 A1.2,1.2 0 1,0 85,75.4 A1.2,1.2 0 1,0 85,73" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M117,73 A1.2,1.2 0 1,0 117,75.4 A1.2,1.2 0 1,0 117,73" />
+
+    <!-- Nose & Mouth -->
+    <path
+        android:fillColor="#FF8FA3"
+        android:pathData="M98,79 L102,79 L100,82 Z" />
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M97,83 Q100,86 103,83" />
+
+    <!-- Whiskers -->
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M58,74 L74,77" />
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M56,83 L73,81" />
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M142,74 L126,77" />
+    <path
+        android:strokeColor="#2B2D42"
+        android:strokeWidth="2.5"
+        android:strokeLineCap="round"
+        android:pathData="M144,83 L127,81" />
+
+    <!-- Cheeks (Blush) -->
+    <path
+        android:fillColor="#FFCCD7"
+        android:pathData="M73,81 A5,3 0 1,0 73,87 A5,3 0 1,0 73,81" />
+    <path
+        android:fillColor="#FFCCD7"
+        android:pathData="M127,81 A5,3 0 1,0 127,87 A5,3 0 1,0 127,81" />
+
+    <!-- AI Sparkle -->
+    <path
+        android:fillColor="#5AB697"
+        android:pathData="M38,62 L40,54 L42,62 L50,64 L42,66 L40,74 L38,66 L30,64 Z" />
+</vector>

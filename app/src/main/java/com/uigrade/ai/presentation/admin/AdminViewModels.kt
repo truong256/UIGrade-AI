@@ -10,6 +10,8 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+// ─── Admin Dashboard ───────────────────────────────────────────────────────────
+
 data class AdminDashboardUiState(
     val stats: AdminStats? = null,
     val isLoading: Boolean = true,
@@ -45,25 +47,166 @@ class AdminDashboardViewModel @Inject constructor(
     fun logout(onDone: () -> Unit) { viewModelScope.launch { logoutUseCase(); onDone() } }
 }
 
-data class UserManagementUiState(val users: List<User> = emptyList(), val isLoading: Boolean = true, val error: String? = null)
+// ─── User Management ──────────────────────────────────────────────────────────
+
+data class UserManagementUiState(
+    val allUsers: List<User> = emptyList(),
+    val filteredUsers: List<User> = emptyList(),
+    val isLoading: Boolean = true,
+    val error: String? = null,
+    val snackbarMessage: String? = null,
+    val searchQuery: String = "",
+    val selectedRoleFilter: UserRole? = null,
+    // Dialog state
+    val editingUser: User? = null,
+    val deletingUser: User? = null,
+    val isProcessing: Boolean = false
+)
 
 @HiltViewModel
 class UserManagementViewModel @Inject constructor(
-    private val getAllUsersUseCase: GetAllUsersUseCase
+    private val getAllUsersUseCase: GetAllUsersUseCase,
+    private val updateUserUseCase: UpdateUserUseCase,
+    private val deleteUserUseCase: DeleteUserUseCase
 ) : ViewModel() {
+
     private val _uiState = MutableStateFlow(UserManagementUiState())
     val uiState: StateFlow<UserManagementUiState> = _uiState.asStateFlow()
-    init { viewModelScope.launch { try { _uiState.value = UserManagementUiState(users = getAllUsersUseCase(), isLoading = false) } catch (e: Exception) { _uiState.value = UserManagementUiState(isLoading = false, error = e.message) } } }
+
+    init { loadUsers() }
+
+    fun loadUsers() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isLoading = true, error = null) }
+            try {
+                val users = getAllUsersUseCase()
+                _uiState.update { state ->
+                    state.copy(
+                        allUsers = users,
+                        filteredUsers = applyFilters(users, state.searchQuery, state.selectedRoleFilter),
+                        isLoading = false
+                    )
+                }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun onSearchQueryChange(query: String) {
+        _uiState.update { state ->
+            state.copy(
+                searchQuery = query,
+                filteredUsers = applyFilters(state.allUsers, query, state.selectedRoleFilter)
+            )
+        }
+    }
+
+    fun onRoleFilterChange(role: UserRole?) {
+        _uiState.update { state ->
+            state.copy(
+                selectedRoleFilter = role,
+                filteredUsers = applyFilters(state.allUsers, state.searchQuery, role)
+            )
+        }
+    }
+
+    fun openEditDialog(user: User) {
+        _uiState.update { it.copy(editingUser = user) }
+    }
+
+    fun closeEditDialog() {
+        _uiState.update { it.copy(editingUser = null) }
+    }
+
+    fun openDeleteDialog(user: User) {
+        _uiState.update { it.copy(deletingUser = user) }
+    }
+
+    fun closeDeleteDialog() {
+        _uiState.update { it.copy(deletingUser = null) }
+    }
+
+    fun updateUser(user: User) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isProcessing = true) }
+            val result = updateUserUseCase(user)
+            if (result.isSuccess) {
+                loadUsers()
+                _uiState.update { it.copy(isProcessing = false, editingUser = null, snackbarMessage = "Đã cập nhật thông tin người dùng") }
+            } else {
+                _uiState.update { it.copy(isProcessing = false, snackbarMessage = result.exceptionOrNull()?.message ?: "Cập nhật thất bại") }
+            }
+        }
+    }
+
+    fun deleteUser(userId: String) {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isProcessing = true) }
+            val result = deleteUserUseCase(userId)
+            if (result.isSuccess) {
+                loadUsers()
+                _uiState.update { it.copy(isProcessing = false, deletingUser = null, snackbarMessage = "Đã xoá người dùng") }
+            } else {
+                _uiState.update { it.copy(isProcessing = false, snackbarMessage = result.exceptionOrNull()?.message ?: "Xoá thất bại") }
+            }
+        }
+    }
+
+    fun clearSnackbar() {
+        _uiState.update { it.copy(snackbarMessage = null) }
+    }
+
+    private fun applyFilters(users: List<User>, query: String, role: UserRole?): List<User> {
+        return users.filter { user ->
+            val matchesQuery = query.isBlank() ||
+                user.name.contains(query, ignoreCase = true) ||
+                user.email.contains(query, ignoreCase = true) ||
+                (user.studentId?.contains(query, ignoreCase = true) == true)
+            val matchesRole = role == null || user.role == role
+            matchesQuery && matchesRole
+        }
+    }
 }
 
-data class LogsUiState(val logs: List<SystemLog> = emptyList(), val isLoading: Boolean = true, val error: String? = null)
+// ─── System Logs ──────────────────────────────────────────────────────────────
+
+data class LogsUiState(
+    val allLogs: List<SystemLog> = emptyList(),
+    val filteredLogs: List<SystemLog> = emptyList(),
+    val isLoading: Boolean = true,
+    val error: String? = null,
+    val selectedLevel: LogLevel? = null
+)
 
 @HiltViewModel
 class SystemLogsViewModel @Inject constructor(private val statsRepository: StatsRepository) : ViewModel() {
     private val _uiState = MutableStateFlow(LogsUiState())
     val uiState: StateFlow<LogsUiState> = _uiState.asStateFlow()
-    init { viewModelScope.launch { try { _uiState.value = LogsUiState(logs = statsRepository.getSystemLogs(), isLoading = false) } catch (e: Exception) { _uiState.value = LogsUiState(isLoading = false, error = e.message) } } }
+
+    init {
+        viewModelScope.launch {
+            try {
+                val logs = statsRepository.getSystemLogs()
+                _uiState.update { it.copy(allLogs = logs, filteredLogs = logs, isLoading = false) }
+            } catch (e: Exception) {
+                _uiState.update { it.copy(isLoading = false, error = e.message) }
+            }
+        }
+    }
+
+    fun filterByLevel(level: LogLevel?) {
+        _uiState.update { state ->
+            state.copy(
+                selectedLevel = level,
+                filteredLogs = if (level == null) state.allLogs
+                               else state.allLogs.filter { it.level == level }
+            )
+        }
+    }
 }
+
+// ─── Rule Management ──────────────────────────────────────────────────────────
 
 data class RuleManagementUiState(
     val rules: List<Rule> = emptyList(),
@@ -93,6 +236,8 @@ class RuleManagementViewModel @Inject constructor(
         }
     }
 }
+
+// ─── Metric Management ────────────────────────────────────────────────────────
 
 data class MetricManagementUiState(
     val metrics: List<Metric> = emptyList(),

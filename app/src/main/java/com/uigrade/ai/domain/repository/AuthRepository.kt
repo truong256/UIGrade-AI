@@ -14,6 +14,12 @@ interface AuthRepository {
     suspend fun login(email: String, password: String): User?
 
     /**
+     * Register a new user account (Student by default).
+     * @return the newly registered User on success, null on error.
+     */
+    suspend fun signUp(name: String, email: String, password: String): User?
+
+    /**
      * Returns the currently authenticated user, or null if not logged in.
      */
     suspend fun getCurrentUser(): User?
