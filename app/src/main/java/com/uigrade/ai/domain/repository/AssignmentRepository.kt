@@ -11,4 +11,24 @@ interface AssignmentRepository {
     suspend fun createAssignment(assignment: Assignment): Assignment
     suspend fun updateAssignment(assignment: Assignment): Assignment
     suspend fun deleteAssignment(id: String): Boolean
+
+    /**
+     * Get all PUBLISHED assignments for a given classroom.
+     * Used by students — only returns publishStatus == PUBLISHED.
+     */
+    suspend fun getPublishedAssignmentsForClassroom(classroomId: String): List<Assignment>
+
+    /**
+     * Get all assignments (any status) for a classroom — lecturer view.
+     */
+    suspend fun getAllAssignmentsForClassroom(classroomId: String): List<Assignment>
+
+    /**
+     * Get assignments for a student filtered to a specific classroom,
+     * only returning PUBLISHED ones.
+     */
+    suspend fun getAssignmentsForStudentInClassroom(
+        studentId: String,
+        classroomId: String
+    ): List<AssignmentWithStatus>
 }

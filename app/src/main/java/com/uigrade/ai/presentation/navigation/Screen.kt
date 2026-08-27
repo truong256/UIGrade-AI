@@ -13,39 +13,61 @@ sealed class Screen(val route: String) {
     object Login       : Screen("login")
 
     // ─── Student ──────────────────────────────────────────────────────────
-    object StudentDashboard    : Screen("student/dashboard")
-    object StudentAssignments  : Screen("student/assignments")
-    object AssignmentDetail    : Screen("student/assignments/{assignmentId}") {
+    object StudentDashboard      : Screen("student/dashboard")
+    object StudentClassrooms     : Screen("student/classrooms")
+    object JoinClassroom         : Screen("student/classrooms/join")
+    object StudentClassroomDetail: Screen("student/classroom/{classroomId}") {
+        fun createRoute(classroomId: String) = "student/classroom/$classroomId"
+    }
+    object StudentAssignments    : Screen("student/assignments")
+    object AssignmentDetail      : Screen("student/assignments/{assignmentId}") {
         fun createRoute(assignmentId: String) = "student/assignments/$assignmentId"
     }
-    object SubmitAssignment    : Screen("student/submit/{assignmentId}") {
+    object SubmitAssignment      : Screen("student/submit/{assignmentId}") {
         fun createRoute(assignmentId: String) = "student/submit/$assignmentId"
     }
-    object GradingResult       : Screen("student/result/{submissionId}") {
+    object GradingResult         : Screen("student/result/{submissionId}") {
         fun createRoute(submissionId: String) = "student/result/$submissionId"
     }
-    object StudentProfile      : Screen("student/profile")
+    object StudentProfile        : Screen("student/profile")
 
     // ─── Lecturer ─────────────────────────────────────────────────────────
-    object LecturerDashboard   : Screen("lecturer/dashboard")
-    object LecturerAssignments : Screen("lecturer/assignments")
-    object RubricManagement    : Screen("lecturer/rubrics")
-    object RubricDetail        : Screen("lecturer/rubrics/{rubricId}") {
+    object LecturerDashboard     : Screen("lecturer/dashboard")
+    object LecturerClassrooms    : Screen("lecturer/classrooms")
+    object CreateClassroom       : Screen("lecturer/classroom/create")
+    object ClassroomDetail       : Screen("lecturer/classroom/{classroomId}") {
+        fun createRoute(classroomId: String) = "lecturer/classroom/$classroomId"
+    }
+    object ClassroomStudents     : Screen("lecturer/classroom/{classroomId}/students") {
+        fun createRoute(classroomId: String) = "lecturer/classroom/$classroomId/students"
+    }
+    object CreateAssignment      : Screen("lecturer/classroom/{classroomId}/assignment/create") {
+        fun createRoute(classroomId: String) = "lecturer/classroom/$classroomId/assignment/create"
+    }
+    object EditAssignment        : Screen("lecturer/assignment/edit/{assignmentId}") {
+        fun createRoute(assignmentId: String) = "lecturer/assignment/edit/$assignmentId"
+    }
+    object LecturerAssignments   : Screen("lecturer/assignments")
+    object RubricManagement      : Screen("lecturer/rubrics")
+    object RubricDetail          : Screen("lecturer/rubrics/{rubricId}") {
         fun createRoute(rubricId: String) = "lecturer/rubrics/$rubricId"
     }
-    object LecturerSubmissions : Screen("lecturer/submissions/{assignmentId}") {
+    object LecturerSubmissions   : Screen("lecturer/submissions/{assignmentId}") {
         fun createRoute(assignmentId: String) = "lecturer/submissions/$assignmentId"
     }
-    object SubmissionDetail    : Screen("lecturer/submission/{submissionId}") {
+    object SubmissionDetail      : Screen("lecturer/submission/{submissionId}") {
         fun createRoute(submissionId: String) = "lecturer/submission/$submissionId"
     }
-    object LecturerStatistics  : Screen("lecturer/statistics")
+    object GradingScreen         : Screen("lecturer/submission/{submissionId}/grade") {
+        fun createRoute(submissionId: String) = "lecturer/submission/$submissionId/grade"
+    }
+    object LecturerStatistics    : Screen("lecturer/statistics")
 
     // ─── Admin ────────────────────────────────────────────────────────────
-    object AdminDashboard      : Screen("admin/dashboard")
-    object UserManagement      : Screen("admin/users")
-    object AdminRubrics        : Screen("admin/rubrics")
-    object RuleManagement      : Screen("admin/rules")
-    object MetricManagement    : Screen("admin/metrics")
-    object SystemLogs          : Screen("admin/logs")
+    object AdminDashboard        : Screen("admin/dashboard")
+    object UserManagement        : Screen("admin/users")
+    object AdminRubrics          : Screen("admin/rubrics")
+    object RuleManagement        : Screen("admin/rules")
+    object MetricManagement      : Screen("admin/metrics")
+    object SystemLogs            : Screen("admin/logs")
 }

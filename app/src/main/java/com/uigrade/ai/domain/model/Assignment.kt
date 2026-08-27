@@ -13,7 +13,18 @@ enum class AssignmentStatus {
 }
 
 /**
+ * Publish lifecycle of an assignment created by a lecturer.
+ */
+enum class AssignmentPublishStatus {
+    DRAFT,
+    PUBLISHED,
+    CLOSED
+}
+
+/**
  * An assignment created by a lecturer, linked to a rubric.
+ * classroomId links this assignment to a specific classroom.
+ * publishStatus controls student visibility.
  */
 data class Assignment(
     val id: String,
@@ -22,10 +33,19 @@ data class Assignment(
     val deadline: LocalDateTime,
     val rubricId: String,
     val lecturerId: String,
-    val courseId: String,
-    val courseName: String,
+    val courseId: String,               // kept for backward compat
+    val courseName: String,             // kept for backward compat
     val createdAt: LocalDateTime,
-    val totalMaxScore: Int = 100
+    val totalMaxScore: Int = 100,
+    // Classroom integration
+    val classroomId: String = "",
+    val publishStatus: AssignmentPublishStatus = AssignmentPublishStatus.PUBLISHED,
+    val startAt: LocalDateTime? = null,
+    val allowLateSubmission: Boolean = false,
+    val allowResubmission: Boolean = false,
+    val maxAttempts: Int = 1,
+    val publishedAt: LocalDateTime? = null,
+    val allowedFileTypes: List<String> = listOf("apk", "aab", "zip")
 )
 
 /**

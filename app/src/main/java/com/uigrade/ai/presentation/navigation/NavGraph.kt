@@ -22,6 +22,12 @@ import com.uigrade.ai.presentation.auth.LoginScreen
 import com.uigrade.ai.presentation.auth.SignUpScreen
 import com.uigrade.ai.presentation.auth.SplashScreen
 import com.uigrade.ai.presentation.lecturer.AssignmentManagementScreen
+import com.uigrade.ai.presentation.lecturer.ClassroomDetailScreen
+import com.uigrade.ai.presentation.lecturer.ClassroomStudentListScreen
+import com.uigrade.ai.presentation.lecturer.CreateClassroomScreen
+import com.uigrade.ai.presentation.lecturer.CreateEditAssignmentScreen
+import com.uigrade.ai.presentation.lecturer.GradingScreen
+import com.uigrade.ai.presentation.lecturer.LecturerClassroomListScreen
 import com.uigrade.ai.presentation.lecturer.LecturerDashboardScreen
 import com.uigrade.ai.presentation.lecturer.LecturerStatisticsScreen
 import com.uigrade.ai.presentation.lecturer.RubricDetailScreen
@@ -31,6 +37,9 @@ import com.uigrade.ai.presentation.lecturer.SubmissionListScreen
 import com.uigrade.ai.presentation.student.AssignmentDetailScreen
 import com.uigrade.ai.presentation.student.AssignmentListScreen
 import com.uigrade.ai.presentation.student.GradingResultScreen
+import com.uigrade.ai.presentation.student.JoinClassroomScreen
+import com.uigrade.ai.presentation.student.StudentClassroomDetailScreen
+import com.uigrade.ai.presentation.student.StudentClassroomListScreen
 import com.uigrade.ai.presentation.student.StudentDashboardScreen
 import com.uigrade.ai.presentation.student.StudentProfileScreen
 import com.uigrade.ai.presentation.student.SubmitAssignmentScreen
@@ -131,11 +140,47 @@ fun UIGradeNavGraph(
             StudentDashboardScreen(
                 onNavigateToAssignments = { navController.navigate(Screen.StudentAssignments.route) },
                 onNavigateToAssignment = { id -> navController.navigate(Screen.AssignmentDetail.createRoute(id)) },
+                onNavigateToClassrooms = { navController.navigate(Screen.StudentClassrooms.route) },
+                onNavigateToClassroom = { id -> navController.navigate(Screen.StudentClassroomDetail.createRoute(id)) },
+                onNavigateToJoinClassroom = { navController.navigate(Screen.JoinClassroom.route) },
                 onNavigateToProfile = { navController.navigate(Screen.StudentProfile.route) },
                 onLogout = {
                     navController.navigate(Screen.GetStarted.route) {
                         popUpTo(0) { inclusive = true }
                     }
+                }
+            )
+        }
+
+        composable(Screen.StudentClassrooms.route) {
+            StudentClassroomListScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToJoinClassroom = { navController.navigate(Screen.JoinClassroom.route) },
+                onNavigateToClassroomDetail = { id -> navController.navigate(Screen.StudentClassroomDetail.createRoute(id)) }
+            )
+        }
+
+        composable(Screen.JoinClassroom.route) {
+            JoinClassroomScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onJoinSuccess = { classroomId ->
+                    navController.navigate(Screen.StudentClassroomDetail.createRoute(classroomId)) {
+                        popUpTo(Screen.StudentClassrooms.route) { inclusive = false }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.StudentClassroomDetail.route,
+            arguments = listOf(navArgument("classroomId") { type = NavType.StringType })
+        ) { backStack ->
+            val classroomId = backStack.arguments?.getString("classroomId") ?: return@composable
+            StudentClassroomDetailScreen(
+                classroomId = classroomId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToAssignment = { assignmentId ->
+                    navController.navigate(Screen.AssignmentDetail.createRoute(assignmentId))
                 }
             )
         }
@@ -203,6 +248,9 @@ fun UIGradeNavGraph(
             LecturerDashboardScreen(
                 onNavigateToAssignments = { navController.navigate(Screen.LecturerAssignments.route) },
                 onNavigateToRubrics = { navController.navigate(Screen.RubricManagement.route) },
+                onNavigateToClassrooms = { navController.navigate(Screen.LecturerClassrooms.route) },
+                onNavigateToClassroom = { id -> navController.navigate(Screen.ClassroomDetail.createRoute(id)) },
+                onNavigateToCreateClassroom = { navController.navigate(Screen.CreateClassroom.route) },
                 onNavigateToSubmissions = { id -> navController.navigate(Screen.LecturerSubmissions.createRoute(id)) },
                 onNavigateToStatistics = { navController.navigate(Screen.LecturerStatistics.route) },
                 onLogout = {
@@ -210,6 +258,77 @@ fun UIGradeNavGraph(
                         popUpTo(0) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(Screen.LecturerClassrooms.route) {
+            LecturerClassroomListScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToCreateClassroom = { navController.navigate(Screen.CreateClassroom.route) },
+                onNavigateToClassroomDetail = { id -> navController.navigate(Screen.ClassroomDetail.createRoute(id)) }
+            )
+        }
+
+        composable(Screen.CreateClassroom.route) {
+            CreateClassroomScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onClassroomCreated = { classroomId ->
+                    navController.navigate(Screen.ClassroomDetail.createRoute(classroomId)) {
+                        popUpTo(Screen.LecturerClassrooms.route) { inclusive = false }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.ClassroomDetail.route,
+            arguments = listOf(navArgument("classroomId") { type = NavType.StringType })
+        ) { backStack ->
+            val classroomId = backStack.arguments?.getString("classroomId") ?: return@composable
+            ClassroomDetailScreen(
+                classroomId = classroomId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToCreateAssignment = { cId -> navController.navigate(Screen.CreateAssignment.createRoute(cId)) },
+                onNavigateToEditAssignment = { aId -> navController.navigate(Screen.EditAssignment.createRoute(aId)) },
+                onNavigateToStudents = { cId -> navController.navigate(Screen.ClassroomStudents.createRoute(cId)) },
+                onNavigateToSubmissions = { aId -> navController.navigate(Screen.LecturerSubmissions.createRoute(aId)) }
+            )
+        }
+
+        composable(
+            route = Screen.ClassroomStudents.route,
+            arguments = listOf(navArgument("classroomId") { type = NavType.StringType })
+        ) { backStack ->
+            val classroomId = backStack.arguments?.getString("classroomId") ?: return@composable
+            ClassroomStudentListScreen(
+                classroomId = classroomId,
+                onNavigateBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.CreateAssignment.route,
+            arguments = listOf(navArgument("classroomId") { type = NavType.StringType })
+        ) { backStack ->
+            val classroomId = backStack.arguments?.getString("classroomId") ?: return@composable
+            CreateEditAssignmentScreen(
+                classroomId = classroomId,
+                assignmentId = null,
+                onNavigateBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() }
+            )
+        }
+
+        composable(
+            route = Screen.EditAssignment.route,
+            arguments = listOf(navArgument("assignmentId") { type = NavType.StringType })
+        ) { backStack ->
+            val assignmentId = backStack.arguments?.getString("assignmentId") ?: return@composable
+            CreateEditAssignmentScreen(
+                classroomId = "",
+                assignmentId = assignmentId,
+                onNavigateBack = { navController.popBackStack() },
+                onSaved = { navController.popBackStack() }
             )
         }
 
@@ -246,7 +365,8 @@ fun UIGradeNavGraph(
             SubmissionListScreen(
                 assignmentId = assignmentId,
                 onNavigateBack = { navController.popBackStack() },
-                onNavigateToSubmission = { id -> navController.navigate(Screen.SubmissionDetail.createRoute(id)) }
+                onNavigateToSubmission = { id -> navController.navigate(Screen.SubmissionDetail.createRoute(id)) },
+                onNavigateToGrading = { id -> navController.navigate(Screen.GradingScreen.createRoute(id)) }
             )
         }
 
@@ -256,6 +376,18 @@ fun UIGradeNavGraph(
         ) { backStack ->
             val submissionId = backStack.arguments?.getString("submissionId") ?: return@composable
             SubmissionDetailScreen(
+                submissionId = submissionId,
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToGrading = { id -> navController.navigate(Screen.GradingScreen.createRoute(id)) }
+            )
+        }
+
+        composable(
+            route = Screen.GradingScreen.route,
+            arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
+        ) { backStack ->
+            val submissionId = backStack.arguments?.getString("submissionId") ?: return@composable
+            GradingScreen(
                 submissionId = submissionId,
                 onNavigateBack = { navController.popBackStack() }
             )

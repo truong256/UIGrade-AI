@@ -2,8 +2,11 @@ package com.uigrade.ai.presentation.student
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.Logout
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,6 +18,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uigrade.ai.domain.model.AssignmentStatus
 import com.uigrade.ai.domain.model.AssignmentWithStatus
+import com.uigrade.ai.domain.model.Classroom
 import com.uigrade.ai.ui.components.*
 import com.uigrade.ai.ui.theme.Primary
 import com.uigrade.ai.ui.theme.Success
@@ -25,11 +29,18 @@ import java.time.format.DateTimeFormatter
 fun StudentDashboardScreen(
     onNavigateToAssignments: () -> Unit,
     onNavigateToAssignment: (String) -> Unit,
+    onNavigateToClassrooms: () -> Unit = {},
+    onNavigateToClassroom: (String) -> Unit = {},
+    onNavigateToJoinClassroom: () -> Unit = {},
     onNavigateToProfile: () -> Unit,
     onLogout: () -> Unit,
     viewModel: StudentDashboardViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    LaunchedEffect(Unit) {
+        viewModel.load()
+    }
 
     Scaffold(
         topBar = {
@@ -37,7 +48,7 @@ fun StudentDashboardScreen(
                 title = { Text("UIGrade AI", fontWeight = FontWeight.Bold) },
                 actions = {
                     IconButton(onClick = onNavigateToProfile) { Icon(Icons.Default.Person, "Profile") }
-                    IconButton(onClick = { viewModel.logout(onLogout) }) { Icon(Icons.Default.Logout, "Logout") }
+                    IconButton(onClick = { viewModel.logout(onLogout) }) { Icon(Icons.AutoMirrored.Filled.Logout, "Logout") }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = MaterialTheme.colorScheme.surface)
             )
@@ -48,9 +59,11 @@ fun StudentDashboardScreen(
             uiState.error != null -> ErrorScreen(uiState.error!!, onRetry = { viewModel.load() }, modifier = Modifier.padding(padding))
             else -> {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(padding),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
                     // Greeting
                     item {
@@ -62,7 +75,6 @@ fun StudentDashboardScreen(
                         uiState.user?.studentId?.let {
                             Text("Mã SV: $it", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                         }
-                        Spacer(Modifier.height(8.dp))
                     }
 
                     // Stats row
@@ -72,23 +84,82 @@ fun StudentDashboardScreen(
                             val pending = uiState.assignments.count { it.status == AssignmentStatus.NOT_SUBMITTED }
                             StatCard("Đã chấm", "$graded", Icons.Default.CheckCircle, Success, Modifier.weight(1f))
                             StatCard("Chưa nộp", "$pending", Icons.Default.RadioButtonUnchecked, MaterialTheme.colorScheme.onSurfaceVariant, Modifier.weight(1f))
-                            StatCard("Tổng", "${uiState.assignments.size}", Icons.Default.Assignment, Primary, Modifier.weight(1f))
+                            StatCard("Lớp học", "${uiState.classrooms.size}", Icons.Default.School, Primary, Modifier.weight(1f))
                         }
                     }
 
+                    // Classrooms Section
                     item {
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text("Bài tập của tôi", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            Text("Lớp học của tôi (${uiState.classrooms.size})", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
+                            Row {
+                                TextButton(onClick = onNavigateToJoinClassroom) {
+                                    Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("Vào lớp")
+                                }
+                                if (uiState.classrooms.isNotEmpty()) {
+                                    TextButton(onClick = onNavigateToClassrooms) { Text("Xem tất cả") }
+                                }
+                            }
+                        }
+                    }
+
+                    if (uiState.classrooms.isEmpty()) {
+                        item {
+                            Card(
+                                onClick = onNavigateToJoinClassroom,
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(14.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
+                            ) {
+                                Row(
+                                    modifier = Modifier.padding(16.dp),
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                                ) {
+                                    Icon(Icons.Default.GroupAdd, contentDescription = null, tint = Primary, modifier = Modifier.size(32.dp))
+                                    Column(modifier = Modifier.weight(1f)) {
+                                        Text("Chưa tham gia lớp học nào", fontWeight = FontWeight.SemiBold)
+                                        Text("Nhập mã 6 ký tự để tham gia lớp học ngay", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                    Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                }
+                            }
+                        }
+                    } else {
+                        item {
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(12.dp)
+                            ) {
+                                items(uiState.classrooms, key = { it.id }) { cls ->
+                                    DashboardClassroomCard(
+                                        classroom = cls,
+                                        onClick = { onNavigateToClassroom(cls.id) }
+                                    )
+                                }
+                            }
+                        }
+                    }
+
+                    // Assignments Section
+                    item {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text("Bài tập gần đây", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                             TextButton(onClick = onNavigateToAssignments) { Text("Xem tất cả") }
                         }
                     }
 
                     if (uiState.assignments.isEmpty()) {
-                        item { EmptyScreen("Chưa có bài tập nào", Modifier.height(200.dp)) }
+                        item { EmptyScreen("Chưa có bài tập nào", Modifier.height(160.dp)) }
                     } else {
                         items(uiState.assignments) { item ->
                             AssignmentCard(item, onClick = { onNavigateToAssignment(item.assignment.id) })
@@ -96,6 +167,26 @@ fun StudentDashboardScreen(
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DashboardClassroomCard(
+    classroom: Classroom,
+    onClick: () -> Unit
+) {
+    Card(
+        onClick = onClick,
+        modifier = Modifier.width(220.dp),
+        shape = RoundedCornerShape(14.dp),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.4f))
+    ) {
+        Column(modifier = Modifier.padding(14.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(classroom.courseCode, style = MaterialTheme.typography.labelSmall, color = Primary, fontWeight = FontWeight.Bold)
+            Text(classroom.name, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold, maxLines = 1)
+            Text("GV: ${classroom.lecturerName}", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 1)
+            Text(classroom.semester, style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }

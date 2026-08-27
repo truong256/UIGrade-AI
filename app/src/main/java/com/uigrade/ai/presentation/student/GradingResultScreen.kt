@@ -3,8 +3,9 @@ package com.uigrade.ai.presentation.student
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -29,19 +30,25 @@ fun GradingResultScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Kết quả chấm điểm") },
-                navigationIcon = { IconButton(onClick = onNavigateBack) { Icon(Icons.Default.ArrowBack, "Back") } }
+                title = { Text("Kết quả chấm điểm", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                }
             )
         }
     ) { padding ->
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
             uiState.error != null -> ErrorScreen(uiState.error!!, onRetry = { viewModel.load(submissionId) }, modifier = Modifier.padding(padding))
-            uiState.gradingResult == null -> EmptyScreen("Chưa có kết quả chấm điểm. Bài đang được xử lý.", Modifier.padding(padding))
+            uiState.gradingResult == null -> EmptyScreen("Bài của bạn đang được giảng viên chấm.\nKết quả sẽ hiển thị sau khi giảng viên công bố điểm.", Modifier.padding(padding))
             else -> {
                 val result = uiState.gradingResult!!
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize().padding(padding),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(padding),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
@@ -53,24 +60,37 @@ fun GradingResultScreen(
                             shape = MaterialTheme.shapes.extraLarge
                         ) {
                             Column(
-                                modifier = Modifier.fillMaxWidth().padding(24.dp),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(24.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
                                 Text("Tổng điểm", style = MaterialTheme.typography.titleMedium)
                                 ScoreRing(score = result.totalScore, maxScore = result.maxScore, modifier = Modifier.size(120.dp))
-                                Text(
-                                    "Engine: ${result.engineVersion}",
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
                                 Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.small) {
                                     Text(
-                                        "⚠ Điểm được tính bằng metric/rule xác định. AI không quyết định điểm.",
+                                        "⚠ Điểm số do hệ thống tiêu chí và giảng viên xác nhận.",
                                         style = MaterialTheme.typography.labelSmall,
                                         modifier = Modifier.padding(8.dp, 4.dp),
                                         color = MaterialTheme.colorScheme.onSecondaryContainer
                                     )
+                                }
+                            }
+                        }
+                    }
+
+                    // Lecturer Overall Comment
+                    if (result.lecturerComment.isNotBlank()) {
+                        item {
+                            Card(
+                                modifier = Modifier.fillMaxWidth(),
+                                shape = RoundedCornerShape(12.dp),
+                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+                            ) {
+                                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text("Nhận xét của giảng viên", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
+                                    Text(result.lecturerComment, style = MaterialTheme.typography.bodyMedium)
                                 }
                             }
                         }
@@ -85,7 +105,7 @@ fun GradingResultScreen(
 
                     // AI Feedback
                     uiState.feedback?.let { feedback ->
-                        item { Text("Phản hồi từ AI", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
+                        item { Text("Gợi ý cải thiện từ AI", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
                         item { AIFeedbackCard(feedback) }
                     }
 
@@ -100,14 +120,14 @@ fun GradingResultScreen(
 private fun CriterionScoreSection(score: CriterionScore) {
     var expanded by remember { mutableStateOf(false) }
     Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
             // Header
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(score.criterionName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                Text(score.criterionName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
                 Text(
                     "${score.earned} / ${score.maxScore}",
                     style = MaterialTheme.typography.titleSmall,
@@ -122,22 +142,37 @@ private fun CriterionScoreSection(score: CriterionScore) {
                 trackColor = MaterialTheme.colorScheme.surfaceVariant
             )
 
-            TextButton(
-                onClick = { expanded = !expanded },
-                contentPadding = PaddingValues(0.dp)
-            ) {
-                Text(if (expanded) "Ẩn chi tiết" else "Xem chi tiết metric & rule")
+            if (score.lecturerComment.isNotBlank()) {
+                Surface(
+                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text(
+                        "Nhận xét: ${score.lecturerComment}",
+                        style = MaterialTheme.typography.bodySmall,
+                        modifier = Modifier.padding(8.dp, 4.dp)
+                    )
+                }
             }
 
-            if (expanded) {
-                if (score.metrics.isNotEmpty()) {
-                    Text("Metrics", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    score.metrics.forEach { metric -> MetricCard(metric, Modifier.padding(top = 4.dp)) }
+            if (score.metrics.isNotEmpty() || score.rules.isNotEmpty()) {
+                TextButton(
+                    onClick = { expanded = !expanded },
+                    contentPadding = PaddingValues(0.dp)
+                ) {
+                    Text(if (expanded) "Ẩn chi tiết" else "Xem chi tiết metric & rule")
                 }
-                if (score.rules.isNotEmpty()) {
-                    Spacer(Modifier.height(4.dp))
-                    Text("Rules", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                    score.rules.forEach { rule -> RuleCard(rule, Modifier.padding(top = 4.dp)) }
+
+                if (expanded) {
+                    if (score.metrics.isNotEmpty()) {
+                        Text("Metrics", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        score.metrics.forEach { metric -> MetricCard(metric, Modifier.padding(top = 4.dp)) }
+                    }
+                    if (score.rules.isNotEmpty()) {
+                        Spacer(Modifier.height(4.dp))
+                        Text("Rules", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        score.rules.forEach { rule -> RuleCard(rule, Modifier.padding(top = 4.dp)) }
+                    }
                 }
             }
         }

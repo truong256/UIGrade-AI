@@ -12,4 +12,25 @@ interface SubmissionRepository {
         studentId: String,
         fileUri: String?
     ): Submission
+
+    /**
+     * Submit with extra metadata for classroom flow.
+     * Validates classroom membership, publish status, deadline, attempt count, file type.
+     */
+    suspend fun submitAssignmentForClassroom(
+        assignmentId: String,
+        classroomId: String,
+        studentId: String,
+        fileUri: String?,
+        fileName: String
+    ): Submission
+
+    /** Get all submissions for an assignment inside a specific classroom. */
+    suspend fun getSubmissionsForClassroomAssignment(
+        classroomId: String,
+        assignmentId: String
+    ): List<Submission>
+
+    /** Update submission status (e.g., GRADING → GRADED → RELEASED). */
+    suspend fun updateSubmissionStatus(submissionId: String, status: com.uigrade.ai.domain.model.SubmissionStatus): Submission?
 }

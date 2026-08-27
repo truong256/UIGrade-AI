@@ -3,9 +3,11 @@ package com.uigrade.ai.presentation.student
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.uigrade.ai.domain.model.AssignmentWithStatus
+import com.uigrade.ai.domain.model.Classroom
 import com.uigrade.ai.domain.model.User
 import com.uigrade.ai.domain.usecase.GetAssignmentsForStudentUseCase
 import com.uigrade.ai.domain.usecase.GetCurrentUserUseCase
+import com.uigrade.ai.domain.usecase.GetStudentClassroomsUseCase
 import com.uigrade.ai.domain.usecase.LogoutUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,6 +18,7 @@ import javax.inject.Inject
 
 data class StudentDashboardUiState(
     val user: User? = null,
+    val classrooms: List<Classroom> = emptyList(),
     val assignments: List<AssignmentWithStatus> = emptyList(),
     val isLoading: Boolean = true,
     val error: String? = null
@@ -25,6 +28,7 @@ data class StudentDashboardUiState(
 class StudentDashboardViewModel @Inject constructor(
     private val getCurrentUserUseCase: GetCurrentUserUseCase,
     private val getAssignmentsForStudentUseCase: GetAssignmentsForStudentUseCase,
+    private val getStudentClassroomsUseCase: GetStudentClassroomsUseCase,
     private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
@@ -39,9 +43,15 @@ class StudentDashboardViewModel @Inject constructor(
             try {
                 val user = getCurrentUserUseCase()
                 val assignments = if (user != null) getAssignmentsForStudentUseCase(user.id) else emptyList()
-                _uiState.value = _uiState.value.copy(user = user, assignments = assignments, isLoading = false)
+                val classrooms = getStudentClassroomsUseCase()
+                _uiState.value = _uiState.value.copy(
+                    user = user,
+                    classrooms = classrooms,
+                    assignments = assignments,
+                    isLoading = false
+                )
             } catch (e: Exception) {
-                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message ?: "Unknown error")
+                _uiState.value = _uiState.value.copy(isLoading = false, error = e.message ?: "Lỗi tải dữ liệu")
             }
         }
     }
