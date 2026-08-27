@@ -3,12 +3,10 @@ package com.uigrade.ai.presentation.auth
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -21,6 +19,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.focus.FocusDirection
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.res.stringResource
@@ -35,7 +34,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uigrade.ai.R
 import com.uigrade.ai.domain.model.UserRole
-import com.uigrade.ai.ui.theme.*
+import com.uigrade.ai.ui.components.button.GradePrimaryButton
+import com.uigrade.ai.ui.components.mascot.CatMascot
+import com.uigrade.ai.ui.components.mascot.CatMascotState
+import com.uigrade.ai.ui.components.mascot.CatMascotStyle
 import kotlinx.coroutines.delay
 
 @Composable
@@ -48,22 +50,32 @@ fun SignUpScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val focusManager = LocalFocusManager.current
     val scrollState = rememberScrollState()
-    val isDark = isSystemInDarkTheme()
     val snackbarHostState = remember { SnackbarHostState() }
-
-    // Colors according to blue specification
-    val primaryColor = if (isDark) AuthBluePrimaryDarkTheme else AuthBluePrimary
-    val primaryDarkColor = AuthBluePrimaryDark
-    val backgroundColor = if (isDark) AuthBlueBackgroundDarkTheme else AuthBlueBackgroundLight
-    val surfaceColor = if (isDark) AuthBlueSurfaceDarkTheme else AuthBlueSurface
-    val textPrimaryColor = if (isDark) AuthBlueTextPrimaryDarkTheme else AuthBlueTextPrimary
-    val textSecondaryColor = if (isDark) AuthBlueTextSecondaryDarkTheme else AuthBlueTextSecondary
-    val borderColor = if (isDark) AuthBlueBorderDarkTheme else AuthBlueBorder
-    val errorColor = AuthBlueError
 
     var contentVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) {
         contentVisible = true
+    }
+
+    var mascotState by remember { mutableStateOf(CatMascotState.Idle) }
+    var mascotMessage by remember { mutableStateOf<String?>("Đăng ký để bắt đầu trải nghiệm cùng UIGrade AI ✨") }
+
+    // Sync mascot with UI state changes
+    LaunchedEffect(uiState.isLoading, uiState.generalError, uiState.registeredUser) {
+        when {
+            uiState.registeredUser != null -> {
+                mascotState = CatMascotState.Success
+                mascotMessage = "Tài khoản của bạn đã sẵn sàng! 🎉"
+            }
+            uiState.generalError != null -> {
+                mascotState = CatMascotState.Error
+                mascotMessage = uiState.generalError
+            }
+            uiState.isLoading -> {
+                mascotState = CatMascotState.Thinking
+                mascotMessage = "Đang kiểm tra và khởi tạo tài khoản..."
+            }
+        }
     }
 
     val successMessage = stringResource(R.string.register_success_msg)
@@ -84,7 +96,7 @@ fun SignUpScreen(
 
     Scaffold(
         snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = backgroundColor
+        containerColor = MaterialTheme.colorScheme.background
     ) { paddingValues ->
         Box(
             modifier = Modifier
@@ -102,43 +114,44 @@ fun SignUpScreen(
                     modifier = Modifier
                         .fillMaxSize()
                         .verticalScroll(scrollState)
-                        .padding(horizontal = 24.dp, vertical = 20.dp),
+                        .padding(horizontal = 24.dp, vertical = 16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Spacer(Modifier.height(8.dp))
+                    Spacer(Modifier.height(4.dp))
 
-                    // ─── App Brand Title ──────────────────────────────────────────
-                    Text(
-                        text = stringResource(R.string.app_name),
-                        fontSize = 24.sp,
-                        fontWeight = FontWeight.ExtraBold,
-                        color = primaryColor,
-                        letterSpacing = 0.5.sp,
-                        textAlign = TextAlign.Center
+                    // ─── Center: Mascot Header ─────────────────────────────────────
+                    CatMascot(
+                        state = mascotState,
+                        style = CatMascotStyle.Default.copy(size = 135.dp),
+                        message = mascotMessage,
+                        onClick = {
+                            mascotState = CatMascotState.Happy
+                        }
                     )
 
-                    Spacer(Modifier.height(16.dp))
+                    Spacer(Modifier.height(10.dp))
 
                     // ─── Header: Titles ───────────────────────────────────────────
                     Text(
                         text = stringResource(R.string.register_title),
-                        fontSize = 22.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = textPrimaryColor,
+                        style = MaterialTheme.typography.headlineSmall.copy(
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface
+                        ),
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(Modifier.height(6.dp))
+                    Spacer(Modifier.height(4.dp))
 
                     Text(
                         text = stringResource(R.string.register_subtitle),
-                        fontSize = 14.sp,
-                        fontWeight = FontWeight.Normal,
-                        color = textSecondaryColor,
+                        style = MaterialTheme.typography.bodySmall.copy(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        ),
                         textAlign = TextAlign.Center
                     )
 
-                    Spacer(Modifier.height(24.dp))
+                    Spacer(Modifier.height(20.dp))
 
                     // ─── Role Selection Section: "Bạn là ai?" ─────────────────────
                     Column(
@@ -147,9 +160,10 @@ fun SignUpScreen(
                     ) {
                         Text(
                             text = stringResource(R.string.register_who_are_you),
-                            fontSize = 14.sp,
-                            fontWeight = FontWeight.SemiBold,
-                            color = textPrimaryColor
+                            style = MaterialTheme.typography.labelLarge.copy(
+                                fontWeight = FontWeight.SemiBold,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         )
 
                         Row(
@@ -160,13 +174,11 @@ fun SignUpScreen(
                             RoleSelectionCard(
                                 title = stringResource(R.string.role_student),
                                 isSelected = uiState.role == UserRole.STUDENT,
-                                onClick = { viewModel.onRoleChange(UserRole.STUDENT) },
-                                primaryColor = primaryColor,
-                                primaryDarkColor = primaryDarkColor,
-                                surfaceColor = surfaceColor,
-                                textPrimaryColor = textPrimaryColor,
-                                textSecondaryColor = textSecondaryColor,
-                                borderColor = borderColor,
+                                onClick = {
+                                    viewModel.onRoleChange(UserRole.STUDENT)
+                                    mascotState = CatMascotState.Happy
+                                    mascotMessage = "Chào mừng bạn đến lớp học! 🎓"
+                                },
                                 modifier = Modifier.weight(1f)
                             )
 
@@ -174,13 +186,11 @@ fun SignUpScreen(
                             RoleSelectionCard(
                                 title = stringResource(R.string.role_lecturer),
                                 isSelected = uiState.role == UserRole.LECTURER,
-                                onClick = { viewModel.onRoleChange(UserRole.LECTURER) },
-                                primaryColor = primaryColor,
-                                primaryDarkColor = primaryDarkColor,
-                                surfaceColor = surfaceColor,
-                                textPrimaryColor = textPrimaryColor,
-                                textSecondaryColor = textSecondaryColor,
-                                borderColor = borderColor,
+                                onClick = {
+                                    viewModel.onRoleChange(UserRole.LECTURER)
+                                    mascotState = CatMascotState.Excited
+                                    mascotMessage = "Cùng tạo một lớp học thật tuyệt nhé! 👨‍🏫"
+                                },
                                 modifier = Modifier.weight(1f)
                             )
                         }
@@ -193,7 +203,7 @@ fun SignUpScreen(
                         ) {
                             Text(
                                 text = uiState.roleError.orEmpty(),
-                                color = errorColor,
+                                color = MaterialTheme.colorScheme.error,
                                 fontSize = 12.sp,
                                 modifier = Modifier.padding(start = 4.dp, top = 2.dp)
                             )
@@ -221,12 +231,12 @@ fun SignUpScreen(
                             keyboardActions = KeyboardActions(
                                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
                             ),
-                            primaryColor = primaryColor,
-                            surfaceColor = surfaceColor,
-                            textPrimaryColor = textPrimaryColor,
-                            textSecondaryColor = textSecondaryColor,
-                            borderColor = borderColor,
-                            errorColor = errorColor
+                            modifier = Modifier.onFocusChanged {
+                                if (it.isFocused && !uiState.isLoading && uiState.registeredUser == null) {
+                                    mascotState = CatMascotState.Listening
+                                    mascotMessage = "Hãy cho mình biết tên của bạn nhé 🐾"
+                                }
+                            }
                         )
 
                         // 2. Email Field
@@ -243,12 +253,12 @@ fun SignUpScreen(
                             keyboardActions = KeyboardActions(
                                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
                             ),
-                            primaryColor = primaryColor,
-                            surfaceColor = surfaceColor,
-                            textPrimaryColor = textPrimaryColor,
-                            textSecondaryColor = textSecondaryColor,
-                            borderColor = borderColor,
-                            errorColor = errorColor
+                            modifier = Modifier.onFocusChanged {
+                                if (it.isFocused && !uiState.isLoading && uiState.registeredUser == null) {
+                                    mascotState = CatMascotState.Listening
+                                    mascotMessage = "Nhập email của bạn nhé ✉️"
+                                }
+                            }
                         )
 
                         // 3. Password Field
@@ -266,12 +276,12 @@ fun SignUpScreen(
                             keyboardActions = KeyboardActions(
                                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
                             ),
-                            primaryColor = primaryColor,
-                            surfaceColor = surfaceColor,
-                            textPrimaryColor = textPrimaryColor,
-                            textSecondaryColor = textSecondaryColor,
-                            borderColor = borderColor,
-                            errorColor = errorColor
+                            modifier = Modifier.onFocusChanged {
+                                if (it.isFocused && !uiState.isLoading && uiState.registeredUser == null) {
+                                    mascotState = CatMascotState.Shy
+                                    mascotMessage = "Mật khẩu tối thiểu 8 ký tự để bảo mật nha 🔒"
+                                }
+                            }
                         )
 
                         // 4. Confirm Password Field
@@ -292,27 +302,26 @@ fun SignUpScreen(
                                     viewModel.signUp()
                                 }
                             ),
-                            primaryColor = primaryColor,
-                            surfaceColor = surfaceColor,
-                            textPrimaryColor = textPrimaryColor,
-                            textSecondaryColor = textSecondaryColor,
-                            borderColor = borderColor,
-                            errorColor = errorColor
+                            modifier = Modifier.onFocusChanged {
+                                if (it.isFocused && !uiState.isLoading && uiState.registeredUser == null) {
+                                    mascotState = CatMascotState.Listening
+                                    mascotMessage = "Nhập lại mật khẩu để xác nhận nha ✨"
+                                }
+                            }
                         )
                     }
 
                     Spacer(Modifier.height(24.dp))
 
                     // ─── Register Button ──────────────────────────────────────────
-                    InteractiveRegisterButton(
+                    GradePrimaryButton(
                         text = if (uiState.isLoading) stringResource(R.string.btn_registering) else stringResource(R.string.btn_register),
                         isLoading = uiState.isLoading,
                         onClick = {
                             focusManager.clearFocus()
+                            mascotState = CatMascotState.Thinking
                             viewModel.signUp()
                         },
-                        primaryColor = primaryColor,
-                        primaryDarkColor = primaryDarkColor,
                         modifier = Modifier.fillMaxWidth()
                     )
 
@@ -327,13 +336,13 @@ fun SignUpScreen(
                         Text(
                             text = stringResource(R.string.already_have_account) + " ",
                             fontSize = 14.sp,
-                            color = textSecondaryColor
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                         Text(
                             text = stringResource(R.string.login_action),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.Bold,
-                            color = primaryColor,
+                            color = MaterialTheme.colorScheme.primary,
                             modifier = Modifier.clickable(
                                 interactionSource = remember { MutableInteractionSource() },
                                 indication = null,
@@ -350,48 +359,38 @@ fun SignUpScreen(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// ROLE SELECTION CARD (Pure Text & Blue Animation, Zero Icons)
+// ROLE SELECTION CARD (Text-based, Material 3 Theme reactive)
 // ═══════════════════════════════════════════════════════════════════════════════
 @Composable
 private fun RoleSelectionCard(
     title: String,
     isSelected: Boolean,
     onClick: () -> Unit,
-    primaryColor: Color,
-    primaryDarkColor: Color,
-    surfaceColor: Color,
-    textPrimaryColor: Color,
-    textSecondaryColor: Color,
-    borderColor: Color,
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
 
-    // Smooth subtle scale animation when pressed (1.0 -> 0.97 -> 1.0)
     val scale by animateFloatAsState(
         targetValue = if (isPressed) 0.97f else 1.0f,
         animationSpec = tween(durationMillis = 120),
         label = "roleCardScale"
     )
 
-    // Smooth background color animation
     val animatedBgColor by animateColorAsState(
-        targetValue = if (isSelected) primaryColor else surfaceColor,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.surface,
         animationSpec = tween(durationMillis = 200),
         label = "roleCardBg"
     )
 
-    // Smooth border color animation
     val animatedBorderColor by animateColorAsState(
-        targetValue = if (isSelected) primaryDarkColor else borderColor,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
         animationSpec = tween(durationMillis = 200),
         label = "roleCardBorder"
     )
 
-    // Smooth text color animation
     val animatedTextColor by animateColorAsState(
-        targetValue = if (isSelected) Color.White else textPrimaryColor,
+        targetValue = if (isSelected) MaterialTheme.colorScheme.onPrimary else MaterialTheme.colorScheme.onSurface,
         animationSpec = tween(durationMillis = 200),
         label = "roleCardText"
     )
@@ -426,7 +425,7 @@ private fun RoleSelectionCard(
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// REGISTRATION INPUT FIELD (Minimalist, Outlined, Zero Icons)
+// REGISTRATION INPUT FIELD (Outlined, Theme-Driven)
 // ═══════════════════════════════════════════════════════════════════════════════
 @Composable
 private fun RegistrationInputField(
@@ -438,12 +437,6 @@ private fun RegistrationInputField(
     isPassword: Boolean = false,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     keyboardActions: KeyboardActions = KeyboardActions.Default,
-    primaryColor: Color,
-    surfaceColor: Color,
-    textPrimaryColor: Color,
-    textSecondaryColor: Color,
-    borderColor: Color,
-    errorColor: Color,
     modifier: Modifier = Modifier
 ) {
     val isError = errorMessage != null
@@ -465,7 +458,7 @@ private fun RegistrationInputField(
                 Text(
                     text = placeholder,
                     fontSize = 14.sp,
-                    color = textSecondaryColor.copy(alpha = 0.7f)
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
                 )
             },
             isError = isError,
@@ -475,17 +468,17 @@ private fun RegistrationInputField(
             keyboardActions = keyboardActions,
             shape = RoundedCornerShape(14.dp),
             colors = OutlinedTextFieldDefaults.colors(
-                focusedBorderColor = primaryColor,
-                unfocusedBorderColor = borderColor,
-                focusedLabelColor = primaryColor,
-                unfocusedLabelColor = textSecondaryColor,
-                errorBorderColor = errorColor,
-                errorLabelColor = errorColor,
-                focusedTextColor = textPrimaryColor,
-                unfocusedTextColor = textPrimaryColor,
-                focusedContainerColor = surfaceColor,
-                unfocusedContainerColor = surfaceColor,
-                errorContainerColor = surfaceColor
+                focusedBorderColor = MaterialTheme.colorScheme.primary,
+                unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                focusedLabelColor = MaterialTheme.colorScheme.primary,
+                unfocusedLabelColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                errorBorderColor = MaterialTheme.colorScheme.error,
+                errorLabelColor = MaterialTheme.colorScheme.error,
+                focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                focusedContainerColor = MaterialTheme.colorScheme.surface,
+                unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+                errorContainerColor = MaterialTheme.colorScheme.surface
             ),
             modifier = Modifier.fillMaxWidth()
         )
@@ -498,77 +491,10 @@ private fun RegistrationInputField(
         ) {
             Text(
                 text = errorMessage.orEmpty(),
-                color = errorColor,
+                color = MaterialTheme.colorScheme.error,
                 fontSize = 12.sp,
                 fontWeight = FontWeight.Medium,
                 modifier = Modifier.padding(start = 6.dp, top = 2.dp)
-            )
-        }
-    }
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// INTERACTIVE REGISTER BUTTON (Blue Theme, Press Scale, Zero Icons)
-// ═══════════════════════════════════════════════════════════════════════════════
-@Composable
-private fun InteractiveRegisterButton(
-    text: String,
-    isLoading: Boolean,
-    onClick: () -> Unit,
-    primaryColor: Color,
-    primaryDarkColor: Color,
-    modifier: Modifier = Modifier
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    // Smooth subtle scale animation when pressed (1.0 -> 0.98 -> 1.0)
-    val scale by animateFloatAsState(
-        targetValue = if (isPressed && !isLoading) 0.98f else 1.0f,
-        animationSpec = tween(durationMillis = 100),
-        label = "btnScale"
-    )
-
-    val buttonBgColor by animateColorAsState(
-        targetValue = if (isPressed) primaryDarkColor else primaryColor,
-        animationSpec = tween(durationMillis = 150),
-        label = "btnBgColor"
-    )
-
-    Button(
-        onClick = onClick,
-        enabled = !isLoading,
-        interactionSource = interactionSource,
-        shape = RoundedCornerShape(14.dp),
-        colors = ButtonDefaults.buttonColors(
-            containerColor = buttonBgColor,
-            disabledContainerColor = primaryColor.copy(alpha = 0.65f),
-            contentColor = Color.White,
-            disabledContentColor = Color.White.copy(alpha = 0.85f)
-        ),
-        modifier = modifier
-            .height(54.dp)
-            .scale(scale)
-    ) {
-        if (isLoading) {
-            CircularProgressIndicator(
-                color = Color.White,
-                strokeWidth = 2.5.dp,
-                modifier = Modifier.size(20.dp)
-            )
-            Spacer(Modifier.width(10.dp))
-            Text(
-                text = text,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-        } else {
-            Text(
-                text = text,
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
             )
         }
     }

@@ -26,7 +26,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -36,14 +36,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.uigrade.ai.ui.components.UIGradeButton
 import com.uigrade.ai.ui.components.UIGradePasswordTextField
 import com.uigrade.ai.ui.components.UIGradeTextField
-import com.uigrade.ai.ui.components.mascot.GuideBubble
-import com.uigrade.ai.ui.components.mascot.UIGradeCatMascot
-import com.uigrade.ai.ui.theme.AccentMintContainer
-import com.uigrade.ai.ui.theme.Primary
-import com.uigrade.ai.ui.theme.SecondaryContainerLight
+import com.uigrade.ai.ui.components.button.GradePrimaryButton
+import com.uigrade.ai.ui.components.mascot.CatMascot
+import com.uigrade.ai.ui.components.mascot.CatMascotState
+import com.uigrade.ai.ui.components.mascot.CatMascotStyle
 import kotlinx.coroutines.delay
 
 @Composable
@@ -60,6 +58,27 @@ fun LoginScreen(
     var contentVisible by remember { mutableStateOf(false) }
     LaunchedEffect(Unit) { contentVisible = true }
 
+    var mascotState by remember { mutableStateOf(CatMascotState.Idle) }
+    var mascotMessage by remember { mutableStateOf<String?>("Chào bạn quay trở lại! Đăng nhập để tiếp tục nhé ✨") }
+
+    // Sync mascot state with UI state
+    LaunchedEffect(uiState.isLoading, uiState.error, uiState.loggedInUser) {
+        when {
+            uiState.loggedInUser != null -> {
+                mascotState = CatMascotState.Success
+                mascotMessage = "Đăng nhập thành công rồi! Đang chuyển hướng... 🎉"
+            }
+            uiState.error != null -> {
+                mascotState = CatMascotState.Error
+                mascotMessage = uiState.error
+            }
+            uiState.isLoading -> {
+                mascotState = CatMascotState.Thinking
+                mascotMessage = "Đang kiểm tra tài khoản, đợi mình chút nha..."
+            }
+        }
+    }
+
     LaunchedEffect(uiState.loggedInUser) {
         uiState.loggedInUser?.let { user ->
             delay(900)
@@ -70,15 +89,7 @@ fun LoginScreen(
     Box(
         modifier = Modifier
             .fillMaxSize()
-            .background(
-                Brush.verticalGradient(
-                    colors = listOf(
-                        MaterialTheme.colorScheme.background,
-                        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.45f),
-                        MaterialTheme.colorScheme.background
-                    )
-                )
-            )
+            .background(MaterialTheme.colorScheme.background)
             .systemBarsPadding()
             .imePadding()
     ) {
@@ -118,24 +129,18 @@ fun LoginScreen(
                     }
                 }
 
-                // ─── Mascot Header & Guide Bubble ─────────────────────────────────
+                // ─── Center Mascot & Speech Bubble ─────────────────────────────────
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    modifier = Modifier.padding(bottom = 14.dp)
+                    modifier = Modifier.padding(bottom = 12.dp)
                 ) {
-                    UIGradeCatMascot(
-                        pose = uiState.catPose,
-                        size = 135.dp,
-                        showAura = true
-                    )
-
-                    Spacer(Modifier.height(10.dp))
-
-                    GuideBubble(
-                        text = uiState.guideText,
-                        isError = uiState.isGuideError || uiState.error != null,
-                        isSuccess = uiState.loggedInUser != null,
-                        modifier = Modifier.fillMaxWidth(0.95f)
+                    CatMascot(
+                        state = mascotState,
+                        style = CatMascotStyle.Default.copy(size = 145.dp),
+                        message = mascotMessage,
+                        onClick = {
+                            mascotState = CatMascotState.Happy
+                        }
                     )
                 }
 
@@ -148,7 +153,7 @@ fun LoginScreen(
                     )
                 )
                 Text(
-                    text = "Chào mừng bạn quay trở lại với UIGrade AI",
+                    text = "Nhập thông tin để tiếp tục với UIGrade AI",
                     style = MaterialTheme.typography.bodySmall.copy(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     ),
@@ -160,7 +165,7 @@ fun LoginScreen(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(24.dp),
                     colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
                 ) {
                     Column(
                         modifier = Modifier.padding(20.dp),
@@ -181,7 +186,13 @@ fun LoginScreen(
                             ),
                             keyboardActions = KeyboardActions(
                                 onNext = { focusManager.moveFocus(FocusDirection.Down) }
-                            )
+                            ),
+                            modifier = Modifier.onFocusChanged {
+                                if (it.isFocused && !uiState.isLoading && uiState.loggedInUser == null) {
+                                    mascotState = CatMascotState.Listening
+                                    mascotMessage = "Nhập email của bạn để nhận thông báo nhé ✉️"
+                                }
+                            }
                         )
 
                         // Password Field
@@ -192,7 +203,7 @@ fun LoginScreen(
                             placeholder = "Nhập mật khẩu",
                             leadingIcon = Icons.Rounded.Lock,
                             errorMessage = uiState.passwordError,
-                            isValid = uiState.password.isNotEmpty(),
+                            isValid = uiState.password.isNotBlank(),
                             keyboardOptions = KeyboardOptions(
                                 keyboardType = KeyboardType.Password,
                                 imeAction = ImeAction.Done
@@ -202,22 +213,19 @@ fun LoginScreen(
                                     focusManager.clearFocus()
                                     viewModel.login()
                                 }
-                            )
+                            ),
+                            modifier = Modifier.onFocusChanged {
+                                if (it.isFocused && !uiState.isLoading && uiState.loggedInUser == null) {
+                                    mascotState = CatMascotState.Shy
+                                    mascotMessage = "Mật khẩu đang được bảo mật an toàn nè 🔒"
+                                }
+                            }
                         )
-
-                        // General Error Text
-                        AnimatedVisibility(visible = uiState.error != null) {
-                            Text(
-                                text = uiState.error ?: "",
-                                color = MaterialTheme.colorScheme.error,
-                                style = MaterialTheme.typography.bodySmall.copy(fontSize = 12.sp)
-                            )
-                        }
 
                         Spacer(Modifier.height(4.dp))
 
                         // Submit Button
-                        UIGradeButton(
+                        GradePrimaryButton(
                             text = "Đăng nhập",
                             onClick = {
                                 focusManager.clearFocus()
@@ -226,29 +234,19 @@ fun LoginScreen(
                             isLoading = uiState.isLoading,
                             modifier = Modifier.fillMaxWidth()
                         )
-                    }
-                }
 
-                Spacer(Modifier.height(16.dp))
+                        // ─── Demo Account Quick Select ─────────────────────────────
+                        HorizontalDivider(
+                            modifier = Modifier.padding(vertical = 4.dp),
+                            color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.5f)
+                        )
 
-                // ─── Quick Demo Accounts Selector ──────────────────────────────────
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(18.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.6f)
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(14.dp)
-                    ) {
                         Text(
-                            text = "Tài khoản mẫu (chạm để điền nhanh):",
+                            text = "Hoặc chọn tài khoản demo trải nghiệm:",
                             style = MaterialTheme.typography.labelSmall.copy(
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            ),
-                            modifier = Modifier.padding(bottom = 8.dp)
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                fontWeight = FontWeight.Medium
+                            )
                         )
 
                         Row(
@@ -258,7 +256,11 @@ fun LoginScreen(
                             // Student Quick Fill
                             FilterChip(
                                 selected = uiState.email == "student@uigrade.ai",
-                                onClick = { viewModel.selectDemoAccount("student@uigrade.ai", "Sinh viên") },
+                                onClick = {
+                                    viewModel.selectDemoAccount("student@uigrade.ai", "Sinh viên")
+                                    mascotState = CatMascotState.Happy
+                                    mascotMessage = "Đã chọn tài khoản Sinh viên mẫu 🎓"
+                                },
                                 label = { Text("Sinh viên", fontSize = 12.sp) },
                                 leadingIcon = {
                                     Icon(Icons.Rounded.Person, contentDescription = null, modifier = Modifier.size(14.dp))
@@ -269,7 +271,11 @@ fun LoginScreen(
                             // Lecturer Quick Fill
                             FilterChip(
                                 selected = uiState.email == "lecturer@uigrade.ai",
-                                onClick = { viewModel.selectDemoAccount("lecturer@uigrade.ai", "Giảng viên") },
+                                onClick = {
+                                    viewModel.selectDemoAccount("lecturer@uigrade.ai", "Giảng viên")
+                                    mascotState = CatMascotState.Excited
+                                    mascotMessage = "Đã chọn tài khoản Giảng viên mẫu 👨‍🏫"
+                                },
                                 label = { Text("Giảng viên", fontSize = 12.sp) },
                                 leadingIcon = {
                                     Icon(Icons.Rounded.School, contentDescription = null, modifier = Modifier.size(14.dp))
@@ -280,7 +286,11 @@ fun LoginScreen(
                             // Admin Quick Fill
                             FilterChip(
                                 selected = uiState.email == "admin@uigrade.ai",
-                                onClick = { viewModel.selectDemoAccount("admin@uigrade.ai", "Admin") },
+                                onClick = {
+                                    viewModel.selectDemoAccount("admin@uigrade.ai", "Admin")
+                                    mascotState = CatMascotState.Thinking
+                                    mascotMessage = "Đã chọn tài khoản Quản trị viên ⚙️"
+                                },
                                 label = { Text("Admin", fontSize = 12.sp) },
                                 leadingIcon = {
                                     Icon(Icons.Rounded.AdminPanelSettings, contentDescription = null, modifier = Modifier.size(14.dp))
@@ -307,7 +317,7 @@ fun LoginScreen(
                         text = "Đăng ký ngay",
                         style = MaterialTheme.typography.bodyMedium.copy(
                             fontWeight = FontWeight.Bold,
-                            color = Primary
+                            color = MaterialTheme.colorScheme.primary
                         ),
                         modifier = Modifier.clickable(
                             interactionSource = remember { MutableInteractionSource() },

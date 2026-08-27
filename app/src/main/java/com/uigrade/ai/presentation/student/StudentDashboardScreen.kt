@@ -65,15 +65,47 @@ fun StudentDashboardScreen(
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    // Greeting
+                    // Greeting with Cat Mascot Companion Card
                     item {
-                        Text(
-                            "Xin chào, ${uiState.user?.name ?: "Sinh viên"} 👋",
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                        uiState.user?.studentId?.let {
-                            Text("Mã SV: $it", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Card(
+                            shape = RoundedCornerShape(20.dp),
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
+                            elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Row(
+                                modifier = Modifier.padding(16.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(14.dp)
+                            ) {
+                                com.uigrade.ai.ui.components.mascot.CatMascot(
+                                    state = com.uigrade.ai.ui.components.mascot.CatMascotState.Happy,
+                                    style = com.uigrade.ai.ui.components.mascot.CatMascotStyle.Default.copy(size = 82.dp, showSpeechBubble = false)
+                                )
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        "Xin chào, ${uiState.user?.name ?: "Sinh viên"} 👋",
+                                        style = MaterialTheme.typography.titleMedium,
+                                        fontWeight = FontWeight.Bold,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(Modifier.height(2.dp))
+                                    Text(
+                                        "Cùng kiểm tra bài tập và theo dõi điểm số hôm nay nhé!",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                    uiState.user?.studentId?.let {
+                                        Spacer(Modifier.height(4.dp))
+                                        Text(
+                                            "Mã SV: $it",
+                                            style = MaterialTheme.typography.labelSmall,
+                                            fontWeight = FontWeight.SemiBold,
+                                            color = MaterialTheme.colorScheme.primary
+                                        )
+                                    }
+                                }
+                            }
                         }
                     }
 
