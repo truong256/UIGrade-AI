@@ -1,4 +1,45 @@
 <resources>
     <string name="app_name">UIGrade AI</string>
-    <string name="app_description">AI-Powered UI Assignment Grading Platform</string>
+    <string name="app_description">Nền tảng chấm điểm bài tập giao diện người dùng hỗ trợ AI</string>
+
+    <!-- Main Navigation Titles -->
+    <string name="title_lecturer_dashboard">Bảng điều khiển giảng viên</string>
+    <string name="title_my_classrooms">Lớp học của tôi</string>
+    <string name="title_create_classroom">Tạo lớp học</string>
+    <string name="title_classroom_detail">Chi tiết lớp học</string>
+    <string name="title_classroom_students">Danh sách sinh viên</string>
+    <string name="title_join_code">Mã tham gia lớp</string>
+    <string name="title_create_assignment">Tạo bài tập</string>
+    <string name="title_edit_assignment">Chỉnh sửa bài tập</string>
+    <string name="title_submission_list">Danh sách bài nộp</string>
+    <string name="title_submission_detail">Chi tiết bài nộp</string>
+    <string name="title_grading">Chấm bài</string>
+    <string name="title_release_grade">Công bố điểm</string>
+    <string name="title_join_classroom">Tham gia lớp học</string>
+    <string name="title_classroom_assignments">Bài tập của lớp</string>
+    <string name="title_grading_result">Kết quả chấm điểm</string>
+
+    <!-- Feedback & Messages -->
+    <string name="msg_classroom_created_success">Đã tạo lớp học thành công</string>
+    <string name="msg_join_classroom_success">Bạn đã tham gia lớp học thành công</string>
+    <string name="msg_grade_released_success">Đã công bố điểm cho sinh viên</string>
+    <string name="msg_grade_draft_saved">Đã lưu bản nháp</string>
+    <string name="msg_submit_success">Nộp bài thành công</string>
+    <string name="msg_assignment_expired">Bài tập đã hết hạn</string>
+    <string name="msg_assignment_closed">Bài tập đã đóng</string>
+    <string name="msg_file_type_unsupported">Loại tệp không được hỗ trợ</string>
+    <string name="msg_max_attempts_reached">Bạn đã sử dụng hết số lần nộp</string>
+    <string name="msg_file_read_error">Không thể đọc tệp đã chọn</string>
+    <string name="msg_grading_in_progress">Bài của bạn đang được giảng viên chấm</string>
+    <string name="msg_ai_disclaimer">AI chỉ hỗ trợ tạo nhận xét. Điểm số do hệ thống tiêu chí và giảng viên xác nhận.</string>
+
+    <!-- Empty States -->
+    <string name="empty_no_classrooms_created">Bạn chưa tạo lớp học nào</string>
+    <string name="empty_no_classrooms_joined">Bạn chưa tham gia lớp học nào</string>
+    <string name="empty_no_students">Lớp học chưa có sinh viên</string>
+    <string name="empty_no_assignments">Lớp học chưa có bài tập</string>
+    <string name="empty_no_submissions">Chưa có sinh viên nộp bài</string>
+    <string name="empty_no_search_results">Không có kết quả phù hợp</string>
+    <string name="empty_load_failed">Không thể tải dữ liệu</string>
+    <string name="action_retry">Thử lại</string>
 </resources>

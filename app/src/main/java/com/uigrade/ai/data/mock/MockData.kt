@@ -3,6 +3,7 @@ package com.uigrade.ai.data.mock
 import com.uigrade.ai.domain.model.*
 import java.time.LocalDateTime
 
+
 /**
  * Mock dataset for MVP. Mirrors the Python Baseline JSON contract.
  * Replace data sources with real API calls without changing domain or UI layers.
@@ -249,7 +250,10 @@ object MockData {
             lecturerId = "l1",
             courseId = "CS401",
             courseName = "Android UI Development",
-            createdAt = LocalDateTime.of(2026, 8, 1, 8, 0)
+            createdAt = LocalDateTime.of(2026, 8, 1, 8, 0),
+            classroomId = "cls1",
+            publishStatus = AssignmentPublishStatus.PUBLISHED,
+            publishedAt = LocalDateTime.of(2026, 8, 1, 10, 0)
         ),
         Assignment(
             id = "a2",
@@ -260,7 +264,10 @@ object MockData {
             lecturerId = "l1",
             courseId = "CS401",
             courseName = "Android UI Development",
-            createdAt = LocalDateTime.of(2026, 8, 10, 8, 0)
+            createdAt = LocalDateTime.of(2026, 8, 10, 8, 0),
+            classroomId = "cls1",
+            publishStatus = AssignmentPublishStatus.PUBLISHED,
+            publishedAt = LocalDateTime.of(2026, 8, 10, 10, 0)
         ),
         Assignment(
             id = "a3",
@@ -271,7 +278,10 @@ object MockData {
             lecturerId = "l2",
             courseId = "CS401",
             courseName = "Android UI Development",
-            createdAt = LocalDateTime.of(2026, 8, 15, 8, 0)
+            createdAt = LocalDateTime.of(2026, 8, 15, 8, 0),
+            classroomId = "cls2",
+            publishStatus = AssignmentPublishStatus.PUBLISHED,
+            publishedAt = LocalDateTime.of(2026, 8, 15, 10, 0)
         )
     )
 
@@ -279,16 +289,22 @@ object MockData {
 
     val submissions = listOf(
         Submission("sub1", "a1", "s1", "Nguyễn Văn An", null,
-            LocalDateTime.of(2026, 8, 28, 14, 30), SubmissionStatus.COMPLETED, "gr1"),
+            LocalDateTime.of(2026, 8, 28, 14, 30), SubmissionStatus.COMPLETED, "gr1",
+            classroomId = "cls1", fileName = "profile_screen.apk", isLate = false),
         Submission("sub2", "a1", "s2", "Trần Thị Bình", null,
-            LocalDateTime.of(2026, 8, 29, 9, 15), SubmissionStatus.COMPLETED, "gr2"),
+            LocalDateTime.of(2026, 8, 29, 9, 15), SubmissionStatus.COMPLETED, "gr2",
+            classroomId = "cls1", fileName = "binh_ui_v1.apk", isLate = false),
         Submission("sub3", "a1", "s3", "Lê Văn Cường", null,
-            LocalDateTime.of(2026, 8, 27, 16, 45), SubmissionStatus.COMPLETED, "gr3"),
+            LocalDateTime.of(2026, 8, 27, 16, 45), SubmissionStatus.COMPLETED, "gr3",
+            classroomId = "cls1", fileName = "cuong_assignment.zip", isLate = false),
         Submission("sub4", "a2", "s1", "Nguyễn Văn An", null,
-            LocalDateTime.of(2026, 9, 4, 11, 0), SubmissionStatus.PROCESSING, null),
+            LocalDateTime.of(2026, 9, 4, 11, 0), SubmissionStatus.PROCESSING, null,
+            classroomId = "cls1", fileName = "navigation_app.apk", isLate = false),
         Submission("sub5", "a1", "s4", "Phạm Thị Dung", null,
-            LocalDateTime.of(2026, 8, 30, 8, 0), SubmissionStatus.COMPLETED, "gr4")
+            LocalDateTime.of(2026, 8, 30, 8, 0), SubmissionStatus.COMPLETED, "gr4",
+            classroomId = "cls1", fileName = "dung_layout.apk", isLate = false)
     )
+
 
     // ─── Metrics (per submission) ─────────────────────────────────────────────
 
@@ -570,4 +586,47 @@ object MockData {
         SystemLog("log9", LogLevel.ERROR, "API", "Connection timeout for external metric extractor (retry 1/3)", "2026-08-29T14:00:00", null),
         SystemLog("log10", LogLevel.INFO, "API", "Connection restored after retry", "2026-08-29T14:01:00", null)
     )
+
+    // ─── Classrooms ───────────────────────────────────────────────────────────
+
+    val classrooms = listOf(
+        Classroom(
+            id = "cls1",
+            name = "Android UI Development – Nhóm A",
+            courseCode = "CS401",
+            description = "Lớp học thiết kế giao diện Android với Jetpack Compose và Material 3. Học viên sẽ xây dựng ứng dụng thực tế từ A đến Z.",
+            lecturerId = "l1",
+            lecturerName = "TS. Nguyễn Minh Khoa",
+            joinCode = "A7K9PX",
+            semester = "HK1 2026-2027",
+            status = ClassroomStatus.ACTIVE,
+            createdAt = LocalDateTime.of(2026, 8, 1, 7, 0)
+        ),
+        Classroom(
+            id = "cls2",
+            name = "Android UI Development – Nhóm B",
+            courseCode = "CS401",
+            description = "Lớp học thiết kế giao diện Android nâng cao, tập trung vào animation và accessibility.",
+            lecturerId = "l2",
+            lecturerName = "ThS. Trần Thị Lan",
+            joinCode = "B3M8QZ",
+            semester = "HK1 2026-2027",
+            status = ClassroomStatus.ACTIVE,
+            createdAt = LocalDateTime.of(2026, 8, 2, 7, 0)
+        )
+    )
+
+    // ─── Memberships ──────────────────────────────────────────────────────────
+
+    val memberships = listOf(
+        // cls1: s1, s2, s3, s4 đã tham gia
+        ClassMembership("cls1", "s1", LocalDateTime.of(2026, 8, 3, 9, 0)),
+        ClassMembership("cls1", "s2", LocalDateTime.of(2026, 8, 3, 9, 30)),
+        ClassMembership("cls1", "s3", LocalDateTime.of(2026, 8, 4, 10, 0)),
+        ClassMembership("cls1", "s4", LocalDateTime.of(2026, 8, 5, 11, 0)),
+        // cls2: s3, s5 đã tham gia
+        ClassMembership("cls2", "s3", LocalDateTime.of(2026, 8, 4, 14, 0)),
+        ClassMembership("cls2", "s5", LocalDateTime.of(2026, 8, 6, 8, 30))
+    )
 }
+
