@@ -29,7 +29,9 @@ data class Classroom(
     val academicYear: String = "",
     val schedule: String = "",
     val room: String = "",
-    val joinEnabled: Boolean = true
+    val joinEnabled: Boolean = true,
+    val requiresApproval: Boolean = false,
+    val allowStudentLeave: Boolean = true
 )
 
 /**
@@ -54,3 +56,17 @@ data class JoinRequest(
     val requestedAt: LocalDateTime,
     val status: JoinRequestStatus = JoinRequestStatus.PENDING
 )
+
+sealed interface JoinClassResult {
+    val classroom: Classroom
+
+    data class Joined(
+        override val classroom: Classroom,
+        val membership: ClassMembership
+    ) : JoinClassResult
+
+    data class Pending(
+        override val classroom: Classroom,
+        val request: JoinRequest
+    ) : JoinClassResult
+}

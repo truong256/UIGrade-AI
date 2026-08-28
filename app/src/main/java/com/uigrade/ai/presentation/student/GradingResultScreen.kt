@@ -1,13 +1,39 @@
 package com.uigrade.ai.presentation.student
 
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.AutoAwesome
+import androidx.compose.material.icons.filled.Description
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -15,13 +41,20 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.uigrade.ai.domain.model.CriterionScore
-import com.uigrade.ai.ui.components.*
+import com.uigrade.ai.ui.components.AIFeedbackCard
+import com.uigrade.ai.ui.components.EmptyScreen
+import com.uigrade.ai.ui.components.ErrorScreen
+import com.uigrade.ai.ui.components.LoadingScreen
+import com.uigrade.ai.ui.components.ScoreRing
+import com.uigrade.ai.ui.components.scoreColor
+import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GradingResultScreen(
     submissionId: String,
     onNavigateBack: () -> Unit,
+    onNavigateToSubmission: (String) -> Unit,
     viewModel: GradingResultViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -30,7 +63,7 @@ fun GradingResultScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Kết quả chấm điểm", fontWeight = FontWeight.Bold) },
+                title = { Text("Kết quả học tập", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
@@ -41,75 +74,94 @@ fun GradingResultScreen(
     ) { padding ->
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
-            uiState.error != null -> ErrorScreen(uiState.error!!, onRetry = { viewModel.load(submissionId) }, modifier = Modifier.padding(padding))
-            uiState.gradingResult == null -> EmptyScreen("Bài của bạn đang được giảng viên chấm.\nKết quả sẽ hiển thị sau khi giảng viên công bố điểm.", Modifier.padding(padding))
+            uiState.error != null -> ErrorScreen(
+                uiState.error ?: "Không thể tải kết quả.",
+                onRetry = { viewModel.load(submissionId) },
+                modifier = Modifier.padding(padding)
+            )
+            uiState.gradingResult == null -> EmptyScreen(
+                "Giảng viên chưa công bố kết quả.",
+                Modifier.padding(padding)
+            )
             else -> {
-                val result = uiState.gradingResult!!
+                val result = uiState.gradingResult ?: return@Scaffold
                 LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+                    Modifier.fillMaxSize().padding(padding),
                     contentPadding = PaddingValues(16.dp),
-                    verticalArrangement = Arrangement.spacedBy(16.dp)
+                    verticalArrangement = Arrangement.spacedBy(14.dp)
                 ) {
-                    // Total score hero
                     item {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
-                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer),
-                            shape = MaterialTheme.shapes.extraLarge
+                            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)
                         ) {
                             Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(24.dp),
+                                Modifier.fillMaxWidth().padding(24.dp),
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text("Tổng điểm", style = MaterialTheme.typography.titleMedium)
-                                ScoreRing(score = result.totalScore, maxScore = result.maxScore, modifier = Modifier.size(120.dp))
-                                Surface(color = MaterialTheme.colorScheme.secondaryContainer, shape = MaterialTheme.shapes.small) {
-                                    Text(
-                                        "⚠ Điểm số do hệ thống tiêu chí và giảng viên xác nhận.",
-                                        style = MaterialTheme.typography.labelSmall,
-                                        modifier = Modifier.padding(8.dp, 4.dp),
-                                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                                Text("Điểm chính thức", style = MaterialTheme.typography.titleMedium)
+                                if (result.maxScore > 0) {
+                                    ScoreRing(
+                                        score = result.totalScore.coerceIn(0, result.maxScore),
+                                        maxScore = result.maxScore,
+                                        modifier = Modifier.size(120.dp)
                                     )
+                                    Text("${(result.percentage * 100).coerceIn(0f, 100f).toInt()}%")
+                                } else {
+                                    Text("Chưa xác định", style = MaterialTheme.typography.headlineSmall)
                                 }
+                                Text("Công bố: ${result.gradedAt.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"))}")
                             }
                         }
                     }
-
-                    // Lecturer Overall Comment
                     if (result.lecturerComment.isNotBlank()) {
                         item {
-                            Card(
-                                modifier = Modifier.fillMaxWidth(),
-                                shape = RoundedCornerShape(12.dp),
-                                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-                            ) {
-                                Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    Text("Nhận xét của giảng viên", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                                    Text(result.lecturerComment, style = MaterialTheme.typography.bodyMedium)
+                            Card(Modifier.fillMaxWidth()) {
+                                Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    Text("Phản hồi của Giảng viên", fontWeight = FontWeight.Bold)
+                                    Text(result.lecturerComment)
                                 }
                             }
                         }
                     }
-
-                    // Criteria scores
-                    item { Text("Chi tiết theo tiêu chí", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
-
-                    items(result.criteriaScores) { criterionScore ->
-                        CriterionScoreSection(criterionScore)
+                    item { Text("Điểm theo rubric", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold) }
+                    items(result.criteriaScores, key = { it.criterionId }) { score ->
+                        StudentCriterionScoreCard(score)
                     }
-
-                    // AI Feedback
+                    item {
+                        OutlinedButton(
+                            onClick = { onNavigateToSubmission(submissionId) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Description, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Mở lại bài đã nộp")
+                        }
+                    }
+                    item {
+                        Text("Gợi ý từ AI", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text(
+                            "AI chỉ giải thích và đề xuất cải thiện, không tự thay đổi điểm chính thức.",
+                            style = MaterialTheme.typography.bodySmall
+                        )
+                    }
                     uiState.feedback?.let { feedback ->
-                        item { Text("Gợi ý cải thiện từ AI", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold) }
                         item { AIFeedbackCard(feedback) }
                     }
-
-                    item { Spacer(Modifier.height(16.dp)) }
+                    item {
+                        Button(
+                            onClick = viewModel::requestAiExplanation,
+                            enabled = !uiState.isAiLoading,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            if (uiState.isAiLoading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+                            else Icon(Icons.Default.AutoAwesome, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text(if (uiState.feedback == null) "Yêu cầu AI giải thích" else "Tạo lại giải thích AI")
+                        }
+                        uiState.aiError?.let { Text(it, color = MaterialTheme.colorScheme.error) }
+                    }
                 }
             }
         }
@@ -117,63 +169,23 @@ fun GradingResultScreen(
 }
 
 @Composable
-private fun CriterionScoreSection(score: CriterionScore) {
-    var expanded by remember { mutableStateOf(false) }
-    Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
-        Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            // Header
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text(score.criterionName, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold, modifier = Modifier.weight(1f))
-                Text(
-                    "${score.earned} / ${score.maxScore}",
-                    style = MaterialTheme.typography.titleSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = scoreColor(score.earned, score.maxScore)
-                )
+private fun StudentCriterionScoreCard(score: CriterionScore) {
+    val percent = if (score.maxScore > 0) {
+        (score.earned.coerceIn(0, score.maxScore).toFloat() / score.maxScore).coerceIn(0f, 1f)
+    } else 0f
+    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(14.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(score.criterionName, Modifier.weight(1f), fontWeight = FontWeight.SemiBold)
+                Text("${score.earned.coerceAtLeast(0)}/${score.maxScore.coerceAtLeast(0)}", fontWeight = FontWeight.Bold)
             }
             LinearProgressIndicator(
-                progress = { score.percentage },
+                progress = { percent },
                 modifier = Modifier.fillMaxWidth(),
-                color = scoreColor(score.earned, score.maxScore),
-                trackColor = MaterialTheme.colorScheme.surfaceVariant
+                color = scoreColor(score.earned, score.maxScore)
             )
-
             if (score.lecturerComment.isNotBlank()) {
-                Surface(
-                    color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-                    shape = RoundedCornerShape(8.dp)
-                ) {
-                    Text(
-                        "Nhận xét: ${score.lecturerComment}",
-                        style = MaterialTheme.typography.bodySmall,
-                        modifier = Modifier.padding(8.dp, 4.dp)
-                    )
-                }
-            }
-
-            if (score.metrics.isNotEmpty() || score.rules.isNotEmpty()) {
-                TextButton(
-                    onClick = { expanded = !expanded },
-                    contentPadding = PaddingValues(0.dp)
-                ) {
-                    Text(if (expanded) "Ẩn chi tiết" else "Xem chi tiết metric & rule")
-                }
-
-                if (expanded) {
-                    if (score.metrics.isNotEmpty()) {
-                        Text("Metrics", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        score.metrics.forEach { metric -> MetricCard(metric, Modifier.padding(top = 4.dp)) }
-                    }
-                    if (score.rules.isNotEmpty()) {
-                        Spacer(Modifier.height(4.dp))
-                        Text("Rules", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-                        score.rules.forEach { rule -> RuleCard(rule, Modifier.padding(top = 4.dp)) }
-                    }
-                }
+                Text("Nhận xét: ${score.lecturerComment}", style = MaterialTheme.typography.bodySmall)
             }
         }
     }

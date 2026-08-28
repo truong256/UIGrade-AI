@@ -6,10 +6,16 @@ import java.time.LocalDateTime
  * Status of a student's submission for an assignment.
  */
 enum class AssignmentStatus {
+    UPCOMING,
     NOT_SUBMITTED,
+    DRAFT,
     SUBMITTED,
+    LATE,
     GRADING,
-    GRADED
+    GRADED,
+    OVERDUE,
+    CLOSED,
+    RESUBMISSION_REQUIRED
 }
 
 /**
@@ -62,5 +68,9 @@ data class AssignmentWithStatus(
     val assignment: Assignment,
     val status: AssignmentStatus,
     val score: Int? = null,
-    val submissionId: String? = null
+    val submissionId: String? = null,
+    val latestSubmission: Submission? = null,
+    val attemptsUsed: Int = 0,
+    val attemptsRemaining: Int = assignment.maxAttempts,
+    val disabledReason: String? = null
 )

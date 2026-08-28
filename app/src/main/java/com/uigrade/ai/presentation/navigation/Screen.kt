@@ -19,7 +19,9 @@ sealed class Screen(val route: String) {
     object StudentClassroomDetail: Screen("student/classroom/{classroomId}") {
         fun createRoute(classroomId: String) = "student/classroom/$classroomId"
     }
-    object StudentAssignments    : Screen("student/assignments")
+    object StudentAssignments    : Screen("student/assignments?filter={filter}") {
+        fun createRoute(filter: String? = null) = "student/assignments?filter=${filter ?: "all"}"
+    }
     object AssignmentDetail      : Screen("student/assignments/{assignmentId}") {
         fun createRoute(assignmentId: String) = "student/assignments/$assignmentId"
     }
@@ -29,7 +31,19 @@ sealed class Screen(val route: String) {
     object GradingResult         : Screen("student/result/{submissionId}") {
         fun createRoute(submissionId: String) = "student/result/$submissionId"
     }
+    object StudentSubmissionDetail : Screen("student/submission/{submissionId}") {
+        fun createRoute(submissionId: String) = "student/submission/$submissionId"
+    }
+    object StudentSubmissionHistory : Screen("student/assignment/{assignmentId}/history") {
+        fun createRoute(assignmentId: String) = "student/assignment/$assignmentId/history"
+    }
+    object StudentJoinRequests   : Screen("student/classrooms/join-requests")
+    object StudentGrades         : Screen("student/grades")
+    object StudentProgress       : Screen("student/progress")
+    object StudentCalendar       : Screen("student/calendar")
+    object StudentNotifications  : Screen("student/notifications")
     object StudentProfile        : Screen("student/profile")
+    object StudentChangePassword : Screen("student/profile/change-password")
 
     // ─── Lecturer ─────────────────────────────────────────────────────────
     object LecturerDashboard     : Screen("lecturer/dashboard")

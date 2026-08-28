@@ -3,7 +3,10 @@ package com.uigrade.ai.data.repository
 import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.AssignmentPublishStatus
 import com.uigrade.ai.domain.model.Submission
+import com.uigrade.ai.domain.model.SubmissionAttachment
 import com.uigrade.ai.domain.model.SubmissionStatus
+import com.uigrade.ai.domain.model.StudentNotification
+import com.uigrade.ai.domain.model.StudentNotificationType
 import com.uigrade.ai.domain.repository.SubmissionRepository
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
@@ -36,6 +39,16 @@ class MockSubmissionRepository @Inject constructor(
     override suspend fun getSubmissionById(id: String): Submission? {
         delay(300)
         return submissions.find { it.id == id }
+    }
+
+    override suspend fun getSubmissionsForStudentAssignment(
+        studentId: String,
+        assignmentId: String
+    ): List<Submission> {
+        delay(350)
+        return submissions
+            .filter { it.studentId == studentId && it.assignmentId == assignmentId }
+            .sortedWith(compareByDescending<Submission> { it.attemptNumber }.thenByDescending { it.savedAt })
     }
 
     override suspend fun submitAssignment(
@@ -147,8 +160,6 @@ class MockSubmissionRepository @Inject constructor(
             ?: throw IllegalArgumentException("Người dùng không tồn tại")
 
         val submissionId = UUID.randomUUID().toString()
-        val gradingResultId = "grade-$submissionId"
-        val feedbackId = "feedback-$submissionId"
         val newSubmission = Submission(
             id = submissionId,
             assignmentId = assignmentId,
@@ -161,10 +172,103 @@ class MockSubmissionRepository @Inject constructor(
             attemptNumber = attemptCount + 1,
             classroomId = classroomId,
             fileName = fileName,
-            isLate = isLate
+            isLate = isLate,
+            attachments = listOf(
+                SubmissionAttachment(
+                    id = UUID.randomUUID().toString(),
+                    uri = fileUri,
+                    displayName = fileName
+                )
+            )
         )
         submissions.add(newSubmission)
+        addSubmissionNotification(newSubmission)
         return newSubmission
+    }
+
+    override suspend fun saveDraft(
+        assignmentId: String,
+        classroomId: String,
+        studentId: String,
+        content: String,
+        linkUrl: String,
+        attachments: List<SubmissionAttachment>
+    ): Submission {
+        delay(550)
+        val assignment = dataStore.assignments.find { it.id == assignmentId }
+            ?: throw IllegalArgumentException("Không tìm thấy bài tập.")
+        require(assignment.classroomId == classroomId) { "Bài tập không thuộc lớp học này." }
+        require(dataStore.memberships.any { it.classroomId == classroomId && it.studentId == studentId }) {
+            "Bạn cần tham gia lớp trước."
+        }
+        val student = dataStore.users.find { it.id == studentId }
+            ?: throw IllegalArgumentException("Không tìm thấy thông tin sinh viên.")
+        val now = LocalDateTime.now()
+        val existingIndex = submissions.indexOfFirst {
+            it.assignmentId == assignmentId && it.studentId == studentId && it.isDraft
+        }
+        val draft = Submission(
+            id = if (existingIndex >= 0) submissions[existingIndex].id else UUID.randomUUID().toString(),
+            assignmentId = assignmentId,
+            studentId = studentId,
+            studentName = student.name,
+            fileUri = attachments.firstOrNull()?.uri,
+            submittedAt = if (existingIndex >= 0) submissions[existingIndex].submittedAt else now,
+            status = SubmissionStatus.PENDING,
+            attemptNumber = submissions.count {
+                it.assignmentId == assignmentId && it.studentId == studentId && !it.isDraft
+            } + 1,
+            classroomId = classroomId,
+            fileName = attachments.firstOrNull()?.displayName.orEmpty(),
+            content = content,
+            linkUrl = linkUrl,
+            attachments = attachments,
+            isDraft = true,
+            savedAt = now
+        )
+        if (existingIndex >= 0) submissions[existingIndex] = draft else submissions.add(draft)
+        return draft
+    }
+
+    override suspend fun deleteDraft(submissionId: String, studentId: String): Result<Unit> {
+        delay(350)
+        val removed = submissions.removeAll {
+            it.id == submissionId && it.studentId == studentId && it.isDraft
+        }
+        return if (removed) Result.success(Unit)
+        else Result.failure(IllegalArgumentException("Không tìm thấy bản nháp."))
+    }
+
+    override suspend fun submitDraft(submissionId: String, studentId: String): Submission {
+        delay(900)
+        val index = submissions.indexOfFirst {
+            it.id == submissionId && it.studentId == studentId && it.isDraft
+        }
+        if (index < 0) throw IllegalArgumentException("Không tìm thấy bản nháp.")
+        val draft = submissions[index]
+        val assignment = dataStore.assignments.find { it.id == draft.assignmentId }
+            ?: throw IllegalArgumentException("Bài tập không tồn tại.")
+        validateSubmissionWindow(assignment, studentId)
+        validateAttemptLimit(assignment, studentId)
+        validateAttachments(assignment.allowedFileTypes, draft.attachments)
+        if (draft.content.isBlank() && draft.linkUrl.isBlank() && draft.attachments.isEmpty()) {
+            throw IllegalArgumentException("Vui lòng nhập nội dung bài làm hoặc đính kèm tệp.")
+        }
+        val now = LocalDateTime.now()
+        val isLate = now.isAfter(assignment.deadline)
+        val submitted = draft.copy(
+            submittedAt = now,
+            savedAt = now,
+            isDraft = false,
+            isLate = isLate,
+            status = if (isLate) SubmissionStatus.LATE else SubmissionStatus.SUBMITTED,
+            attachments = draft.attachments.map {
+                it.copy(uploadState = com.uigrade.ai.domain.model.AttachmentUploadState.UPLOADED)
+            }
+        )
+        submissions[index] = submitted
+        addSubmissionNotification(submitted)
+        return submitted
     }
 
     override suspend fun getSubmissionsForClassroomAssignment(
@@ -200,6 +304,91 @@ class MockSubmissionRepository @Inject constructor(
             needsReview = needsReview,
             resubmissionRequested = resubmissionRequested
         )
+        if (resubmissionRequested && dataStore.studentNotifications.none {
+                it.type == StudentNotificationType.RESUBMISSION_REQUESTED && it.submissionId == submissionId
+            }) {
+            val submission = submissions[index]
+            dataStore.studentNotifications.add(
+                StudentNotification(
+                    id = UUID.randomUUID().toString(),
+                    studentId = submission.studentId,
+                    title = "Giảng viên yêu cầu nộp lại",
+                    message = "Bài làm cần được cập nhật theo phản hồi của giảng viên.",
+                    type = StudentNotificationType.RESUBMISSION_REQUESTED,
+                    createdAt = LocalDateTime.now(),
+                    classroomId = submission.classroomId,
+                    assignmentId = submission.assignmentId,
+                    submissionId = submission.id
+                )
+            )
+        }
         return submissions[index]
+    }
+
+    private fun validateSubmissionWindow(assignment: com.uigrade.ai.domain.model.Assignment, studentId: String) {
+        require(assignment.publishStatus == AssignmentPublishStatus.PUBLISHED) { "Bài tập chưa được xuất bản." }
+        require(!assignment.isArchived) { "Bài tập đã được lưu trữ." }
+        require(dataStore.memberships.any {
+            it.classroomId == assignment.classroomId && it.studentId == studentId
+        }) { "Bạn cần tham gia lớp trước." }
+        val now = LocalDateTime.now()
+        if (assignment.startAt?.let(now::isBefore) == true) {
+            throw IllegalArgumentException("Bài tập chưa mở.")
+        }
+        if (assignment.closeAt?.let { !now.isBefore(it) } == true) {
+            throw IllegalArgumentException("Bài tập đã đóng.")
+        }
+        if (now.isAfter(assignment.deadline) && !assignment.allowLateSubmission) {
+            throw IllegalArgumentException("Hạn nộp đã kết thúc.")
+        }
+    }
+
+    private fun validateAttemptLimit(assignment: com.uigrade.ai.domain.model.Assignment, studentId: String) {
+        val history = submissions.filter {
+            it.assignmentId == assignment.id && it.studentId == studentId && !it.isDraft
+        }
+        val requested = history.maxByOrNull { it.attemptNumber }?.resubmissionRequested == true
+        if (history.isNotEmpty() && !assignment.allowResubmission && !requested) {
+            throw IllegalArgumentException("Bài tập này không cho phép nộp lại.")
+        }
+        if (history.size >= assignment.maxAttempts && !requested) {
+            throw IllegalArgumentException("Bạn đã sử dụng hết số lần nộp.")
+        }
+    }
+
+    private fun validateAttachments(
+        allowedTypes: List<String>,
+        attachments: List<SubmissionAttachment>
+    ) {
+        if (attachments.size > 5) throw IllegalArgumentException("Bạn chỉ được đính kèm tối đa 5 tệp.")
+        attachments.forEach { attachment ->
+            if (attachment.sizeBytes != null && attachment.sizeBytes > 25L * 1024 * 1024) {
+                throw IllegalArgumentException("Tệp ${attachment.displayName} vượt quá kích thước 25 MB.")
+            }
+            val extension = attachment.displayName.substringAfterLast('.', "").lowercase()
+            if (allowedTypes.isNotEmpty() && extension !in allowedTypes.map(String::lowercase)) {
+                throw IllegalArgumentException("Định dạng tệp không được hỗ trợ: ${attachment.displayName}.")
+            }
+        }
+    }
+
+    private fun addSubmissionNotification(submission: Submission) {
+        dataStore.studentNotifications.add(
+            StudentNotification(
+                id = UUID.randomUUID().toString(),
+                studentId = submission.studentId,
+                title = "Đã nhận bài nộp",
+                message = if (submission.isLate) {
+                    "Bài làm đã được ghi nhận ở trạng thái nộp muộn."
+                } else {
+                    "Bài làm đã được ghi nhận thành công."
+                },
+                type = StudentNotificationType.SUBMISSION_RECEIVED,
+                createdAt = LocalDateTime.now(),
+                classroomId = submission.classroomId,
+                assignmentId = submission.assignmentId,
+                submissionId = submission.id
+            )
+        )
     }
 }

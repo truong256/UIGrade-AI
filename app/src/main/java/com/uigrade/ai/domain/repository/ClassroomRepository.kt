@@ -2,7 +2,10 @@ package com.uigrade.ai.domain.repository
 
 import com.uigrade.ai.domain.model.ClassMembership
 import com.uigrade.ai.domain.model.Classroom
+import com.uigrade.ai.domain.model.ClassAnnouncement
 import com.uigrade.ai.domain.model.JoinRequest
+import com.uigrade.ai.domain.model.JoinClassResult
+import com.uigrade.ai.domain.model.LearningMaterial
 import com.uigrade.ai.domain.model.User
 
 interface ClassroomRepository {
@@ -31,6 +34,9 @@ interface ClassroomRepository {
      */
     suspend fun joinClassroom(joinCode: String, studentId: String): Result<ClassMembership>
 
+    /** Join immediately or create a pending request depending on classroom policy. */
+    suspend fun requestJoinClassroom(joinCode: String, studentId: String): Result<JoinClassResult>
+
     /**
      * Invalidate the current join code and generate a new one.
      * Existing members keep their membership.
@@ -57,8 +63,20 @@ interface ClassroomRepository {
 
     suspend fun getJoinRequests(classroomId: String): List<JoinRequest>
 
+    suspend fun getJoinRequestsForStudent(studentId: String): List<JoinRequest>
+
+    suspend fun cancelJoinRequest(requestId: String, studentId: String): Result<Unit>
+
     suspend fun respondToJoinRequest(requestId: String, approve: Boolean): Result<JoinRequest>
 
     /** Check whether a student is enrolled in a classroom. */
     suspend fun isStudentEnrolled(classroomId: String, studentId: String): Boolean
+
+    suspend fun getMembershipsForStudent(studentId: String): List<ClassMembership>
+
+    suspend fun leaveClassroom(classroomId: String, studentId: String): Result<Unit>
+
+    suspend fun getAnnouncements(classroomId: String): List<ClassAnnouncement>
+
+    suspend fun getLearningMaterials(classroomId: String): List<LearningMaterial>
 }

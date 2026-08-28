@@ -19,6 +19,22 @@ enum class SubmissionStatus {
     RELEASED
 }
 
+data class SubmissionAttachment(
+    val id: String,
+    val uri: String,
+    val displayName: String,
+    val mimeType: String = "application/octet-stream",
+    val sizeBytes: Long? = null,
+    val uploadState: AttachmentUploadState = AttachmentUploadState.READY
+)
+
+enum class AttachmentUploadState {
+    READY,
+    UPLOADING,
+    UPLOADED,
+    FAILED
+}
+
 /**
  * A student's submission of an assignment.
  * classroomId and fileName are added for classroom flow.
@@ -39,5 +55,10 @@ data class Submission(
     val fileName: String = "",
     val isLate: Boolean = false,
     val needsReview: Boolean = false,
-    val resubmissionRequested: Boolean = false
+    val resubmissionRequested: Boolean = false,
+    val content: String = "",
+    val linkUrl: String = "",
+    val attachments: List<SubmissionAttachment> = emptyList(),
+    val isDraft: Boolean = false,
+    val savedAt: LocalDateTime = submittedAt
 )

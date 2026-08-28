@@ -2,13 +2,18 @@ package com.uigrade.ai.data.repository
 
 import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.ClassMembership
+import com.uigrade.ai.domain.model.ClassAnnouncement
 import com.uigrade.ai.domain.model.Classroom
 import com.uigrade.ai.domain.model.ClassroomStatus
+import com.uigrade.ai.domain.model.JoinClassResult
 import com.uigrade.ai.domain.model.JoinRequest
 import com.uigrade.ai.domain.model.JoinRequestStatus
+import com.uigrade.ai.domain.model.LearningMaterial
 import com.uigrade.ai.domain.model.LecturerNotification
 import com.uigrade.ai.domain.model.LecturerNotificationType
 import com.uigrade.ai.domain.model.User
+import com.uigrade.ai.domain.model.StudentNotification
+import com.uigrade.ai.domain.model.StudentNotificationType
 import com.uigrade.ai.domain.repository.ClassroomRepository
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
@@ -97,6 +102,54 @@ class MockClassroomRepository @Inject constructor(
         return Result.success(membership)
     }
 
+    override suspend fun requestJoinClassroom(joinCode: String, studentId: String): Result<JoinClassResult> {
+        delay(700)
+        val code = joinCode.trim().uppercase()
+        val classroom = classrooms.find { it.joinCode.equals(code, ignoreCase = true) }
+            ?: return Result.failure(IllegalArgumentException("Không tìm thấy lớp học với mã này."))
+        if (classroom.status == ClassroomStatus.ARCHIVED) {
+            return Result.failure(IllegalArgumentException("Mã lớp đã hết hiệu lực."))
+        }
+        if (!classroom.joinEnabled) {
+            return Result.failure(IllegalArgumentException("Lớp học hiện không nhận thêm sinh viên."))
+        }
+        if (memberships.any { it.classroomId == classroom.id && it.studentId == studentId }) {
+            return Result.failure(IllegalArgumentException("Bạn đã tham gia lớp học này."))
+        }
+        val pending = dataStore.joinRequests.find {
+            it.classroomId == classroom.id && it.studentId == studentId && it.status == JoinRequestStatus.PENDING
+        }
+        if (pending != null) {
+            return Result.failure(IllegalStateException("Yêu cầu tham gia của bạn đang chờ giảng viên duyệt."))
+        }
+
+        return if (classroom.requiresApproval) {
+            val request = JoinRequest(
+                id = UUID.randomUUID().toString(),
+                classroomId = classroom.id,
+                studentId = studentId,
+                requestedAt = LocalDateTime.now()
+            )
+            dataStore.joinRequests.add(request)
+            dataStore.notifications.add(
+                LecturerNotification(
+                    id = UUID.randomUUID().toString(),
+                    lecturerId = classroom.lecturerId,
+                    title = "Yêu cầu tham gia lớp",
+                    message = "${users.find { it.id == studentId }?.name ?: "Sinh viên"} muốn tham gia ${classroom.name}.",
+                    type = LecturerNotificationType.JOIN_REQUEST,
+                    createdAt = LocalDateTime.now(),
+                    classroomId = classroom.id
+                )
+            )
+            Result.success(JoinClassResult.Pending(classroom, request))
+        } else {
+            val membership = ClassMembership(classroom.id, studentId, LocalDateTime.now())
+            memberships.add(membership)
+            Result.success(JoinClassResult.Joined(classroom, membership))
+        }
+    }
+
     override suspend fun regenerateJoinCode(classroomId: String): Result<String> {
         delay(500)
         val index = classrooms.indexOfFirst { it.id == classroomId }
@@ -175,6 +228,24 @@ class MockClassroomRepository @Inject constructor(
         }
     }
 
+    override suspend fun getJoinRequestsForStudent(studentId: String): List<JoinRequest> {
+        delay(300)
+        return dataStore.joinRequests
+            .filter { it.studentId == studentId }
+            .sortedByDescending { it.requestedAt }
+    }
+
+    override suspend fun cancelJoinRequest(requestId: String, studentId: String): Result<Unit> {
+        delay(350)
+        val request = dataStore.joinRequests.find { it.id == requestId && it.studentId == studentId }
+            ?: return Result.failure(IllegalArgumentException("Không tìm thấy yêu cầu tham gia."))
+        if (request.status != JoinRequestStatus.PENDING) {
+            return Result.failure(IllegalStateException("Chỉ có thể hủy yêu cầu đang chờ duyệt."))
+        }
+        dataStore.joinRequests.remove(request)
+        return Result.success(Unit)
+    }
+
     override suspend fun respondToJoinRequest(requestId: String, approve: Boolean): Result<JoinRequest> {
         delay(500)
         val index = dataStore.joinRequests.indexOfFirst { it.id == requestId }
@@ -207,6 +278,22 @@ class MockClassroomRepository @Inject constructor(
                     classroomId = classroom.id
                 )
             )
+            dataStore.studentNotifications.add(
+                StudentNotification(
+                    id = UUID.randomUUID().toString(),
+                    studentId = request.studentId,
+                    title = if (approve) "Yêu cầu đã được chấp nhận" else "Yêu cầu đã bị từ chối",
+                    message = if (approve) {
+                        "Bạn đã được thêm vào lớp ${classroom.name}."
+                    } else {
+                        "Yêu cầu tham gia lớp ${classroom.name} chưa được chấp nhận."
+                    },
+                    type = if (approve) StudentNotificationType.JOIN_APPROVED else StudentNotificationType.JOIN_REJECTED,
+                    createdAt = LocalDateTime.now(),
+                    classroomId = classroom.id,
+                    joinRequestId = request.id
+                )
+            )
         }
         return Result.success(updated)
     }
@@ -214,6 +301,33 @@ class MockClassroomRepository @Inject constructor(
     override suspend fun isStudentEnrolled(classroomId: String, studentId: String): Boolean {
         delay(200)
         return memberships.any { it.classroomId == classroomId && it.studentId == studentId }
+    }
+
+    override suspend fun getMembershipsForStudent(studentId: String): List<ClassMembership> {
+        delay(250)
+        return memberships.filter { it.studentId == studentId }.sortedByDescending { it.joinedAt }
+    }
+
+    override suspend fun leaveClassroom(classroomId: String, studentId: String): Result<Unit> {
+        delay(400)
+        val classroom = classrooms.find { it.id == classroomId }
+            ?: return Result.failure(IllegalArgumentException("Không tìm thấy lớp học."))
+        if (!classroom.allowStudentLeave) {
+            return Result.failure(IllegalStateException("Lớp học này không cho phép sinh viên tự rời lớp."))
+        }
+        val removed = memberships.removeAll { it.classroomId == classroomId && it.studentId == studentId }
+        return if (removed) Result.success(Unit)
+        else Result.failure(IllegalArgumentException("Bạn không còn là thành viên của lớp học này."))
+    }
+
+    override suspend fun getAnnouncements(classroomId: String): List<ClassAnnouncement> {
+        delay(300)
+        return dataStore.announcements.filter { it.classroomId == classroomId }.sortedByDescending { it.createdAt }
+    }
+
+    override suspend fun getLearningMaterials(classroomId: String): List<LearningMaterial> {
+        delay(300)
+        return dataStore.learningMaterials.filter { it.classroomId == classroomId }.sortedByDescending { it.createdAt }
     }
 
     private fun generateUniqueJoinCode(): String {
