@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -77,7 +78,7 @@ fun LecturerClassroomListScreen(
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
             uiState.error != null -> ErrorScreen(
-                message = uiState.error!!,
+                message = uiState.error.orEmpty(),
                 onRetry = { viewModel.load() },
                 modifier = Modifier.padding(padding)
             )
@@ -257,21 +258,47 @@ private fun LecturerClassroomCard(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateClassroomScreen(
+    classroomId: String? = null,
     onNavigateBack: () -> Unit,
     onClassroomCreated: (classroomId: String) -> Unit,
     viewModel: CreateClassroomViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val isEditing = classroomId != null
 
-    var name by remember { mutableStateOf("") }
-    var courseCode by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var semester by remember { mutableStateOf("HK1 2026-2027") }
+    var name by rememberSaveable { mutableStateOf("") }
+    var courseCode by rememberSaveable { mutableStateOf("") }
+    var courseName by rememberSaveable { mutableStateOf("") }
+    var description by rememberSaveable { mutableStateOf("") }
+    var semester by rememberSaveable { mutableStateOf("HK1 2026-2027") }
+    var academicYear by rememberSaveable { mutableStateOf("2026-2027") }
+    var schedule by rememberSaveable { mutableStateOf("") }
+    var room by rememberSaveable { mutableStateOf("") }
+    var formInitialized by rememberSaveable { mutableStateOf(false) }
 
-    var nameError by remember { mutableStateOf(false) }
-    var courseCodeError by remember { mutableStateOf(false) }
+    var nameError by rememberSaveable { mutableStateOf(false) }
+    var courseCodeError by rememberSaveable { mutableStateOf(false) }
 
     val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(classroomId) {
+        if (classroomId != null) viewModel.loadForEdit(classroomId)
+    }
+
+    LaunchedEffect(uiState.classroom) {
+        val classroom = uiState.classroom
+        if (classroom != null && !formInitialized) {
+            name = classroom.name
+            courseCode = classroom.courseCode
+            courseName = classroom.courseName
+            description = classroom.description
+            semester = classroom.semester
+            academicYear = classroom.academicYear
+            schedule = classroom.schedule
+            room = classroom.room
+            formInitialized = true
+        }
+    }
 
     LaunchedEffect(uiState.success) {
         uiState.success?.let { classroom ->
@@ -289,7 +316,7 @@ fun CreateClassroomScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Tạo lớp học", fontWeight = FontWeight.Bold) },
+                title = { Text(if (isEditing) "Chỉnh sửa lớp học" else "Tạo lớp học", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
                     IconButton(onClick = onNavigateBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
@@ -313,7 +340,8 @@ fun CreateClassroomScreen(
                     fontWeight = FontWeight.Bold
                 )
                 Text(
-                    "Điền các thông tin cơ bản để tạo lớp học mới. Hệ thống sẽ tự động tạo mã tham gia lớp.",
+                    if (isEditing) "Cập nhật thông tin lớp học. Mã tham gia hiện tại được giữ nguyên."
+                    else "Điền các thông tin cơ bản để tạo lớp học mới. Hệ thống sẽ tự động tạo mã tham gia lớp.",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
@@ -353,6 +381,17 @@ fun CreateClassroomScreen(
 
             item {
                 OutlinedTextField(
+                    value = courseName,
+                    onValueChange = { courseName = it },
+                    label = { Text("Tên học phần") },
+                    placeholder = { Text("Ví dụ: Phát triển giao diện Android") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+
+            item {
+                OutlinedTextField(
                     value = semester,
                     onValueChange = { semester = it },
                     label = { Text("Học kỳ *") },
@@ -376,6 +415,39 @@ fun CreateClassroomScreen(
             }
 
             item {
+                OutlinedTextField(
+                    value = academicYear,
+                    onValueChange = { academicYear = it },
+                    label = { Text("Năm học") },
+                    placeholder = { Text("Ví dụ: 2026-2027") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+
+            item {
+                OutlinedTextField(
+                    value = schedule,
+                    onValueChange = { schedule = it },
+                    label = { Text("Lịch học") },
+                    placeholder = { Text("Ví dụ: Thứ 3, 09:00-11:30") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+
+            item {
+                OutlinedTextField(
+                    value = room,
+                    onValueChange = { room = it },
+                    label = { Text("Phòng học") },
+                    placeholder = { Text("Ví dụ: A2.04") },
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(12.dp)
+                )
+            }
+
+            item {
                 Spacer(Modifier.height(8.dp))
                 Button(
                     onClick = {
@@ -384,10 +456,21 @@ fun CreateClassroomScreen(
                         nameError = !isNameValid
                         courseCodeError = !isCodeValid
                         if (isNameValid && isCodeValid) {
-                            viewModel.create(name, courseCode, description, semester)
+                            val original = uiState.classroom
+                            if (isEditing && original != null) {
+                                viewModel.update(
+                                    original, name, courseCode, description, semester,
+                                    courseName, academicYear, schedule, room
+                                )
+                            } else if (!isEditing) {
+                                viewModel.create(
+                                    name, courseCode, description, semester,
+                                    courseName, academicYear, schedule, room
+                                )
+                            }
                         }
                     },
-                    enabled = !uiState.isLoading,
+                    enabled = !uiState.isLoading && (!isEditing || uiState.classroom != null),
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(50.dp),
@@ -400,9 +483,9 @@ fun CreateClassroomScreen(
                             strokeWidth = 2.dp
                         )
                     } else {
-                        Icon(Icons.Default.Add, contentDescription = null)
+                        Icon(if (isEditing) Icons.Default.Save else Icons.Default.Add, contentDescription = null)
                         Spacer(Modifier.width(8.dp))
-                        Text("Tạo lớp học", fontWeight = FontWeight.Bold, fontSize = 16.sp)
+                        Text(if (isEditing) "Lưu thay đổi" else "Tạo lớp học", fontWeight = FontWeight.Bold, fontSize = 16.sp)
                     }
                 }
             }
@@ -418,9 +501,11 @@ fun CreateClassroomScreen(
 fun ClassroomDetailScreen(
     classroomId: String,
     onNavigateBack: () -> Unit,
+    onNavigateToEditClassroom: (classroomId: String) -> Unit,
     onNavigateToCreateAssignment: (classroomId: String) -> Unit,
     onNavigateToEditAssignment: (assignmentId: String) -> Unit,
     onNavigateToStudents: (classroomId: String) -> Unit,
+    onNavigateToJoinRequests: (classroomId: String) -> Unit,
     onNavigateToSubmissions: (assignmentId: String) -> Unit,
     viewModel: ClassroomDetailViewModel = hiltViewModel()
 ) {
@@ -430,6 +515,7 @@ fun ClassroomDetailScreen(
 
     var showRegenDialog by remember { mutableStateOf(false) }
     var showArchiveDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
 
     LaunchedEffect(classroomId) {
         viewModel.load(classroomId)
@@ -452,9 +538,28 @@ fun ClassroomDetailScreen(
                     }
                 },
                 actions = {
-                    if (uiState.classroom?.status == ClassroomStatus.ACTIVE) {
-                        IconButton(onClick = { showArchiveDialog = true }) {
+                    val classroom = uiState.classroom
+                    if (classroom?.status == ClassroomStatus.ACTIVE) {
+                        IconButton(
+                            onClick = { onNavigateToEditClassroom(classroomId) },
+                            enabled = !uiState.isSubmitting
+                        ) {
+                            Icon(Icons.Default.Edit, contentDescription = "Chỉnh sửa lớp")
+                        }
+                        IconButton(onClick = { showArchiveDialog = true }, enabled = !uiState.isSubmitting) {
                             Icon(Icons.Default.Archive, contentDescription = "Lưu trữ lớp")
+                        }
+                    } else if (classroom?.status == ClassroomStatus.ARCHIVED) {
+                        IconButton(
+                            onClick = { viewModel.restoreClassroom(classroomId) },
+                            enabled = !uiState.isSubmitting
+                        ) {
+                            Icon(Icons.Default.Unarchive, contentDescription = "Khôi phục lớp")
+                        }
+                    }
+                    if (classroom != null) {
+                        IconButton(onClick = { showDeleteDialog = true }, enabled = !uiState.isSubmitting) {
+                            Icon(Icons.Default.DeleteOutline, contentDescription = "Xóa lớp")
                         }
                     }
                 }
@@ -475,13 +580,13 @@ fun ClassroomDetailScreen(
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
             uiState.error != null -> ErrorScreen(
-                message = uiState.error!!,
+                message = uiState.error.orEmpty(),
                 onRetry = { viewModel.load(classroomId) },
                 modifier = Modifier.padding(padding)
             )
             uiState.classroom == null -> EmptyScreen("Không tìm thấy lớp học", Modifier.padding(padding))
             else -> {
-                val classroom = uiState.classroom!!
+                val classroom = uiState.classroom ?: return@Scaffold
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
@@ -503,6 +608,15 @@ fun ClassroomDetailScreen(
                                     Text("Học kỳ: ${classroom.semester}", style = MaterialTheme.typography.bodyMedium)
                                 }
                                 Text("Giảng viên: ${classroom.lecturerName}", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                if (classroom.courseName.isNotBlank()) Text("Học phần: ${classroom.courseName}", style = MaterialTheme.typography.bodyMedium)
+                                if (classroom.academicYear.isNotBlank()) Text("Năm học: ${classroom.academicYear}", style = MaterialTheme.typography.bodySmall)
+                                if (classroom.schedule.isNotBlank() || classroom.room.isNotBlank()) {
+                                    Text(
+                                        listOf(classroom.schedule, classroom.room).filter { it.isNotBlank() }.joinToString(" · "),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
                                 if (classroom.description.isNotBlank()) {
                                     Text(classroom.description, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
@@ -522,6 +636,25 @@ fun ClassroomDetailScreen(
                                 horizontalAlignment = Alignment.CenterHorizontally,
                                 verticalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.SpaceBetween,
+                                    verticalAlignment = Alignment.CenterVertically
+                                ) {
+                                    Column(Modifier.weight(1f)) {
+                                        Text("Nhận sinh viên mới", fontWeight = FontWeight.SemiBold)
+                                        Text(
+                                            if (classroom.joinEnabled && classroom.status == ClassroomStatus.ACTIVE) "Đang bật" else "Đang tạm dừng",
+                                            style = MaterialTheme.typography.bodySmall,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                    Switch(
+                                        checked = classroom.joinEnabled && classroom.status == ClassroomStatus.ACTIVE,
+                                        onCheckedChange = { viewModel.setJoinEnabled(classroomId, it) },
+                                        enabled = classroom.status == ClassroomStatus.ACTIVE && !uiState.isSubmitting
+                                    )
+                                }
                                 Text("Mã tham gia lớp", style = MaterialTheme.typography.labelMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 Text(
                                     text = classroom.joinCode,
@@ -559,7 +692,10 @@ fun ClassroomDetailScreen(
                                         Text("Chia sẻ mã")
                                     }
 
-                                    TextButton(onClick = { showRegenDialog = true }) {
+                                    TextButton(
+                                        onClick = { showRegenDialog = true },
+                                        enabled = classroom.status == ClassroomStatus.ACTIVE && !uiState.isSubmitting
+                                    ) {
                                         Icon(Icons.Default.Refresh, contentDescription = null, modifier = Modifier.size(18.dp))
                                         Spacer(Modifier.width(4.dp))
                                         Text("Tạo mã mới")
@@ -591,6 +727,29 @@ fun ClassroomDetailScreen(
                                     }
                                 }
                                 Icon(Icons.Default.ChevronRight, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                            }
+                        }
+                    }
+
+                    item {
+                        Card(
+                            onClick = { onNavigateToJoinRequests(classroomId) },
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = RoundedCornerShape(12.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(16.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                    Icon(Icons.Default.PersonAdd, contentDescription = null, tint = Primary)
+                                    Column {
+                                        Text("Yêu cầu tham gia", fontWeight = FontWeight.SemiBold)
+                                        Text("Duyệt hoặc từ chối yêu cầu đang chờ", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    }
+                                }
+                                Icon(Icons.Default.ChevronRight, contentDescription = null)
                             }
                         }
                     }
@@ -657,7 +816,7 @@ fun ClassroomDetailScreen(
                 Button(
                     onClick = {
                         showArchiveDialog = false
-                        viewModel.archiveClassroom(classroomId, onNavigateBack)
+                        viewModel.archiveClassroom(classroomId) { viewModel.load(classroomId) }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
                 ) {
@@ -667,6 +826,25 @@ fun ClassroomDetailScreen(
             dismissButton = {
                 TextButton(onClick = { showArchiveDialog = false }) { Text("Hủy") }
             }
+        )
+    }
+
+    if (showDeleteDialog) {
+        AlertDialog(
+            onDismissRequest = { showDeleteDialog = false },
+            title = { Text("Xóa lớp học?") },
+            text = { Text("Chỉ lớp chưa có sinh viên, bài tập hoặc yêu cầu tham gia mới có thể xóa. Thao tác này không thể hoàn tác.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDeleteDialog = false
+                        viewModel.deleteClassroom(classroomId, onNavigateBack)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    enabled = !uiState.isSubmitting
+                ) { Text("Xóa lớp") }
+            },
+            dismissButton = { TextButton(onClick = { showDeleteDialog = false }) { Text("Hủy") } }
         )
     }
 }
@@ -749,9 +927,20 @@ fun ClassroomStudentListScreen(
     viewModel: ClassroomStudentListViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    var pendingRemoval by remember { mutableStateOf<User?>(null) }
+    var selectedStudent by remember { mutableStateOf<User?>(null) }
 
     LaunchedEffect(classroomId) {
         viewModel.load(classroomId)
+    }
+
+    LaunchedEffect(uiState.snackbarMessage, uiState.error) {
+        val message = uiState.snackbarMessage ?: uiState.error
+        if (message != null) {
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearMessage()
+        }
     }
 
     Scaffold(
@@ -764,17 +953,35 @@ fun ClassroomStudentListScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        when {
-            uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
-            uiState.error != null -> ErrorScreen(uiState.error!!, onRetry = { viewModel.load(classroomId) }, modifier = Modifier.padding(padding))
-            uiState.students.isEmpty() -> EmptyScreen("Lớp học chưa có sinh viên nào", Modifier.padding(padding))
-            else -> {
+        Column(Modifier.fillMaxSize().padding(padding)) {
+            OutlinedTextField(
+                value = uiState.searchQuery,
+                onValueChange = viewModel::onSearchChange,
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp),
+                placeholder = { Text("Tìm theo tên, email hoặc MSSV") },
+                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
+                trailingIcon = {
+                    if (uiState.searchQuery.isNotBlank()) {
+                        IconButton(onClick = { viewModel.onSearchChange("") }) {
+                            Icon(Icons.Default.Clear, contentDescription = "Xóa tìm kiếm")
+                        }
+                    }
+                },
+                singleLine = true,
+                shape = RoundedCornerShape(12.dp)
+            )
+            when {
+                uiState.isLoading -> LoadingScreen(Modifier.weight(1f))
+                uiState.students.isEmpty() -> EmptyScreen("Lớp học chưa có sinh viên nào", Modifier.weight(1f))
+                uiState.filteredStudents.isEmpty() -> EmptyScreen("Không tìm thấy sinh viên phù hợp", Modifier.weight(1f))
+                else -> {
                 LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(padding),
+                        .weight(1f)
+                        .fillMaxWidth(),
                     contentPadding = PaddingValues(16.dp),
                     verticalArrangement = Arrangement.spacedBy(10.dp)
                 ) {
@@ -786,8 +993,10 @@ fun ClassroomStudentListScreen(
                         )
                     }
 
-                    items(uiState.students, key = { it.id }) { student ->
+                    items(uiState.filteredStudents, key = { it.id }) { student ->
+                        val progress = uiState.progress[student.id] ?: ClassroomStudentProgress()
                         Card(
+                            onClick = { selectedStudent = student },
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(12.dp)
                         ) {
@@ -819,6 +1028,129 @@ fun ClassroomStudentListScreen(
                                         Text("MSSV: $it", style = MaterialTheme.typography.bodySmall, color = Primary, fontWeight = FontWeight.Medium)
                                     }
                                     Text(student.email, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(
+                                        "Đã nộp ${progress.submitted} · Chưa nộp ${progress.missing} · " +
+                                            (progress.averageScore?.let { "TB ${"%.1f".format(it)}" } ?: "Chưa có điểm"),
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                IconButton(
+                                    onClick = { pendingRemoval = student },
+                                    enabled = !uiState.isSubmitting
+                                ) {
+                                    Icon(Icons.Default.PersonRemove, contentDescription = "Xóa khỏi lớp", tint = MaterialTheme.colorScheme.error)
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    }
+
+    pendingRemoval?.let { student ->
+        AlertDialog(
+            onDismissRequest = { pendingRemoval = null },
+            title = { Text("Xóa sinh viên khỏi lớp?") },
+            text = { Text("${student.name} sẽ mất quyền truy cập lớp. Các bài đã nộp và điểm số vẫn được giữ lại.") },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        pendingRemoval = null
+                        viewModel.removeStudent(classroomId, student.id)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) { Text("Xóa khỏi lớp") }
+            },
+            dismissButton = { TextButton(onClick = { pendingRemoval = null }) { Text("Hủy") } }
+        )
+    }
+
+    selectedStudent?.let { student ->
+        val progress = uiState.progress[student.id] ?: ClassroomStudentProgress()
+        AlertDialog(
+            onDismissRequest = { selectedStudent = null },
+            title = { Text(student.name) },
+            text = {
+                Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                    Text("MSSV: ${student.studentId ?: "Chưa cập nhật"}")
+                    Text("Email: ${student.email}")
+                    Text("Trạng thái: Đang học")
+                    HorizontalDivider()
+                    Text("Bài đã nộp: ${progress.submitted}")
+                    Text("Bài chưa nộp: ${progress.missing}")
+                    Text("Điểm trung bình: ${progress.averageScore?.let { "%.1f".format(it) } ?: "Chưa có"}")
+                }
+            },
+            confirmButton = { TextButton(onClick = { selectedStudent = null }) { Text("Đóng") } }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun JoinRequestsScreen(
+    classroomId: String,
+    onNavigateBack: () -> Unit,
+    viewModel: JoinRequestsViewModel = hiltViewModel()
+) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+
+    LaunchedEffect(classroomId) { viewModel.load(classroomId) }
+    LaunchedEffect(uiState.message, uiState.error) {
+        val message = uiState.message ?: uiState.error
+        if (message != null) {
+            snackbarHostState.showSnackbar(message)
+            viewModel.clearMessage()
+        }
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Yêu cầu tham gia", fontWeight = FontWeight.Bold) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
+                    }
+                }
+            )
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
+    ) { padding ->
+        when {
+            uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
+            uiState.requests.isEmpty() -> EmptyScreen("Không có yêu cầu nào đang chờ", Modifier.padding(padding))
+            else -> LazyColumn(
+                modifier = Modifier.fillMaxSize().padding(padding),
+                contentPadding = PaddingValues(16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp)
+            ) {
+                items(uiState.requests, key = { it.request.id }) { item ->
+                    val student = item.student
+                    Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+                            Text(student?.name ?: "Sinh viên không xác định", fontWeight = FontWeight.Bold)
+                            Text(
+                                listOfNotNull(student?.studentId, student?.email).joinToString(" · "),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                                OutlinedButton(
+                                    onClick = { viewModel.respond(classroomId, item.request.id, false) },
+                                    enabled = uiState.processingRequestId == null
+                                ) { Text("Từ chối") }
+                                Button(
+                                    onClick = { viewModel.respond(classroomId, item.request.id, true) },
+                                    enabled = uiState.processingRequestId == null
+                                ) {
+                                    if (uiState.processingRequestId == item.request.id) {
+                                        CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp)
+                                    } else Text("Chấp nhận")
                                 }
                             }
                         }

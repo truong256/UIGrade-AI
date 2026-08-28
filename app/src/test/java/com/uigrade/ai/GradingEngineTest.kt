@@ -94,11 +94,13 @@ class GradingEngineTest {
 
     @Test
     fun `all demo credentials map to existing users`() {
-        MockData.credentials.forEach { (email, pair) ->
+        MockData.credentialHashes.forEach { (email, pair) ->
             val userId = pair.second
             val user = MockData.allUsers.find { it.id == userId }
             assertNotNull("User for email $email with id $userId must exist", user)
             assertEquals("User email must match credential key", email, user!!.email)
+            assertEquals("SHA-256 hashes must be 64 hexadecimal characters", 64, pair.first.length)
+            assertNotEquals("Demo passwords must not be stored as plaintext", "password123", pair.first)
         }
     }
 

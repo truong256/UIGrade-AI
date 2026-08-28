@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.uigrade.ai.domain.model.UserRole
 import com.uigrade.ai.presentation.admin.AdminDashboardScreen
 import com.uigrade.ai.presentation.admin.MetricManagementScreen
 import com.uigrade.ai.presentation.admin.RubricAdminScreen
@@ -21,19 +22,7 @@ import com.uigrade.ai.presentation.auth.GetStartedScreen
 import com.uigrade.ai.presentation.auth.LoginScreen
 import com.uigrade.ai.presentation.auth.SignUpScreen
 import com.uigrade.ai.presentation.auth.SplashScreen
-import com.uigrade.ai.presentation.lecturer.AssignmentManagementScreen
-import com.uigrade.ai.presentation.lecturer.ClassroomDetailScreen
-import com.uigrade.ai.presentation.lecturer.ClassroomStudentListScreen
-import com.uigrade.ai.presentation.lecturer.CreateClassroomScreen
-import com.uigrade.ai.presentation.lecturer.CreateEditAssignmentScreen
-import com.uigrade.ai.presentation.lecturer.GradingScreen
-import com.uigrade.ai.presentation.lecturer.LecturerClassroomListScreen
-import com.uigrade.ai.presentation.lecturer.LecturerDashboardScreen
-import com.uigrade.ai.presentation.lecturer.LecturerStatisticsScreen
-import com.uigrade.ai.presentation.lecturer.RubricDetailScreen
-import com.uigrade.ai.presentation.lecturer.RubricManagementScreen
-import com.uigrade.ai.presentation.lecturer.SubmissionDetailScreen
-import com.uigrade.ai.presentation.lecturer.SubmissionListScreen
+import com.uigrade.ai.presentation.lecturer.*
 import com.uigrade.ai.presentation.student.AssignmentDetailScreen
 import com.uigrade.ai.presentation.student.AssignmentListScreen
 import com.uigrade.ai.presentation.student.GradingResultScreen
@@ -245,39 +234,59 @@ fun UIGradeNavGraph(
 
         // ── Lecturer ──────────────────────────────────────────────────────
         composable(Screen.LecturerDashboard.route) {
-            LecturerDashboardScreen(
-                onNavigateToAssignments = { navController.navigate(Screen.LecturerAssignments.route) },
-                onNavigateToRubrics = { navController.navigate(Screen.RubricManagement.route) },
-                onNavigateToClassrooms = { navController.navigate(Screen.LecturerClassrooms.route) },
-                onNavigateToClassroom = { id -> navController.navigate(Screen.ClassroomDetail.createRoute(id)) },
-                onNavigateToCreateClassroom = { navController.navigate(Screen.CreateClassroom.route) },
-                onNavigateToSubmissions = { id -> navController.navigate(Screen.LecturerSubmissions.createRoute(id)) },
-                onNavigateToStatistics = { navController.navigate(Screen.LecturerStatistics.route) },
-                onLogout = {
-                    navController.navigate(Screen.GetStarted.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
+            LecturerOnly(navController) {
+                LecturerDashboardScreen(
+                    onNavigateToAssignments = { navController.safeNavigate(Screen.LecturerAssignments.route) },
+                    onNavigateToCreateAssignment = { navController.safeNavigate(Screen.CreateLecturerAssignment.route) },
+                    onNavigateToRubrics = { navController.safeNavigate(Screen.RubricManagement.route) },
+                    onNavigateToClassrooms = { navController.safeNavigate(Screen.LecturerClassrooms.route) },
+                    onNavigateToClassroom = { id -> navController.safeNavigate(Screen.ClassroomDetail.createRoute(id)) },
+                    onNavigateToCreateClassroom = { navController.safeNavigate(Screen.CreateClassroom.route) },
+                    onNavigateToSubmissions = { id -> navController.safeNavigate(Screen.LecturerSubmissions.createRoute(id)) },
+                    onNavigateToStatistics = { navController.safeNavigate(Screen.LecturerStatistics.route) },
+                    onNavigateToNotifications = { navController.safeNavigate(Screen.LecturerNotifications.route) },
+                    onNavigateToProfile = { navController.safeNavigate(Screen.LecturerProfile.route) },
+                    onLogout = { navController.clearTo(Screen.GetStarted.route) }
+                )
+            }
         }
 
         composable(Screen.LecturerClassrooms.route) {
-            LecturerClassroomListScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToCreateClassroom = { navController.navigate(Screen.CreateClassroom.route) },
-                onNavigateToClassroomDetail = { id -> navController.navigate(Screen.ClassroomDetail.createRoute(id)) }
-            )
+            LecturerOnly(navController) {
+                LecturerClassroomListScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToCreateClassroom = { navController.safeNavigate(Screen.CreateClassroom.route) },
+                    onNavigateToClassroomDetail = { id -> navController.safeNavigate(Screen.ClassroomDetail.createRoute(id)) }
+                )
+            }
         }
 
         composable(Screen.CreateClassroom.route) {
-            CreateClassroomScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onClassroomCreated = { classroomId ->
-                    navController.navigate(Screen.ClassroomDetail.createRoute(classroomId)) {
-                        popUpTo(Screen.LecturerClassrooms.route) { inclusive = false }
+            LecturerOnly(navController) {
+                CreateClassroomScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onClassroomCreated = { classroomId ->
+                        navController.navigate(Screen.ClassroomDetail.createRoute(classroomId)) {
+                            popUpTo(Screen.LecturerClassrooms.route) { inclusive = false }
+                            launchSingleTop = true
+                        }
                     }
-                }
-            )
+                )
+            }
+        }
+
+        composable(
+            route = Screen.EditClassroom.route,
+            arguments = listOf(navArgument("classroomId") { type = NavType.StringType })
+        ) { backStack ->
+            val classroomId = backStack.arguments?.getString("classroomId") ?: return@composable
+            LecturerOnly(navController) {
+                CreateClassroomScreen(
+                    classroomId = classroomId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onClassroomCreated = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(
@@ -285,14 +294,18 @@ fun UIGradeNavGraph(
             arguments = listOf(navArgument("classroomId") { type = NavType.StringType })
         ) { backStack ->
             val classroomId = backStack.arguments?.getString("classroomId") ?: return@composable
-            ClassroomDetailScreen(
-                classroomId = classroomId,
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToCreateAssignment = { cId -> navController.navigate(Screen.CreateAssignment.createRoute(cId)) },
-                onNavigateToEditAssignment = { aId -> navController.navigate(Screen.EditAssignment.createRoute(aId)) },
-                onNavigateToStudents = { cId -> navController.navigate(Screen.ClassroomStudents.createRoute(cId)) },
-                onNavigateToSubmissions = { aId -> navController.navigate(Screen.LecturerSubmissions.createRoute(aId)) }
-            )
+            LecturerOnly(navController) {
+                ClassroomDetailScreen(
+                    classroomId = classroomId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToEditClassroom = { id -> navController.safeNavigate(Screen.EditClassroom.createRoute(id)) },
+                    onNavigateToCreateAssignment = { id -> navController.safeNavigate(Screen.CreateAssignment.createRoute(id)) },
+                    onNavigateToEditAssignment = { id -> navController.safeNavigate(Screen.EditAssignment.createRoute(id)) },
+                    onNavigateToStudents = { id -> navController.safeNavigate(Screen.ClassroomStudents.createRoute(id)) },
+                    onNavigateToJoinRequests = { id -> navController.safeNavigate(Screen.ClassroomJoinRequests.createRoute(id)) },
+                    onNavigateToSubmissions = { id -> navController.safeNavigate(Screen.LecturerSubmissions.createRoute(id)) }
+                )
+            }
         }
 
         composable(
@@ -300,10 +313,29 @@ fun UIGradeNavGraph(
             arguments = listOf(navArgument("classroomId") { type = NavType.StringType })
         ) { backStack ->
             val classroomId = backStack.arguments?.getString("classroomId") ?: return@composable
-            ClassroomStudentListScreen(
-                classroomId = classroomId,
-                onNavigateBack = { navController.popBackStack() }
-            )
+            LecturerOnly(navController) {
+                ClassroomStudentListScreen(classroomId, onNavigateBack = { navController.popBackStack() })
+            }
+        }
+
+        composable(
+            route = Screen.ClassroomJoinRequests.route,
+            arguments = listOf(navArgument("classroomId") { type = NavType.StringType })
+        ) { backStack ->
+            val classroomId = backStack.arguments?.getString("classroomId") ?: return@composable
+            LecturerOnly(navController) {
+                JoinRequestsScreen(classroomId, onNavigateBack = { navController.popBackStack() })
+            }
+        }
+
+        composable(Screen.CreateLecturerAssignment.route) {
+            LecturerOnly(navController) {
+                CreateEditAssignmentScreen(
+                    classroomId = "",
+                    onNavigateBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(
@@ -311,12 +343,13 @@ fun UIGradeNavGraph(
             arguments = listOf(navArgument("classroomId") { type = NavType.StringType })
         ) { backStack ->
             val classroomId = backStack.arguments?.getString("classroomId") ?: return@composable
-            CreateEditAssignmentScreen(
-                classroomId = classroomId,
-                assignmentId = null,
-                onNavigateBack = { navController.popBackStack() },
-                onSaved = { navController.popBackStack() }
-            )
+            LecturerOnly(navController) {
+                CreateEditAssignmentScreen(
+                    classroomId = classroomId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(
@@ -324,26 +357,76 @@ fun UIGradeNavGraph(
             arguments = listOf(navArgument("assignmentId") { type = NavType.StringType })
         ) { backStack ->
             val assignmentId = backStack.arguments?.getString("assignmentId") ?: return@composable
-            CreateEditAssignmentScreen(
-                classroomId = "",
-                assignmentId = assignmentId,
-                onNavigateBack = { navController.popBackStack() },
-                onSaved = { navController.popBackStack() }
-            )
+            LecturerOnly(navController) {
+                CreateEditAssignmentScreen(
+                    classroomId = "",
+                    assignmentId = assignmentId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(Screen.LecturerAssignments.route) {
-            AssignmentManagementScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToSubmissions = { id -> navController.navigate(Screen.LecturerSubmissions.createRoute(id)) }
-            )
+            LecturerOnly(navController) {
+                AssignmentManagementScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToCreate = { navController.safeNavigate(Screen.CreateLecturerAssignment.route) },
+                    onNavigateToDetail = { id -> navController.safeNavigate(Screen.LecturerAssignmentDetail.createRoute(id)) },
+                    onNavigateToEdit = { id -> navController.safeNavigate(Screen.EditAssignment.createRoute(id)) },
+                    onNavigateToSubmissions = { id -> navController.safeNavigate(Screen.LecturerSubmissions.createRoute(id)) }
+                )
+            }
+        }
+
+        composable(
+            route = Screen.LecturerAssignmentDetail.route,
+            arguments = listOf(navArgument("assignmentId") { type = NavType.StringType })
+        ) { backStack ->
+            val assignmentId = backStack.arguments?.getString("assignmentId") ?: return@composable
+            LecturerOnly(navController) {
+                LecturerAssignmentDetailScreen(
+                    assignmentId = assignmentId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToEdit = { id -> navController.safeNavigate(Screen.EditAssignment.createRoute(id)) },
+                    onNavigateToSubmissions = { id -> navController.safeNavigate(Screen.LecturerSubmissions.createRoute(id)) }
+                )
+            }
         }
 
         composable(Screen.RubricManagement.route) {
-            RubricManagementScreen(
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToRubric = { id -> navController.navigate(Screen.RubricDetail.createRoute(id)) }
-            )
+            LecturerOnly(navController) {
+                RubricManagementScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onCreateRubric = { navController.safeNavigate(Screen.CreateRubric.route) },
+                    onNavigateToRubric = { id -> navController.safeNavigate(Screen.RubricDetail.createRoute(id)) },
+                    onEditRubric = { id -> navController.safeNavigate(Screen.EditRubric.createRoute(id)) }
+                )
+            }
+        }
+
+        composable(Screen.CreateRubric.route) {
+            LecturerOnly(navController) {
+                RubricEditorScreen(
+                    rubricId = null,
+                    onNavigateBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() }
+                )
+            }
+        }
+
+        composable(
+            route = Screen.EditRubric.route,
+            arguments = listOf(navArgument("rubricId") { type = NavType.StringType })
+        ) { backStack ->
+            val rubricId = backStack.arguments?.getString("rubricId") ?: return@composable
+            LecturerOnly(navController) {
+                RubricEditorScreen(
+                    rubricId = rubricId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onSaved = { navController.popBackStack() }
+                )
+            }
         }
 
         composable(
@@ -351,10 +434,9 @@ fun UIGradeNavGraph(
             arguments = listOf(navArgument("rubricId") { type = NavType.StringType })
         ) { backStack ->
             val rubricId = backStack.arguments?.getString("rubricId") ?: return@composable
-            RubricDetailScreen(
-                rubricId = rubricId,
-                onNavigateBack = { navController.popBackStack() }
-            )
+            LecturerOnly(navController) {
+                RubricDetailScreen(rubricId, onNavigateBack = { navController.popBackStack() })
+            }
         }
 
         composable(
@@ -362,12 +444,14 @@ fun UIGradeNavGraph(
             arguments = listOf(navArgument("assignmentId") { type = NavType.StringType })
         ) { backStack ->
             val assignmentId = backStack.arguments?.getString("assignmentId") ?: return@composable
-            SubmissionListScreen(
-                assignmentId = assignmentId,
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToSubmission = { id -> navController.navigate(Screen.SubmissionDetail.createRoute(id)) },
-                onNavigateToGrading = { id -> navController.navigate(Screen.GradingScreen.createRoute(id)) }
-            )
+            LecturerOnly(navController) {
+                SubmissionListScreen(
+                    assignmentId = assignmentId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToSubmission = { id -> navController.safeNavigate(Screen.SubmissionDetail.createRoute(id)) },
+                    onNavigateToGrading = { id -> navController.safeNavigate(Screen.GradingScreen.createRoute(id)) }
+                )
+            }
         }
 
         composable(
@@ -375,11 +459,13 @@ fun UIGradeNavGraph(
             arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
         ) { backStack ->
             val submissionId = backStack.arguments?.getString("submissionId") ?: return@composable
-            SubmissionDetailScreen(
-                submissionId = submissionId,
-                onNavigateBack = { navController.popBackStack() },
-                onNavigateToGrading = { id -> navController.navigate(Screen.GradingScreen.createRoute(id)) }
-            )
+            LecturerOnly(navController) {
+                SubmissionDetailScreen(
+                    submissionId = submissionId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToGrading = { id -> navController.safeNavigate(Screen.GradingScreen.createRoute(id)) }
+                )
+            }
         }
 
         composable(
@@ -387,16 +473,50 @@ fun UIGradeNavGraph(
             arguments = listOf(navArgument("submissionId") { type = NavType.StringType })
         ) { backStack ->
             val submissionId = backStack.arguments?.getString("submissionId") ?: return@composable
-            GradingScreen(
-                submissionId = submissionId,
-                onNavigateBack = { navController.popBackStack() }
-            )
+            LecturerOnly(navController) {
+                GradingScreen(
+                    submissionId = submissionId,
+                    onNavigateBack = { navController.popBackStack() },
+                    onNavigateToGrading = { id ->
+                        navController.navigate(Screen.GradingScreen.createRoute(id)) {
+                            popUpTo(Screen.GradingScreen.route) { inclusive = true }
+                            launchSingleTop = true
+                        }
+                    }
+                )
+            }
         }
 
         composable(Screen.LecturerStatistics.route) {
-            LecturerStatisticsScreen(
-                onNavigateBack = { navController.popBackStack() }
-            )
+            LecturerOnly(navController) {
+                LecturerAnalyticsScreen(onNavigateBack = { navController.popBackStack() })
+            }
+        }
+
+        composable(Screen.LecturerNotifications.route) {
+            LecturerOnly(navController) {
+                LecturerNotificationsScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onOpenNotification = { notification ->
+                        val route = when {
+                            notification.submissionId != null -> Screen.SubmissionDetail.createRoute(notification.submissionId)
+                            notification.assignmentId != null -> Screen.LecturerSubmissions.createRoute(notification.assignmentId)
+                            notification.classroomId != null -> Screen.ClassroomDetail.createRoute(notification.classroomId)
+                            else -> Screen.LecturerDashboard.route
+                        }
+                        navController.safeNavigate(route)
+                    }
+                )
+            }
+        }
+
+        composable(Screen.LecturerProfile.route) {
+            LecturerOnly(navController) {
+                LecturerProfileScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    onLogout = { navController.clearTo(Screen.GetStarted.route) }
+                )
+            }
         }
 
         // ── Admin ─────────────────────────────────────────────────────────
@@ -434,5 +554,36 @@ fun UIGradeNavGraph(
         composable(Screen.SystemLogs.route) {
             SystemLogsScreen(onNavigateBack = { navController.popBackStack() })
         }
+    }
+}
+
+@Composable
+private fun LecturerOnly(
+    navController: NavHostController,
+    content: @Composable () -> Unit
+) {
+    RoleGuard(
+        requiredRole = UserRole.LECTURER,
+        onDenied = { role ->
+            val destination = when (role) {
+                UserRole.STUDENT -> Screen.StudentDashboard.route
+                UserRole.ADMIN -> Screen.AdminDashboard.route
+                UserRole.LECTURER -> Screen.LecturerDashboard.route
+                null -> Screen.GetStarted.route
+            }
+            navController.clearTo(destination)
+        },
+        content = content
+    )
+}
+
+private fun NavHostController.safeNavigate(route: String) {
+    navigate(route) { launchSingleTop = true }
+}
+
+private fun NavHostController.clearTo(route: String) {
+    navigate(route) {
+        popUpTo(0) { inclusive = true }
+        launchSingleTop = true
     }
 }

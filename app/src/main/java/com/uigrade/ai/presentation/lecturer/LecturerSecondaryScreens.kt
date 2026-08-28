@@ -1,5 +1,8 @@
 package com.uigrade.ai.presentation.lecturer
 
+import android.content.Intent
+import android.net.Uri
+import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
@@ -13,6 +16,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -83,7 +87,11 @@ fun SubmissionListScreen(
     ) { padding ->
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
-            uiState.error != null -> ErrorScreen(uiState.error!!, modifier = Modifier.padding(padding))
+            uiState.error != null -> ErrorScreen(
+                uiState.error.orEmpty(),
+                onRetry = { viewModel.load(assignmentId) },
+                modifier = Modifier.padding(padding)
+            )
             else -> {
                 Column(
                     modifier = Modifier
@@ -133,9 +141,16 @@ fun SubmissionListScreen(
                     ) {
                         item {
                             FilterChip(
-                                selected = uiState.selectedStatus == null,
+                                selected = uiState.selectedStatus == null && !uiState.showMissingOnly,
                                 onClick = { viewModel.onStatusFilterChange(null) },
                                 label = { Text("Tất cả (${uiState.allSubmissions.size})") }
+                            )
+                        }
+                        item {
+                            FilterChip(
+                                selected = uiState.showMissingOnly,
+                                onClick = viewModel::showMissingSubmissions,
+                                label = { Text("Chưa nộp (${uiState.missingStudents.size})") }
                             )
                         }
                         item {
@@ -177,7 +192,38 @@ fun SubmissionListScreen(
 
                     Spacer(Modifier.height(4.dp))
 
-                    if (uiState.filteredSubmissions.isEmpty()) {
+                    if (uiState.showMissingOnly && uiState.filteredMissingStudents.isEmpty()) {
+                        EmptyScreen(
+                            message = if (uiState.searchQuery.isNotBlank()) "Không có sinh viên phù hợp" else "Tất cả sinh viên đã nộp bài",
+                            modifier = Modifier.fillMaxSize()
+                        )
+                    } else if (uiState.showMissingOnly) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            contentPadding = PaddingValues(16.dp),
+                            verticalArrangement = Arrangement.spacedBy(10.dp)
+                        ) {
+                            items(uiState.filteredMissingStudents, key = { it.id }) { student ->
+                                Card(Modifier.fillMaxWidth(), shape = RoundedCornerShape(12.dp)) {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth().padding(14.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Column(Modifier.weight(1f)) {
+                                            Text(student.name, fontWeight = FontWeight.Bold)
+                                            Text(
+                                                listOfNotNull(student.studentId, student.email).joinToString(" · "),
+                                                style = MaterialTheme.typography.bodySmall,
+                                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                            )
+                                        }
+                                        Text("Chưa nộp", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.labelMedium)
+                                    }
+                                }
+                            }
+                        }
+                    } else if (uiState.filteredSubmissions.isEmpty()) {
                         EmptyScreen(
                             message = if (uiState.searchQuery.isNotBlank()) "Không có kết quả phù hợp" else "Chưa có sinh viên nộp bài",
                             modifier = Modifier.fillMaxSize()
@@ -276,7 +322,7 @@ private fun SubmissionStatBadge(label: String, count: String, color: Color) {
 fun SubmissionDetailScreen(
     submissionId: String,
     onNavigateBack: () -> Unit,
-    onNavigateToGrading: (String) -> Unit = {},
+    onNavigateToGrading: (String) -> Unit,
     viewModel: SubmissionDetailViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -296,28 +342,39 @@ fun SubmissionDetailScreen(
     ) { padding ->
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
-            uiState.error != null -> ErrorScreen(uiState.error!!, modifier = Modifier.padding(padding))
+            uiState.error != null -> ErrorScreen(
+                uiState.error.orEmpty(),
+                onRetry = { viewModel.load(submissionId) },
+                modifier = Modifier.padding(padding)
+            )
             uiState.gradingResult == null -> {
-                Column(
+                LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(padding)
-                        .padding(16.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+                        .padding(padding),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    Text("Bài nộp chưa được chấm điểm", style = MaterialTheme.typography.titleMedium)
-                    Spacer(Modifier.height(16.dp))
-                    Button(onClick = { onNavigateToGrading(submissionId) }) {
-                        Icon(Icons.Default.Grading, contentDescription = null)
-                        Spacer(Modifier.width(8.dp))
-                        Text("Bắt đầu chấm bài")
+                    uiState.submission?.let { submission -> item { SubmissionInfoCard(submission) } }
+                    item {
+                        Text("Bài nộp chưa được chấm điểm", style = MaterialTheme.typography.titleMedium)
+                    }
+                    item {
+                        Button(
+                            onClick = { onNavigateToGrading(submissionId) },
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Icon(Icons.Default.Grading, contentDescription = null)
+                            Spacer(Modifier.width(8.dp))
+                            Text("Bắt đầu chấm bài")
+                        }
                     }
                 }
             }
             else -> {
-                val result = uiState.gradingResult!!
+                val result = uiState.gradingResult ?: return@Scaffold
                 LazyColumn(modifier = Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                    uiState.submission?.let { submission -> item { SubmissionInfoCard(submission) } }
                     item {
                         Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.primaryContainer)) {
                             Row(modifier = Modifier.padding(16.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
@@ -365,6 +422,43 @@ fun SubmissionDetailScreen(
                         }
                     }
                 }
+            }
+        }
+    }
+}
+
+@Composable
+private fun SubmissionInfoCard(submission: Submission) {
+    val context = LocalContext.current
+    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm")
+    Card(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+            Text(submission.studentName, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Nộp lúc: ${submission.submittedAt.format(formatter)} · Lần ${submission.attemptNumber}")
+            Text("Tệp: ${submission.fileName.ifBlank { "Không có tên tệp" }}", style = MaterialTheme.typography.bodySmall)
+            if (submission.isLate) {
+                Text("Bài nộp muộn", color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.SemiBold)
+            }
+            OutlinedButton(
+                onClick = {
+                    runCatching {
+                        val fileUri = requireNotNull(submission.fileUri)
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse(fileUri)).apply {
+                            addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION)
+                        }
+                        context.startActivity(intent)
+                    }.onFailure {
+                        Toast.makeText(context, "Không có ứng dụng phù hợp để mở tệp.", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                enabled = !submission.fileUri.isNullOrBlank()
+            ) {
+                Icon(Icons.Default.OpenInNew, contentDescription = null)
+                Spacer(Modifier.width(8.dp))
+                Text("Mở tệp bài nộp")
+            }
+            if (submission.fileUri.isNullOrBlank()) {
+                Text("Dữ liệu minh họa chưa đính kèm URI tệp.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }

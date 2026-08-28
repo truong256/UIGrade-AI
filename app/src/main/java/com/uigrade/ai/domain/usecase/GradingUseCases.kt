@@ -2,8 +2,11 @@ package com.uigrade.ai.domain.usecase
 
 import com.uigrade.ai.domain.model.CriterionScore
 import com.uigrade.ai.domain.model.GradingResult
+import com.uigrade.ai.domain.model.Submission
+import com.uigrade.ai.domain.model.UserRole
 import com.uigrade.ai.domain.repository.AuthRepository
 import com.uigrade.ai.domain.repository.GradingRepository
+import com.uigrade.ai.domain.repository.SubmissionRepository
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.Inject
@@ -13,6 +16,20 @@ class GetGradingResultForSubmissionUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(submissionId: String): GradingResult? =
         repository.getGradingResultForSubmission(submissionId)
+}
+
+class GetGradingResultForSubmissionForLecturerUseCase @Inject constructor(
+    private val repository: GradingRepository,
+    private val authRepository: AuthRepository
+) {
+    suspend operator fun invoke(submissionId: String): Result<GradingResult?> {
+        val user = authRepository.getCurrentUser()
+            ?: return Result.failure(IllegalArgumentException("Bạn chưa đăng nhập"))
+        if (user.role != UserRole.LECTURER) {
+            return Result.failure(IllegalArgumentException("Chỉ giảng viên mới có thể xem bản chấm nháp"))
+        }
+        return Result.success(repository.getGradingResultForSubmissionForLecturer(submissionId))
+    }
 }
 
 class GetGradingResultsForStudentUseCase @Inject constructor(
@@ -50,6 +67,9 @@ class SaveGradingDraftUseCase @Inject constructor(
     ): Result<GradingResult> {
         val user = authRepository.getCurrentUser()
             ?: return Result.failure(IllegalArgumentException("Bạn chưa đăng nhập"))
+        if (user.role != UserRole.LECTURER) {
+            return Result.failure(IllegalArgumentException("Chỉ giảng viên mới có thể chấm điểm"))
+        }
 
         // Validate scores
         for (cs in criteriaScores) {
@@ -91,7 +111,31 @@ class ReleaseGradingUseCase @Inject constructor(
 ) {
     suspend operator fun invoke(resultId: String): Result<GradingResult> {
         authRepository.getCurrentUser()
-            ?: return Result.failure(IllegalArgumentException("Bạn chưa đăng nhập"))
+            ?.takeIf { it.role == UserRole.LECTURER }
+            ?: return Result.failure(IllegalArgumentException("Chỉ giảng viên mới có thể công bố điểm"))
         return repository.releaseGrading(resultId)
+    }
+}
+
+class UpdateSubmissionReviewStateUseCase @Inject constructor(
+    private val submissionRepository: SubmissionRepository,
+    private val authRepository: AuthRepository
+) {
+    suspend operator fun invoke(
+        submissionId: String,
+        needsReview: Boolean,
+        resubmissionRequested: Boolean
+    ): Result<Submission> {
+        val user = authRepository.getCurrentUser()
+            ?: return Result.failure(IllegalArgumentException("Bạn chưa đăng nhập"))
+        if (user.role != UserRole.LECTURER) {
+            return Result.failure(IllegalArgumentException("Chỉ giảng viên mới có quyền cập nhật bài nộp"))
+        }
+        val updated = submissionRepository.updateSubmissionReviewState(
+            submissionId,
+            needsReview,
+            resubmissionRequested
+        ) ?: return Result.failure(IllegalArgumentException("Không tìm thấy bài nộp"))
+        return Result.success(updated)
     }
 }

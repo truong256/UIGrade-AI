@@ -187,4 +187,19 @@ class MockSubmissionRepository @Inject constructor(
         submissions[index] = submissions[index].copy(status = status)
         return submissions[index]
     }
+
+    override suspend fun updateSubmissionReviewState(
+        submissionId: String,
+        needsReview: Boolean,
+        resubmissionRequested: Boolean
+    ): Submission? {
+        delay(300)
+        val index = submissions.indexOfFirst { it.id == submissionId }
+        if (index < 0) return null
+        submissions[index] = submissions[index].copy(
+            needsReview = needsReview,
+            resubmissionRequested = resubmissionRequested
+        )
+        return submissions[index]
+    }
 }

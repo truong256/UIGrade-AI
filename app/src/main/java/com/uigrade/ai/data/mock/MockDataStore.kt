@@ -5,6 +5,8 @@ import com.uigrade.ai.domain.model.ClassMembership
 import com.uigrade.ai.domain.model.Classroom
 import com.uigrade.ai.domain.model.Feedback
 import com.uigrade.ai.domain.model.GradingResult
+import com.uigrade.ai.domain.model.JoinRequest
+import com.uigrade.ai.domain.model.LecturerNotification
 import com.uigrade.ai.domain.model.Rubric
 import com.uigrade.ai.domain.model.Submission
 import com.uigrade.ai.domain.model.User
@@ -28,6 +30,8 @@ class MockDataStore @Inject constructor() {
     // Classroom data
     val classrooms: MutableList<Classroom> = MockData.classrooms.toMutableList()
     val memberships: MutableList<ClassMembership> = MockData.memberships.toMutableList()
+    val joinRequests: MutableList<JoinRequest> = MockData.joinRequests.toMutableList()
+    val notifications: MutableList<LecturerNotification> = MockData.lecturerNotifications.toMutableList()
 
     var aiFeedbackEnabled: Boolean = true
 }

@@ -21,8 +21,16 @@ object MockData {
     )
 
     val lecturers = listOf(
-        User("l1", "TS. Nguyễn Minh Khoa", "lecturer@uigrade.ai", UserRole.LECTURER),
-        User("l2", "ThS. Trần Thị Lan", "lan.tran@uigrade.ai", UserRole.LECTURER)
+        User(
+            "l1", "TS. Nguyễn Minh Khoa", "lecturer@uigrade.ai", UserRole.LECTURER,
+            phone = "0901234567", department = "Công nghệ phần mềm",
+            organization = "Khoa Công nghệ thông tin",
+            bio = "Giảng viên phụ trách học phần phát triển giao diện Android."
+        ),
+        User(
+            "l2", "ThS. Trần Thị Lan", "lan.tran@uigrade.ai", UserRole.LECTURER,
+            department = "Hệ thống thông tin", organization = "Khoa Công nghệ thông tin"
+        )
     )
 
     val admins = listOf(
@@ -33,15 +41,15 @@ object MockData {
 
     // ─── Demo credentials ────────────────────────────────────────────────────
 
-    val credentials = mapOf(
-        "student@uigrade.ai" to Pair("password123", "s1"),
-        "binh.tran@uigrade.ai" to Pair("password123", "s2"),
-        "cuong.le@uigrade.ai" to Pair("password123", "s3"),
-        "dung.pham@uigrade.ai" to Pair("password123", "s4"),
-        "em.hoang@uigrade.ai" to Pair("password123", "s5"),
-        "lecturer@uigrade.ai" to Pair("password123", "l1"),
-        "lan.tran@uigrade.ai" to Pair("password123", "l2"),
-        "admin@uigrade.ai" to Pair("password123", "a1")
+    val credentialHashes = mapOf(
+        "student@uigrade.ai" to Pair("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f", "s1"),
+        "binh.tran@uigrade.ai" to Pair("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f", "s2"),
+        "cuong.le@uigrade.ai" to Pair("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f", "s3"),
+        "dung.pham@uigrade.ai" to Pair("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f", "s4"),
+        "em.hoang@uigrade.ai" to Pair("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f", "s5"),
+        "lecturer@uigrade.ai" to Pair("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f", "l1"),
+        "lan.tran@uigrade.ai" to Pair("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f", "l2"),
+        "admin@uigrade.ai" to Pair("ef92b778bafe771e89245b89ecbc08a44a4e166c06659911881f383d4473e94f", "a1")
     )
 
     // ─── Rules ───────────────────────────────────────────────────────────────
@@ -628,5 +636,36 @@ object MockData {
         ClassMembership("cls2", "s3", LocalDateTime.of(2026, 8, 4, 14, 0)),
         ClassMembership("cls2", "s5", LocalDateTime.of(2026, 8, 6, 8, 30))
     )
-}
 
+    val joinRequests = listOf(
+        JoinRequest(
+            id = "join-1",
+            classroomId = "cls1",
+            studentId = "s5",
+            requestedAt = LocalDateTime.of(2026, 8, 26, 9, 15)
+        )
+    )
+
+    val lecturerNotifications = listOf(
+        LecturerNotification(
+            id = "notice-1",
+            lecturerId = "l1",
+            title = "Yêu cầu tham gia lớp",
+            message = "Hoàng Văn Em muốn tham gia Android UI Development – Nhóm A.",
+            type = LecturerNotificationType.JOIN_REQUEST,
+            createdAt = LocalDateTime.of(2026, 8, 26, 9, 15),
+            classroomId = "cls1"
+        ),
+        LecturerNotification(
+            id = "notice-2",
+            lecturerId = "l1",
+            title = "Có bài nộp mới",
+            message = "Phạm Thị Dung đã nộp UI Assignment 01.",
+            type = LecturerNotificationType.SUBMISSION_RECEIVED,
+            createdAt = LocalDateTime.of(2026, 8, 26, 8, 30),
+            classroomId = "cls1",
+            assignmentId = "a1",
+            submissionId = "sub5"
+        )
+    )
+}

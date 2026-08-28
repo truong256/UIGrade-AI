@@ -4,6 +4,9 @@ import com.uigrade.ai.domain.model.GradingResult
 
 interface GradingRepository {
     suspend fun getGradingResultForSubmission(submissionId: String): GradingResult?
+
+    /** Lecturer view includes drafts and finalized-but-not-released results. */
+    suspend fun getGradingResultForSubmissionForLecturer(submissionId: String): GradingResult?
     suspend fun getGradingResultsForStudent(studentId: String): List<GradingResult>
     suspend fun getGradingResultsForAssignment(assignmentId: String): List<GradingResult>
     suspend fun getAllGradingResults(): List<GradingResult>

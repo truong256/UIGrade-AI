@@ -32,12 +32,15 @@ import java.time.format.DateTimeFormatter
 @Composable
 fun LecturerDashboardScreen(
     onNavigateToAssignments: () -> Unit,
+    onNavigateToCreateAssignment: () -> Unit,
     onNavigateToRubrics: () -> Unit,
-    onNavigateToClassrooms: () -> Unit = {},
-    onNavigateToClassroom: (classroomId: String) -> Unit = {},
-    onNavigateToCreateClassroom: () -> Unit = {},
+    onNavigateToClassrooms: () -> Unit,
+    onNavigateToClassroom: (classroomId: String) -> Unit,
+    onNavigateToCreateClassroom: () -> Unit,
     onNavigateToSubmissions: (assignmentId: String) -> Unit,
     onNavigateToStatistics: () -> Unit,
+    onNavigateToNotifications: () -> Unit,
+    onNavigateToProfile: () -> Unit,
     onLogout: () -> Unit,
     viewModel: LecturerDashboardViewModel = hiltViewModel()
 ) {
@@ -52,6 +55,20 @@ fun LecturerDashboardScreen(
             TopAppBar(
                 title = { Text("Bảng điều khiển giảng viên", fontWeight = FontWeight.Bold) },
                 actions = {
+                    BadgedBox(
+                        badge = {
+                            if (uiState.unreadNotifications > 0) {
+                                Badge { Text(uiState.unreadNotifications.toString()) }
+                            }
+                        }
+                    ) {
+                        IconButton(onClick = onNavigateToNotifications) {
+                            Icon(Icons.Default.Notifications, "Thông báo")
+                        }
+                    }
+                    IconButton(onClick = onNavigateToProfile) {
+                        Icon(Icons.Default.AccountCircle, "Hồ sơ giảng viên")
+                    }
                     IconButton(onClick = { viewModel.logout(onLogout) }) {
                         Icon(Icons.AutoMirrored.Filled.Logout, "Đăng xuất")
                     }
@@ -61,7 +78,7 @@ fun LecturerDashboardScreen(
     ) { padding ->
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
-            uiState.error != null -> ErrorScreen(uiState.error!!, onRetry = { viewModel.load() }, modifier = Modifier.padding(padding))
+            uiState.error != null -> ErrorScreen(uiState.error.orEmpty(), onRetry = { viewModel.load() }, modifier = Modifier.padding(padding))
             else -> LazyColumn(
                 modifier = Modifier
                     .fillMaxSize()
@@ -107,10 +124,13 @@ fun LecturerDashboardScreen(
                 // Stats
                 item {
                     val stats = uiState.stats
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        LecturerStatCard("Lớp học", "${uiState.classrooms.size}", Icons.Default.School, Primary, Modifier.weight(1f))
-                        LecturerStatCard("Bài nộp", "${stats?.totalSubmissions ?: 0}", Icons.Default.Send, Success, Modifier.weight(1f))
-                        LecturerStatCard("TB điểm", "${"%.1f".format(stats?.averageScore ?: 0f)}", Icons.Default.Star, Warning, Modifier.weight(1f))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        item { LecturerStatCard("Lớp học", "${uiState.classrooms.size}", Icons.Default.School, Primary, onNavigateToClassrooms) }
+                        item { LecturerStatCard("Sinh viên", "${uiState.totalStudents}", Icons.Default.People, Primary, onNavigateToClassrooms) }
+                        item { LecturerStatCard("Bài tập", "${stats?.totalAssignments ?: 0}", Icons.Default.Assignment, Success, onNavigateToAssignments) }
+                        item { LecturerStatCard("Chưa chấm", "${stats?.pendingGrading ?: 0}", Icons.Default.PendingActions, Warning, onNavigateToAssignments) }
+                        item { LecturerStatCard("Sắp hết hạn", "${uiState.upcomingDeadlines}", Icons.Default.Schedule, Warning, onNavigateToAssignments) }
+                        item { LecturerStatCard("TB điểm", "${"%.1f".format(stats?.averageScore ?: 0f)}", Icons.Default.Star, Warning, onNavigateToStatistics) }
                     }
                 }
 
@@ -118,11 +138,12 @@ fun LecturerDashboardScreen(
                 item {
                     Text("Quản lý nhanh", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
                     Spacer(Modifier.height(8.dp))
-                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        QuickNavCard("Lớp học", Icons.Default.School, onNavigateToClassrooms, Modifier.weight(1f))
-                        QuickNavCard("Bài tập", Icons.Default.Assignment, onNavigateToAssignments, Modifier.weight(1f))
-                        QuickNavCard("Rubric", Icons.AutoMirrored.Filled.Grading, onNavigateToRubrics, Modifier.weight(1f))
-                        QuickNavCard("Thống kê", Icons.Default.BarChart, onNavigateToStatistics, Modifier.weight(1f))
+                    LazyRow(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        item { QuickNavCard("Lớp học", Icons.Default.School, onNavigateToClassrooms) }
+                        item { QuickNavCard("Tạo bài tập", Icons.Default.AddTask, onNavigateToCreateAssignment) }
+                        item { QuickNavCard("Bài tập", Icons.Default.Assignment, onNavigateToAssignments) }
+                        item { QuickNavCard("Rubric", Icons.AutoMirrored.Filled.Grading, onNavigateToRubrics) }
+                        item { QuickNavCard("Thống kê", Icons.Default.BarChart, onNavigateToStatistics) }
                     }
                 }
 
@@ -235,8 +256,8 @@ private fun LecturerDashboardClassroomCard(
 }
 
 @Composable
-private fun LecturerStatCard(title: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: androidx.compose.ui.graphics.Color, modifier: Modifier) {
-    Card(modifier = modifier, colors = CardDefaults.cardColors(containerColor = color.copy(0.08f)), shape = RoundedCornerShape(12.dp)) {
+private fun LecturerStatCard(title: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, color: androidx.compose.ui.graphics.Color, onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.width(116.dp), colors = CardDefaults.cardColors(containerColor = color.copy(0.08f)), shape = RoundedCornerShape(12.dp)) {
         Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(icon, contentDescription = title, tint = color, modifier = Modifier.size(22.dp))
             Spacer(Modifier.height(4.dp))
@@ -247,8 +268,8 @@ private fun LecturerStatCard(title: String, value: String, icon: androidx.compos
 }
 
 @Composable
-private fun QuickNavCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit, modifier: Modifier) {
-    Card(onClick = onClick, modifier = modifier, shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
+private fun QuickNavCard(title: String, icon: androidx.compose.ui.graphics.vector.ImageVector, onClick: () -> Unit) {
+    Card(onClick = onClick, modifier = Modifier.width(112.dp), shape = RoundedCornerShape(12.dp), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)) {
         Column(modifier = Modifier.padding(12.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
             Icon(icon, contentDescription = title, modifier = Modifier.size(26.dp), tint = Primary)
             Spacer(Modifier.height(4.dp))

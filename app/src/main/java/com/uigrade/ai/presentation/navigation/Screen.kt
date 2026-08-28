@@ -35,22 +35,36 @@ sealed class Screen(val route: String) {
     object LecturerDashboard     : Screen("lecturer/dashboard")
     object LecturerClassrooms    : Screen("lecturer/classrooms")
     object CreateClassroom       : Screen("lecturer/classroom/create")
+    object EditClassroom         : Screen("lecturer/classroom/{classroomId}/edit") {
+        fun createRoute(classroomId: String) = "lecturer/classroom/$classroomId/edit"
+    }
     object ClassroomDetail       : Screen("lecturer/classroom/{classroomId}") {
         fun createRoute(classroomId: String) = "lecturer/classroom/$classroomId"
     }
     object ClassroomStudents     : Screen("lecturer/classroom/{classroomId}/students") {
         fun createRoute(classroomId: String) = "lecturer/classroom/$classroomId/students"
     }
+    object ClassroomJoinRequests : Screen("lecturer/classroom/{classroomId}/join-requests") {
+        fun createRoute(classroomId: String) = "lecturer/classroom/$classroomId/join-requests"
+    }
+    object CreateLecturerAssignment : Screen("lecturer/assignment/create")
     object CreateAssignment      : Screen("lecturer/classroom/{classroomId}/assignment/create") {
         fun createRoute(classroomId: String) = "lecturer/classroom/$classroomId/assignment/create"
     }
     object EditAssignment        : Screen("lecturer/assignment/edit/{assignmentId}") {
         fun createRoute(assignmentId: String) = "lecturer/assignment/edit/$assignmentId"
     }
+    object LecturerAssignmentDetail : Screen("lecturer/assignment/{assignmentId}") {
+        fun createRoute(assignmentId: String) = "lecturer/assignment/$assignmentId"
+    }
     object LecturerAssignments   : Screen("lecturer/assignments")
     object RubricManagement      : Screen("lecturer/rubrics")
     object RubricDetail          : Screen("lecturer/rubrics/{rubricId}") {
         fun createRoute(rubricId: String) = "lecturer/rubrics/$rubricId"
+    }
+    object CreateRubric          : Screen("lecturer/rubric/create")
+    object EditRubric            : Screen("lecturer/rubric/{rubricId}/edit") {
+        fun createRoute(rubricId: String) = "lecturer/rubric/$rubricId/edit"
     }
     object LecturerSubmissions   : Screen("lecturer/submissions/{assignmentId}") {
         fun createRoute(assignmentId: String) = "lecturer/submissions/$assignmentId"
@@ -62,6 +76,8 @@ sealed class Screen(val route: String) {
         fun createRoute(submissionId: String) = "lecturer/submission/$submissionId/grade"
     }
     object LecturerStatistics    : Screen("lecturer/statistics")
+    object LecturerNotifications : Screen("lecturer/notifications")
+    object LecturerProfile       : Screen("lecturer/profile")
 
     // ─── Admin ────────────────────────────────────────────────────────────
     object AdminDashboard        : Screen("admin/dashboard")

@@ -26,7 +26,7 @@ class MockGradingRepository @Inject constructor(
     /**
      * Lecturer-only view — returns the result regardless of release status.
      */
-    suspend fun getGradingResultForSubmissionLecturer(submissionId: String): GradingResult? {
+    override suspend fun getGradingResultForSubmissionForLecturer(submissionId: String): GradingResult? {
         delay(400)
         return results.find { it.submissionId == submissionId }
     }

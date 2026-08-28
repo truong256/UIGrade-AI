@@ -37,5 +37,7 @@ data class Submission(
     // Classroom integration
     val classroomId: String = "",
     val fileName: String = "",
-    val isLate: Boolean = false
+    val isLate: Boolean = false,
+    val needsReview: Boolean = false,
+    val resubmissionRequested: Boolean = false
 )
