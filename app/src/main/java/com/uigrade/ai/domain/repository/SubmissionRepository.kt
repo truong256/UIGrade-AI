@@ -33,4 +33,11 @@ interface SubmissionRepository {
 
     /** Update submission status (e.g., GRADING → GRADED → RELEASED). */
     suspend fun updateSubmissionStatus(submissionId: String, status: com.uigrade.ai.domain.model.SubmissionStatus): Submission?
+
+    /** Lecturer workflow flags; never removes the original submission. */
+    suspend fun updateSubmissionReviewState(
+        submissionId: String,
+        needsReview: Boolean,
+        resubmissionRequested: Boolean
+    ): Submission?
 }

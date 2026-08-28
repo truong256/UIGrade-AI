@@ -34,4 +34,7 @@ interface AuthRepository {
      * Clears the current session.
      */
     suspend fun logout()
+
+    /** Changes the current user's password after verifying the existing password. */
+    suspend fun changePassword(currentPassword: String, newPassword: String): Result<Unit>
 }

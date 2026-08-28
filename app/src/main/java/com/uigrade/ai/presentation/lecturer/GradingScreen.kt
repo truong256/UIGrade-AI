@@ -20,6 +20,7 @@ import com.uigrade.ai.domain.model.RubricCriterion
 import com.uigrade.ai.ui.components.EmptyScreen
 import com.uigrade.ai.ui.components.ErrorScreen
 import com.uigrade.ai.ui.components.LoadingScreen
+import com.uigrade.ai.ui.components.AIFeedbackCard
 import com.uigrade.ai.ui.components.scoreColor
 import com.uigrade.ai.ui.theme.Primary
 
@@ -28,11 +29,14 @@ import com.uigrade.ai.ui.theme.Primary
 fun GradingScreen(
     submissionId: String,
     onNavigateBack: () -> Unit,
+    onNavigateToGrading: (String) -> Unit,
     viewModel: GradingViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val snackbarHostState = remember { SnackbarHostState() }
     var showReleaseDialog by remember { mutableStateOf(false) }
+    var showLeaveDialog by remember { mutableStateOf(false) }
+    var pendingSubmissionId by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(submissionId) {
         viewModel.load(submissionId)
@@ -46,7 +50,7 @@ fun GradingScreen(
     }
 
     LaunchedEffect(uiState.error) {
-        uiState.error?.let {
+        uiState.error?.takeIf { uiState.submission != null }?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.clearError()
         }
@@ -57,9 +61,38 @@ fun GradingScreen(
             TopAppBar(
                 title = { Text("Chấm điểm bài nộp", fontWeight = FontWeight.Bold) },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = {
+                        if (uiState.hasUnsavedChanges) showLeaveDialog = true else onNavigateBack()
+                    }) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Quay lại")
                     }
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            uiState.previousSubmissionId?.let { target ->
+                                if (uiState.hasUnsavedChanges) {
+                                    pendingSubmissionId = target
+                                    showLeaveDialog = true
+                                } else onNavigateToGrading(target)
+                            }
+                        },
+                        enabled = uiState.previousSubmissionId != null && !uiState.isSaving
+                    ) { Icon(Icons.Default.NavigateBefore, contentDescription = "Bài nộp trước") }
+                    if (uiState.gradingTotal > 0) {
+                        Text("${uiState.gradingPosition}/${uiState.gradingTotal}", style = MaterialTheme.typography.labelMedium)
+                    }
+                    IconButton(
+                        onClick = {
+                            uiState.nextSubmissionId?.let { target ->
+                                if (uiState.hasUnsavedChanges) {
+                                    pendingSubmissionId = target
+                                    showLeaveDialog = true
+                                } else onNavigateToGrading(target)
+                            }
+                        },
+                        enabled = uiState.nextSubmissionId != null && !uiState.isSaving
+                    ) { Icon(Icons.Default.NavigateNext, contentDescription = "Bài nộp tiếp theo") }
                 }
             )
         },
@@ -68,13 +101,13 @@ fun GradingScreen(
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
             uiState.error != null && uiState.submission == null -> ErrorScreen(
-                message = uiState.error!!,
+                message = uiState.error.orEmpty(),
                 onRetry = { viewModel.load(submissionId) },
                 modifier = Modifier.padding(padding)
             )
             uiState.submission == null -> EmptyScreen("Không tìm thấy bài nộp", Modifier.padding(padding))
             else -> {
-                val submission = uiState.submission!!
+                val submission = uiState.submission ?: return@Scaffold
                 val assignment = uiState.assignment
                 val rubric = uiState.rubric
                 val maxScore = assignment?.totalMaxScore ?: 100
@@ -101,6 +134,60 @@ fun GradingScreen(
                                 }
                                 if (submission.isLate) {
                                     Text("⚠️ Nộp muộn", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.error, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                    }
+
+                    item {
+                        Button(
+                            onClick = viewModel::generateAiSupport,
+                            enabled = !uiState.isSaving && !uiState.isGeneratingAi,
+                            modifier = Modifier.fillMaxWidth().height(48.dp)
+                        ) {
+                            if (uiState.isGeneratingAi) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(22.dp),
+                                    strokeWidth = 2.dp,
+                                    color = MaterialTheme.colorScheme.onPrimary
+                                )
+                                Spacer(Modifier.width(8.dp))
+                                Text("AI đang phân tích...")
+                            } else {
+                                Icon(Icons.Default.AutoAwesome, contentDescription = null)
+                                Spacer(Modifier.width(8.dp))
+                                Text(if (uiState.aiFeedback == null) "Nhờ AI phân tích hỗ trợ" else "Phân tích AI đã sẵn sàng")
+                            }
+                        }
+                    }
+
+                    uiState.aiFeedback?.let { feedback ->
+                        item {
+                            Text(
+                                "Đề xuất AI — giảng viên quyết định kết quả cuối cùng",
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(Modifier.height(8.dp))
+                            AIFeedbackCard(feedback)
+                            Spacer(Modifier.height(8.dp))
+                            when (uiState.aiFeedbackAccepted) {
+                                true -> Text(
+                                    "Đã chấp nhận và thêm vào nhận xét chung.",
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                false -> Text(
+                                    "Đã từ chối đề xuất này.",
+                                    color = MaterialTheme.colorScheme.error,
+                                    fontWeight = FontWeight.SemiBold
+                                )
+                                null -> Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
+                                ) {
+                                    OutlinedButton(onClick = viewModel::rejectAiFeedback) { Text("Từ chối") }
+                                    Button(onClick = viewModel::acceptAiFeedback) { Text("Chấp nhận gợi ý") }
                                 }
                             }
                         }
@@ -214,11 +301,39 @@ fun GradingScreen(
 
                     // Action Buttons
                     item {
+                        Text("Theo dõi bài nộp", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Spacer(Modifier.height(6.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            FilterChip(
+                                selected = submission.needsReview,
+                                onClick = viewModel::toggleNeedsReview,
+                                enabled = !uiState.isSaving,
+                                label = { Text("Cần xem lại") },
+                                leadingIcon = { Icon(Icons.Default.Flag, contentDescription = null) }
+                            )
+                            FilterChip(
+                                selected = submission.resubmissionRequested,
+                                onClick = viewModel::toggleResubmissionRequest,
+                                enabled = !uiState.isSaving && assignment?.allowResubmission == true,
+                                label = { Text("Yêu cầu nộp lại") },
+                                leadingIcon = { Icon(Icons.Default.Replay, contentDescription = null) }
+                            )
+                        }
+                        if (assignment?.allowResubmission != true) {
+                            Text(
+                                "Bài tập này không cho phép nộp lại.",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+
+                    item {
                         Spacer(Modifier.height(8.dp))
                         Column(verticalArrangement = Arrangement.spacedBy(10.dp)) {
                             Button(
                                 onClick = { showReleaseDialog = true },
-                                enabled = !uiState.isSaving,
+                                enabled = !uiState.isSaving && !uiState.isGeneratingAi,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(50.dp),
@@ -235,7 +350,7 @@ fun GradingScreen(
 
                             OutlinedButton(
                                 onClick = { viewModel.saveDraft() },
-                                enabled = !uiState.isSaving,
+                                enabled = !uiState.isSaving && !uiState.isGeneratingAi,
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .height(50.dp),
@@ -267,6 +382,30 @@ fun GradingScreen(
             },
             dismissButton = {
                 TextButton(onClick = { showReleaseDialog = false }) { Text("Hủy") }
+            }
+        )
+    }
+
+    if (showLeaveDialog) {
+        AlertDialog(
+            onDismissRequest = { showLeaveDialog = false },
+            title = { Text("Rời màn hình chấm điểm?") },
+            text = {
+                Text(
+                    if (pendingSubmissionId == null) "Bạn có thay đổi chưa lưu. Nếu rời đi, các thay đổi này sẽ bị mất."
+                    else "Bạn có thay đổi chưa lưu. Nếu chuyển bài nộp, các thay đổi này sẽ bị mất."
+                )
+            },
+            confirmButton = {
+                Button(onClick = {
+                    showLeaveDialog = false
+                    val target = pendingSubmissionId
+                    pendingSubmissionId = null
+                    if (target == null) onNavigateBack() else onNavigateToGrading(target)
+                }) { Text(if (pendingSubmissionId == null) "Rời đi" else "Chuyển bài") }
+            },
+            dismissButton = {
+                TextButton(onClick = { showLeaveDialog = false }) { Text("Tiếp tục chấm") }
             }
         )
     }
@@ -306,7 +445,7 @@ private fun CriterionGradingCard(
                 value = score.toFloat(),
                 onValueChange = { onScoreChange(it.toInt()) },
                 valueRange = 0f..criterion.maxScore.toFloat(),
-                steps = criterion.maxScore - 1
+                steps = (criterion.maxScore - 1).coerceAtLeast(0)
             )
 
             OutlinedTextField(

@@ -52,5 +52,8 @@ abstract class AppModule {
     @Binds
     @Singleton
     abstract fun bindClassroomRepository(impl: MockClassroomRepository): ClassroomRepository
-}
 
+    @Binds
+    @Singleton
+    abstract fun bindNotificationRepository(impl: MockNotificationRepository): NotificationRepository
+}

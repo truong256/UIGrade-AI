@@ -18,5 +18,9 @@ data class User(
     val email: String,
     val role: UserRole,
     val studentId: String? = null,  // Only for STUDENT role
-    val avatarUrl: String? = null
+    val avatarUrl: String? = null,
+    val phone: String = "",
+    val department: String = "",
+    val organization: String = "",
+    val bio: String = ""
 )

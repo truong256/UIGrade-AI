@@ -25,12 +25,14 @@ class CriticalFlowsTest {
     @After
     fun logoutWhenPossible() {
         repeat(5) {
-            val logoutNodes = composeRule.onAllNodesWithContentDescription("Logout")
-                .fetchSemanticsNodes()
-            if (logoutNodes.isNotEmpty()) {
-                composeRule.onAllNodesWithContentDescription("Logout")[0].performClick()
-                waitForText("Đăng nhập")
-                return
+            for (description in listOf("Đăng xuất", "Logout")) {
+                val logoutNodes = composeRule.onAllNodesWithContentDescription(description)
+                    .fetchSemanticsNodes()
+                if (logoutNodes.isNotEmpty()) {
+                    composeRule.onAllNodesWithContentDescription(description)[0].performClick()
+                    waitForText("Đăng nhập")
+                    return
+                }
             }
             composeRule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
             composeRule.waitForIdle()
@@ -89,7 +91,7 @@ class CriticalFlowsTest {
     @Test
     fun lecturerCanOpenAssignmentManagement() {
         login("lecturer@uigrade.ai")
-        waitForText("Lecturer Dashboard")
+        waitForText("Bảng điều khiển giảng viên")
         composeRule.onAllNodesWithText("Bài tập")[0].performClick()
         waitForText("Quản lý bài tập")
     }
@@ -97,7 +99,7 @@ class CriticalFlowsTest {
     @Test
     fun adminCanOpenUserManagement() {
         login("admin@uigrade.ai")
-        waitForText("Admin Dashboard")
+        waitForText("Bảng điều khiển")
         composeRule.onNodeWithText("Quản lý người dùng").performClick()
         waitForText("8 người dùng")
     }

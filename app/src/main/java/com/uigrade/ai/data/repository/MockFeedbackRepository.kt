@@ -5,6 +5,8 @@ import com.uigrade.ai.domain.model.Feedback
 import com.uigrade.ai.domain.model.GradingResult
 import com.uigrade.ai.domain.repository.FeedbackRepository
 import kotlinx.coroutines.delay
+import java.time.LocalDateTime
+import java.util.UUID
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -29,8 +31,33 @@ class MockFeedbackRepository @Inject constructor(
 
     override suspend fun generateFeedback(gradingResult: GradingResult): Feedback {
         delay(1500) // Simulate AI generation time
-        // In MVP, return existing feedback if available; otherwise return a generic one.
-        return feedbacks.find { it.gradingResultId == gradingResult.id }
-            ?: feedbacks.first()
+        feedbacks.find { it.gradingResultId == gradingResult.id }?.let { return it }
+
+        val strongCriteria = gradingResult.criteriaScores
+            .filter { it.percentage >= 0.8f }
+            .map { it.criterionName }
+        val weakCriteria = gradingResult.criteriaScores
+            .filter { it.percentage < 0.6f }
+        val generated = Feedback(
+            id = UUID.randomUUID().toString(),
+            gradingResultId = gradingResult.id,
+            summary = "Bản phân tích hỗ trợ được tạo từ kết quả rubric. Giảng viên cần kiểm tra trước khi sử dụng.",
+            strengths = strongCriteria.ifEmpty { listOf("Bài làm đã đáp ứng một phần yêu cầu cơ bản") },
+            problems = weakCriteria.map {
+                com.uigrade.ai.domain.model.FeedbackProblem(
+                    ruleId = "manual-${it.criterionId}",
+                    metricId = it.criterionId,
+                    description = "Tiêu chí ${it.criterionName} đang đạt ${it.earned}/${it.maxScore} điểm.",
+                    impact = "Cần đối chiếu lại yêu cầu và minh chứng trong bài nộp."
+                )
+            },
+            recommendations = weakCriteria.map {
+                "Bổ sung và hoàn thiện phần ${it.criterionName.lowercase()}."
+            }.ifEmpty { listOf("Tiếp tục duy trì chất lượng và kiểm tra accessibility trên nhiều kích thước màn hình.") },
+            generatedAt = LocalDateTime.now().toString(),
+            modelVersion = "local-assistant-v1"
+        )
+        feedbacks.add(generated)
+        return generated
     }
 }

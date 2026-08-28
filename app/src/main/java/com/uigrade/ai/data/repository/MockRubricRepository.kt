@@ -26,6 +26,7 @@ class MockRubricRepository @Inject constructor(
 
     override suspend fun createRubric(rubric: Rubric): Rubric {
         delay(600)
+        require(rubrics.none { it.id == rubric.id }) { "Mã rubric đã tồn tại" }
         rubrics.add(rubric)
         return rubric
     }
@@ -33,7 +34,8 @@ class MockRubricRepository @Inject constructor(
     override suspend fun updateRubric(rubric: Rubric): Rubric {
         delay(600)
         val index = rubrics.indexOfFirst { it.id == rubric.id }
-        if (index >= 0) rubrics[index] = rubric
+        if (index < 0) throw IllegalArgumentException("Không tìm thấy rubric")
+        rubrics[index] = rubric
         return rubric
     }
 

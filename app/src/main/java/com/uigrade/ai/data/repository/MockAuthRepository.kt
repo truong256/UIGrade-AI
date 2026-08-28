@@ -6,6 +6,7 @@ import com.uigrade.ai.domain.model.User
 import com.uigrade.ai.domain.model.UserRole
 import com.uigrade.ai.domain.repository.AuthRepository
 import kotlinx.coroutines.delay
+import java.security.MessageDigest
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -16,31 +17,23 @@ class MockAuthRepository @Inject constructor(
 
     private var currentUser: User? = null
 
-    // Stores passwords for users registered via signUp (email → password)
-    private val registeredPasswords = mutableMapOf<String, String>()
+    // Stores one-way password hashes only (email → SHA-256 hash) for the mock session.
+    private val registeredPasswordHashes = mutableMapOf<String, String>()
 
     override suspend fun login(email: String, password: String): User? {
         delay(600) // Simulate network latency
-        val credential = MockData.credentials[email]
-        if (credential != null && credential.first == password) {
-            val userId = credential.second
-            val user = dataStore.users.find { it.id == userId } ?: return null
-            currentUser = user
-            return user
-        }
+        val normalizedEmail = email.trim().lowercase()
+        val passwordHash = hashPassword(password)
+        val demoCredential = MockData.credentialHashes[normalizedEmail]
+        val expectedHash = registeredPasswordHashes[normalizedEmail] ?: demoCredential?.first
+        if (expectedHash == null || expectedHash != passwordHash) return null
 
-        // Also check newly registered users – must verify password too
-        val trimmedEmail = email.trim()
-        val storedPassword = registeredPasswords[trimmedEmail.lowercase()]
-        if (storedPassword != null && storedPassword == password) {
-            val foundUser = dataStore.users.find { it.email.equals(trimmedEmail, ignoreCase = true) }
-            if (foundUser != null) {
-                currentUser = foundUser
-                return foundUser
-            }
-        }
-
-        return null
+        val user = demoCredential?.second
+            ?.let { id -> dataStore.users.find { it.id == id } }
+            ?: dataStore.users.find { it.email.equals(normalizedEmail, ignoreCase = true) }
+            ?: return null
+        currentUser = user
+        return user
     }
 
     override suspend fun signUp(
@@ -78,15 +71,38 @@ class MockAuthRepository @Inject constructor(
         )
 
         dataStore.users.add(newUser)
-        registeredPasswords[trimmedEmail.lowercase()] = password
+        registeredPasswordHashes[trimmedEmail.lowercase()] = hashPassword(password)
         currentUser = newUser
         return newUser
     }
 
-    override suspend fun getCurrentUser(): User? = currentUser
+    override suspend fun getCurrentUser(): User? {
+        val currentId = currentUser?.id ?: return null
+        return dataStore.users.find { it.id == currentId }?.also { currentUser = it }
+    }
 
     override suspend fun logout() {
         delay(200)
         currentUser = null
     }
+
+    override suspend fun changePassword(currentPassword: String, newPassword: String): Result<Unit> {
+        delay(500)
+        val user = getCurrentUser()
+            ?: return Result.failure(IllegalArgumentException("Bạn chưa đăng nhập"))
+        val normalizedEmail = user.email.lowercase()
+        val currentHash = hashPassword(currentPassword)
+        val expectedHash = registeredPasswordHashes[normalizedEmail]
+            ?: MockData.credentialHashes[normalizedEmail]?.first
+        if (expectedHash == null || expectedHash != currentHash) {
+            return Result.failure(IllegalArgumentException("Mật khẩu hiện tại không chính xác"))
+        }
+        registeredPasswordHashes[normalizedEmail] = hashPassword(newPassword)
+        return Result.success(Unit)
+    }
+
+    private fun hashPassword(value: String): String = MessageDigest
+        .getInstance("SHA-256")
+        .digest(value.toByteArray(Charsets.UTF_8))
+        .joinToString("") { "%02x".format(it) }
 }

@@ -45,7 +45,14 @@ data class Assignment(
     val allowResubmission: Boolean = false,
     val maxAttempts: Int = 1,
     val publishedAt: LocalDateTime? = null,
-    val allowedFileTypes: List<String> = listOf("apk", "aab", "zip")
+    val allowedFileTypes: List<String> = listOf("apk", "aab", "zip"),
+    val instructions: String = "",
+    val closeAt: LocalDateTime? = null,
+    val assignmentType: String = "Bài tập",
+    val attachmentUri: String? = null,
+    val resourceUrl: String = "",
+    val latePenaltyPercent: Int = 0,
+    val isArchived: Boolean = false
 )
 
 /**

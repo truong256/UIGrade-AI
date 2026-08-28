@@ -67,6 +67,7 @@ class MockAssignmentRepository @Inject constructor(
 
     override suspend fun createAssignment(assignment: Assignment): Assignment {
         delay(700)
+        require(assignments.none { it.id == assignment.id }) { "Mã bài tập đã tồn tại" }
         assignments.add(assignment)
         return assignment
     }
@@ -74,7 +75,8 @@ class MockAssignmentRepository @Inject constructor(
     override suspend fun updateAssignment(assignment: Assignment): Assignment {
         delay(700)
         val index = assignments.indexOfFirst { it.id == assignment.id }
-        if (index >= 0) assignments[index] = assignment
+        if (index < 0) throw IllegalArgumentException("Không tìm thấy bài tập")
+        assignments[index] = assignment
         return assignment
     }
 
@@ -86,7 +88,9 @@ class MockAssignmentRepository @Inject constructor(
     override suspend fun getPublishedAssignmentsForClassroom(classroomId: String): List<Assignment> {
         delay(400)
         return assignments.filter {
-            it.classroomId == classroomId && it.publishStatus == AssignmentPublishStatus.PUBLISHED
+            it.classroomId == classroomId &&
+                it.publishStatus == AssignmentPublishStatus.PUBLISHED &&
+                !it.isArchived
         }
     }
 
@@ -101,7 +105,11 @@ class MockAssignmentRepository @Inject constructor(
     ): List<AssignmentWithStatus> {
         delay(500)
         return assignments
-            .filter { it.classroomId == classroomId && it.publishStatus == AssignmentPublishStatus.PUBLISHED }
+            .filter {
+                it.classroomId == classroomId &&
+                    it.publishStatus == AssignmentPublishStatus.PUBLISHED &&
+                    !it.isArchived
+            }
             .map { assignment ->
                 val (status, submissionId) = submissionStatusFor(assignment.id, studentId)
                 val result = dataStore.submissions.find {

@@ -21,10 +21,13 @@ import com.uigrade.ai.ui.components.*
 @Composable
 fun RubricManagementScreen(
     onNavigateBack: () -> Unit,
+    onCreateRubric: () -> Unit,
     onNavigateToRubric: (String) -> Unit,
+    onEditRubric: (String) -> Unit,
     viewModel: RubricManagementViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    LaunchedEffect(Unit) { viewModel.load() }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -35,11 +38,18 @@ fun RubricManagementScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            ExtendedFloatingActionButton(
+                onClick = onCreateRubric,
+                icon = { Icon(Icons.Default.Add, contentDescription = null) },
+                text = { Text("Tạo rubric") }
+            )
         }
     ) { padding ->
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
-            uiState.error != null -> ErrorScreen(uiState.error!!, modifier = Modifier.padding(padding))
+            uiState.error != null -> ErrorScreen(uiState.error.orEmpty(), onRetry = viewModel::load, modifier = Modifier.padding(padding))
             uiState.rubrics.isEmpty() -> EmptyScreen("Chưa có rubric nào", Modifier.padding(padding))
             else -> LazyColumn(
                 modifier = Modifier.fillMaxSize().padding(padding),
@@ -47,7 +57,11 @@ fun RubricManagementScreen(
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
                 items(uiState.rubrics) { rubric ->
-                    RubricCard(rubric, onClick = { onNavigateToRubric(rubric.id) })
+                    RubricCard(
+                        rubric = rubric,
+                        onClick = { onNavigateToRubric(rubric.id) },
+                        onEdit = { onEditRubric(rubric.id) }
+                    )
                 }
             }
         }
@@ -79,7 +93,7 @@ fun RubricDetailScreen(
         if (rubric == null) {
             LoadingScreen(Modifier.padding(padding))
         } else {
-            val r = rubric!!
+            val r = rubric ?: return@Scaffold
             LazyColumn(modifier = Modifier.fillMaxSize().padding(padding), contentPadding = PaddingValues(16.dp), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 item {
                     Text(r.title, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
@@ -106,10 +120,15 @@ fun RubricDetailScreen(
 }
 
 @Composable
-private fun RubricCard(rubric: Rubric, onClick: () -> Unit) {
+private fun RubricCard(rubric: Rubric, onClick: () -> Unit, onEdit: () -> Unit) {
     Card(onClick = onClick, modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.large) {
         Column(modifier = Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text(rubric.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(rubric.title, style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.SemiBold)
+                IconButton(onClick = onEdit) {
+                    Icon(Icons.Default.Edit, contentDescription = "Chỉnh sửa rubric")
+                }
+            }
             Text("${rubric.criteria.size} tiêu chí · ${rubric.totalMaxScore} điểm", style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             rubric.criteria.take(3).forEach { c ->
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {

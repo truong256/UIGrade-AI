@@ -62,11 +62,11 @@ class LoginViewModel @Inject constructor(
     fun selectDemoAccount(email: String, roleName: String) {
         _uiState.value = _uiState.value.copy(
             email = email,
-            password = "password123",
+            password = "",
             emailError = null,
             passwordError = null,
             error = null,
-            guideText = "Đã chọn tài khoản $roleName! Bấm Đăng nhập để vào hệ thống nhé ⭐",
+            guideText = "Đã chọn tài khoản $roleName! Hãy nhập mật khẩu demo được ghi trong README nhé ⭐",
             isGuideError = false,
             catPose = CatMascotPose.GUIDE
         )

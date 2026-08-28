@@ -24,7 +24,12 @@ data class Classroom(
     val joinCode: String,
     val semester: String,
     val status: ClassroomStatus,
-    val createdAt: LocalDateTime
+    val createdAt: LocalDateTime,
+    val courseName: String = "",
+    val academicYear: String = "",
+    val schedule: String = "",
+    val room: String = "",
+    val joinEnabled: Boolean = true
 )
 
 /**
@@ -34,4 +39,18 @@ data class ClassMembership(
     val classroomId: String,
     val studentId: String,
     val joinedAt: LocalDateTime
+)
+
+enum class JoinRequestStatus {
+    PENDING,
+    APPROVED,
+    REJECTED
+}
+
+data class JoinRequest(
+    val id: String,
+    val classroomId: String,
+    val studentId: String,
+    val requestedAt: LocalDateTime,
+    val status: JoinRequestStatus = JoinRequestStatus.PENDING
 )
