@@ -49,8 +49,8 @@ fun CatMascot(
     modifier: Modifier = Modifier,
     style: CatMascotStyle = CatMascotStyle.Default,
     message: String? = null,
-    onClick: () -> Unit = {},
-    onLongClick: () -> Unit = {}
+    onClick: (() -> Unit)? = null,
+    onLongClick: (() -> Unit)? = null
 ) {
     val coroutineScope = rememberCoroutineScope()
 
@@ -102,7 +102,7 @@ fun CatMascot(
     val activeMessage = internalSpeech ?: message
 
     val handleTap: () -> Unit = {
-        onClick()
+        onClick?.invoke()
         coroutineScope.launch {
             isTapped = true
             val randomQuote = RANDOM_QUOTES[Random.nextInt(RANDOM_QUOTES.size)]
@@ -130,7 +130,7 @@ fun CatMascot(
     }
 
     val handleLongPress: () -> Unit = {
-        onLongClick()
+        onLongClick?.invoke()
         coroutineScope.launch {
             isLongPressed = true
             internalSpeech = "Meo... nhột quá!"

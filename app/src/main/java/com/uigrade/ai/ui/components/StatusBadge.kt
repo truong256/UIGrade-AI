@@ -18,10 +18,16 @@ import com.uigrade.ai.ui.theme.*
 @Composable
 fun AssignmentStatusBadge(status: AssignmentStatus, modifier: Modifier = Modifier) {
     val (label, color, icon) = when (status) {
+        AssignmentStatus.UPCOMING      -> Triple("Sắp mở", Info, Icons.Default.Schedule)
         AssignmentStatus.NOT_SUBMITTED -> Triple("Chưa nộp", Neutral500, Icons.Default.RadioButtonUnchecked)
+        AssignmentStatus.DRAFT         -> Triple("Đang soạn", Warning, Icons.Default.EditNote)
         AssignmentStatus.SUBMITTED     -> Triple("Đã nộp", Info, Icons.Default.CheckCircle)
+        AssignmentStatus.LATE          -> Triple("Nộp muộn", Warning, Icons.Default.Schedule)
         AssignmentStatus.GRADING       -> Triple("Đang chấm", Warning, Icons.Default.HourglassBottom)
         AssignmentStatus.GRADED        -> Triple("Đã chấm", Success, Icons.Default.CheckCircle)
+        AssignmentStatus.OVERDUE       -> Triple("Quá hạn", Error, Icons.Default.EventBusy)
+        AssignmentStatus.CLOSED        -> Triple("Đã đóng", Neutral500, Icons.Default.Lock)
+        AssignmentStatus.RESUBMISSION_REQUIRED -> Triple("Cần nộp lại", Error, Icons.Default.Replay)
     }
     StatusChip(label = label, color = color, icon = { Icon(icon, contentDescription = label, tint = color, modifier = Modifier.size(14.dp)) }, modifier = modifier)
 }

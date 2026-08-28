@@ -308,7 +308,7 @@ private fun EditUserDialog(
                             UserRole.LECTURER -> "Giảng viên"
                             UserRole.ADMIN -> "Quản trị viên"
                         },
-                        onValueChange = {},
+                        onValueChange = { roleExpanded = true },
                         readOnly = true,
                         label = { Text("Vai trò") },
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = roleExpanded) },

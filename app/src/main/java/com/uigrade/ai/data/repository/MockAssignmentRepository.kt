@@ -6,7 +6,9 @@ import com.uigrade.ai.domain.model.AssignmentPublishStatus
 import com.uigrade.ai.domain.model.AssignmentStatus
 import com.uigrade.ai.domain.model.AssignmentWithStatus
 import com.uigrade.ai.domain.repository.AssignmentRepository
+import com.uigrade.ai.domain.usecase.StudentAssignmentPolicy
 import kotlinx.coroutines.delay
+import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -17,37 +19,51 @@ class MockAssignmentRepository @Inject constructor(
 
     private val assignments get() = dataStore.assignments
 
-    private fun submissionStatusFor(assignmentId: String, studentId: String): Pair<AssignmentStatus, String?> {
-        val submission = dataStore.submissions.find {
-            it.assignmentId == assignmentId && it.studentId == studentId
-        }
-        val result = if (submission?.gradingResultId != null) {
-            dataStore.gradingResults.find { it.id == submission.gradingResultId }
-        } else null
-
-        val status = when {
-            submission == null -> AssignmentStatus.NOT_SUBMITTED
-            result != null -> AssignmentStatus.GRADED
-            else -> AssignmentStatus.SUBMITTED
-        }
-        return status to submission?.id
+    private fun assignmentWithStatus(assignment: Assignment, studentId: String): AssignmentWithStatus {
+        val history = dataStore.submissions
+            .filter { it.assignmentId == assignment.id && it.studentId == studentId }
+        val latestSubmission = history
+            .maxWithOrNull(compareBy<com.uigrade.ai.domain.model.Submission> { it.attemptNumber }.thenBy { it.savedAt })
+        val releasedResult = history.asSequence()
+            .mapNotNull { submission ->
+                dataStore.gradingResults.find {
+                    it.submissionId == submission.id && it.studentId == studentId && it.isReleased && !it.isDraft
+                }
+            }
+            .maxByOrNull { it.gradedAt }
+        val attemptsUsed = history.count { !it.isDraft }
+        val status = StudentAssignmentPolicy.resolve(
+            assignment = assignment,
+            submissions = history,
+            releasedGrade = releasedResult,
+            now = LocalDateTime.now()
+        )
+        return AssignmentWithStatus(
+            assignment = assignment,
+            status = status,
+            score = releasedResult?.totalScore,
+            submissionId = latestSubmission?.id,
+            latestSubmission = latestSubmission,
+            attemptsUsed = attemptsUsed,
+            attemptsRemaining = (assignment.maxAttempts - attemptsUsed).coerceAtLeast(0),
+            disabledReason = StudentAssignmentPolicy.disabledReason(assignment, status, attemptsUsed)
+        )
     }
 
     override suspend fun getAssignmentsForStudent(studentId: String): List<AssignmentWithStatus> {
         delay(600)
-        // Return only PUBLISHED assignments
-        return assignments.filter { it.publishStatus == AssignmentPublishStatus.PUBLISHED }.map { assignment ->
-            val (status, submissionId) = submissionStatusFor(assignment.id, studentId)
-            val result = dataStore.submissions.find {
-                it.assignmentId == assignment.id && it.studentId == studentId
-            }?.gradingResultId?.let { grId -> dataStore.gradingResults.find { it.id == grId } }
-            AssignmentWithStatus(
-                assignment = assignment,
-                status = status,
-                score = result?.totalScore,
-                submissionId = submissionId
-            )
-        }
+        val enrolledIds = dataStore.memberships
+            .filter { it.studentId == studentId }
+            .map { it.classroomId }
+            .toSet()
+        return assignments
+            .filter {
+                it.classroomId in enrolledIds &&
+                    it.publishStatus != AssignmentPublishStatus.DRAFT &&
+                    !it.isArchived
+            }
+            .map { assignmentWithStatus(it, studentId) }
+            .sortedBy { it.assignment.deadline }
     }
 
     override suspend fun getAssignmentsForLecturer(lecturerId: String): List<Assignment> {
@@ -107,20 +123,16 @@ class MockAssignmentRepository @Inject constructor(
         return assignments
             .filter {
                 it.classroomId == classroomId &&
-                    it.publishStatus == AssignmentPublishStatus.PUBLISHED &&
+                    it.publishStatus != AssignmentPublishStatus.DRAFT &&
                     !it.isArchived
             }
-            .map { assignment ->
-                val (status, submissionId) = submissionStatusFor(assignment.id, studentId)
-                val result = dataStore.submissions.find {
-                    it.assignmentId == assignment.id && it.studentId == studentId
-                }?.gradingResultId?.let { grId -> dataStore.gradingResults.find { it.id == grId } }
-                AssignmentWithStatus(
-                    assignment = assignment,
-                    status = status,
-                    score = result?.totalScore,
-                    submissionId = submissionId
-                )
+            .takeIf {
+                dataStore.memberships.any { membership ->
+                    membership.classroomId == classroomId && membership.studentId == studentId
+                }
             }
+            .orEmpty()
+            .map { assignmentWithStatus(it, studentId) }
+            .sortedBy { it.assignment.deadline }
     }
 }

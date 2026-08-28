@@ -81,7 +81,7 @@ class SignUpViewModel @Inject constructor(
         )
     }
 
-    fun signUp(onSuccess: (role: String) -> Unit = {}) {
+    fun signUp(onSuccess: ((role: String) -> Unit)? = null) {
         if (_uiState.value.isLoading) return // Prevent multiple concurrent submissions
 
         val state = _uiState.value
@@ -165,7 +165,7 @@ class SignUpViewModel @Inject constructor(
                         isSuccess = true,
                         registeredUser = user
                     )
-                    onSuccess(user.role.name)
+                    onSuccess?.invoke(user.role.name)
                 },
                 onFailure = { error ->
                     val errorMsg = error.message ?: "Không thể tạo tài khoản. Vui lòng thử lại"

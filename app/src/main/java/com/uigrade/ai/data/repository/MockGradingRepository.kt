@@ -3,6 +3,8 @@ package com.uigrade.ai.data.repository
 import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.GradingResult
 import com.uigrade.ai.domain.model.SubmissionStatus
+import com.uigrade.ai.domain.model.StudentNotification
+import com.uigrade.ai.domain.model.StudentNotificationType
 import com.uigrade.ai.domain.repository.GradingRepository
 import kotlinx.coroutines.delay
 import java.time.LocalDateTime
@@ -19,8 +21,8 @@ class MockGradingRepository @Inject constructor(
 
     override suspend fun getGradingResultForSubmission(submissionId: String): GradingResult? {
         delay(400)
-        // Students can only see released results; return null if draft
-        return results.find { it.submissionId == submissionId && !it.isDraft }
+        // Students can only see officially released results.
+        return results.find { it.submissionId == submissionId && it.isReleased && !it.isDraft }
     }
 
     /**
@@ -34,7 +36,7 @@ class MockGradingRepository @Inject constructor(
     override suspend fun getGradingResultsForStudent(studentId: String): List<GradingResult> {
         delay(500)
         // Only released results visible to student
-        return results.filter { it.studentId == studentId && it.isReleased }
+        return results.filter { it.studentId == studentId && it.isReleased && !it.isDraft }
     }
 
     override suspend fun getGradingResultsForAssignment(assignmentId: String): List<GradingResult> {
@@ -90,6 +92,22 @@ class MockGradingRepository @Inject constructor(
             val updated = results[index].copy(isReleased = true, isDraft = false)
             results[index] = updated
             updateSubmissionStatus(updated.submissionId, SubmissionStatus.RELEASED)
+            if (dataStore.studentNotifications.none {
+                    it.type == StudentNotificationType.GRADE_RELEASED && it.submissionId == updated.submissionId
+                }) {
+                dataStore.studentNotifications.add(
+                    StudentNotification(
+                        id = UUID.randomUUID().toString(),
+                        studentId = updated.studentId,
+                        title = "Điểm đã được công bố",
+                        message = "Kết quả bài tập của bạn đã sẵn sàng.",
+                        type = StudentNotificationType.GRADE_RELEASED,
+                        createdAt = LocalDateTime.now(),
+                        assignmentId = updated.assignmentId,
+                        submissionId = updated.submissionId
+                    )
+                )
+            }
             Result.success(updated)
         } else {
             Result.failure(IllegalArgumentException("Không tìm thấy kết quả chấm điểm"))
