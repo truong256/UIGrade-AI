@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.weight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -383,7 +382,8 @@ fun JoinClassroomScreen(
                     modifier = Modifier.fillMaxWidth()
                 )
             }
-            if (uiState.preview == null) {
+            val preview = uiState.preview
+            if (preview == null) {
                 item {
                     Button(
                         onClick = viewModel::preview,
@@ -395,7 +395,7 @@ fun JoinClassroomScreen(
                     }
                 }
             } else {
-                item { JoinPreviewCard(uiState.preview) }
+                item { JoinPreviewCard(preview) }
                 item {
                     Button(
                         onClick = viewModel::confirmJoin,
@@ -403,7 +403,7 @@ fun JoinClassroomScreen(
                         modifier = Modifier.fillMaxWidth().height(52.dp)
                     ) {
                         if (uiState.isSubmitting) CircularProgressIndicator(Modifier.size(22.dp), strokeWidth = 2.dp)
-                        else Text(if (uiState.preview.requiresApproval) "Gửi yêu cầu tham gia" else "Xác nhận tham gia")
+                        else Text(if (preview.requiresApproval) "Gửi yêu cầu tham gia" else "Xác nhận tham gia")
                     }
                 }
                 item {
