@@ -4,9 +4,11 @@ import com.uigrade.ai.data.mock.MockData
 import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.User
 import com.uigrade.ai.domain.model.UserRole
+import com.uigrade.ai.domain.model.UserAccountStatus
 import com.uigrade.ai.domain.repository.AuthRepository
 import kotlinx.coroutines.delay
 import java.security.MessageDigest
+import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -32,8 +34,12 @@ class MockAuthRepository @Inject constructor(
             ?.let { id -> dataStore.users.find { it.id == id } }
             ?: dataStore.users.find { it.email.equals(normalizedEmail, ignoreCase = true) }
             ?: return null
-        currentUser = user
-        return user
+        if (user.accountStatus != UserAccountStatus.ACTIVE) return null
+        val loggedIn = user.copy(lastLoginAt = LocalDateTime.now())
+        val index = dataStore.users.indexOfFirst { it.id == user.id }
+        if (index >= 0) dataStore.users[index] = loggedIn
+        currentUser = loggedIn
+        return loggedIn
     }
 
     override suspend fun signUp(
@@ -78,7 +84,13 @@ class MockAuthRepository @Inject constructor(
 
     override suspend fun getCurrentUser(): User? {
         val currentId = currentUser?.id ?: return null
-        return dataStore.users.find { it.id == currentId }?.also { currentUser = it }
+        val user = dataStore.users.find { it.id == currentId }
+        if (user?.accountStatus != UserAccountStatus.ACTIVE) {
+            currentUser = null
+            return null
+        }
+        currentUser = user
+        return user
     }
 
     override suspend fun logout() {

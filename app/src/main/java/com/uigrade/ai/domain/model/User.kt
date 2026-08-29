@@ -1,5 +1,7 @@
 package com.uigrade.ai.domain.model
 
+import java.time.LocalDateTime
+
 /**
  * Roles available in UIGrade AI.
  */
@@ -7,6 +9,13 @@ enum class UserRole {
     STUDENT,
     LECTURER,
     ADMIN
+}
+
+enum class UserAccountStatus {
+    ACTIVE,
+    LOCKED,
+    DISABLED,
+    PENDING
 }
 
 /**
@@ -22,5 +31,10 @@ data class User(
     val phone: String = "",
     val department: String = "",
     val organization: String = "",
-    val bio: String = ""
+    val bio: String = "",
+    val staffId: String? = null,
+    val accountStatus: UserAccountStatus = UserAccountStatus.ACTIVE,
+    val createdAt: LocalDateTime = LocalDateTime.of(2026, 1, 1, 8, 0),
+    val lastLoginAt: LocalDateTime? = null,
+    val isSuperAdmin: Boolean = false
 )

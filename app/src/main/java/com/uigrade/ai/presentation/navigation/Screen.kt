@@ -95,7 +95,10 @@ sealed class Screen(val route: String) {
 
     // ─── Admin ────────────────────────────────────────────────────────────
     object AdminDashboard        : Screen("admin/dashboard")
-    object UserManagement        : Screen("admin/users")
+    object UserManagement        : Screen("admin/users?role={role}&status={status}") {
+        fun createRoute(role: String? = null, status: String? = null) =
+            "admin/users?role=${role ?: "all"}&status=${status ?: "all"}"
+    }
     object AdminRubrics          : Screen("admin/rubrics")
     object RuleManagement        : Screen("admin/rules")
     object MetricManagement      : Screen("admin/metrics")

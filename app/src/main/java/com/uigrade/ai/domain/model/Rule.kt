@@ -33,5 +33,8 @@ data class Rule(
     val failCondition: String,
     val scoreFormula: String,
     val result: MetricStatus? = null,
-    val earnedScore: Int? = null
+    val earnedScore: Int? = null,
+    val isActive: Boolean = true,
+    val affectedFeature: String = "Chấm điểm tự động",
+    val isCritical: Boolean = false
 )

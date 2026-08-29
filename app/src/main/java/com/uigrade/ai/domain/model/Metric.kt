@@ -31,5 +31,9 @@ data class Metric(
     val expectedValue: String,
     val unit: String,
     val status: MetricStatus,
-    val description: String = ""
+    val description: String = "",
+    val isActive: Boolean = true,
+    val minValue: Double? = null,
+    val maxValue: Double? = null,
+    val usedIn: String = "Bộ máy chấm điểm"
 )
