@@ -11,6 +11,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import com.uigrade.ai.domain.model.UserAccountStatus
 import com.uigrade.ai.domain.model.UserRole
 import com.uigrade.ai.presentation.admin.AdminDashboardScreen
 import com.uigrade.ai.presentation.admin.MetricManagementScreen
@@ -50,7 +51,8 @@ fun UIGradeNavGraph(
                     val dest = when (role) {
                         "STUDENT" -> Screen.StudentDashboard.route
                         "LECTURER" -> Screen.LecturerDashboard.route
-                        else -> Screen.AdminDashboard.route
+                        "ADMIN" -> Screen.AdminDashboard.route
+                        else -> Screen.GetStarted.route
                     }
                     navController.navigate(dest) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
@@ -84,7 +86,8 @@ fun UIGradeNavGraph(
                     val dest = when (role) {
                         "STUDENT" -> Screen.StudentDashboard.route
                         "LECTURER" -> Screen.LecturerDashboard.route
-                        else -> Screen.AdminDashboard.route
+                        "ADMIN" -> Screen.AdminDashboard.route
+                        else -> Screen.GetStarted.route
                     }
                     navController.navigate(dest) {
                         popUpTo(Screen.GetStarted.route) { inclusive = true }
@@ -107,7 +110,8 @@ fun UIGradeNavGraph(
                     val dest = when (role) {
                         "STUDENT" -> Screen.StudentDashboard.route
                         "LECTURER" -> Screen.LecturerDashboard.route
-                        else -> Screen.AdminDashboard.route
+                        "ADMIN" -> Screen.AdminDashboard.route
+                        else -> Screen.GetStarted.route
                     }
                     navController.navigate(dest) {
                         popUpTo(Screen.GetStarted.route) { inclusive = true }
@@ -625,38 +629,62 @@ fun UIGradeNavGraph(
 
         // ── Admin ─────────────────────────────────────────────────────────
         composable(Screen.AdminDashboard.route) {
-            AdminDashboardScreen(
-                onNavigateToUsers = { navController.navigate(Screen.UserManagement.route) },
-                onNavigateToRubrics = { navController.navigate(Screen.AdminRubrics.route) },
-                onNavigateToRules = { navController.navigate(Screen.RuleManagement.route) },
-                onNavigateToMetrics = { navController.navigate(Screen.MetricManagement.route) },
-                onNavigateToLogs = { navController.navigate(Screen.SystemLogs.route) },
-                onLogout = {
-                    navController.navigate(Screen.GetStarted.route) {
-                        popUpTo(0) { inclusive = true }
-                    }
-                }
-            )
+            AdminOnly(navController) {
+                AdminDashboardScreen(
+                    onNavigateToUsers = { role, status ->
+                        navController.safeNavigate(Screen.UserManagement.createRoute(role?.name, status?.name))
+                    },
+                    onNavigateToRubrics = { navController.safeNavigate(Screen.AdminRubrics.route) },
+                    onNavigateToRules = { navController.safeNavigate(Screen.RuleManagement.route) },
+                    onNavigateToMetrics = { navController.safeNavigate(Screen.MetricManagement.route) },
+                    onNavigateToLogs = { navController.safeNavigate(Screen.SystemLogs.route) },
+                    onLogout = { navController.clearTo(Screen.GetStarted.route) }
+                )
+            }
         }
 
-        composable(Screen.UserManagement.route) {
-            UserManagementScreen(onNavigateBack = { navController.popBackStack() })
+        composable(
+            route = Screen.UserManagement.route,
+            arguments = listOf(
+                navArgument("role") { type = NavType.StringType; defaultValue = "all" },
+                navArgument("status") { type = NavType.StringType; defaultValue = "all" }
+            )
+        ) { entry ->
+            AdminOnly(navController) {
+                val role = entry.arguments?.getString("role")?.takeUnless { it == "all" }
+                    ?.let { runCatching { UserRole.valueOf(it) }.getOrNull() }
+                val status = entry.arguments?.getString("status")?.takeUnless { it == "all" }
+                    ?.let { runCatching { UserAccountStatus.valueOf(it) }.getOrNull() }
+                UserManagementScreen(
+                    onNavigateBack = { navController.popBackStack() },
+                    initialRole = role,
+                    initialStatus = status
+                )
+            }
         }
 
         composable(Screen.AdminRubrics.route) {
-            RubricAdminScreen(onNavigateBack = { navController.popBackStack() })
+            AdminOnly(navController) {
+                RubricAdminScreen(onNavigateBack = { navController.popBackStack() })
+            }
         }
 
         composable(Screen.RuleManagement.route) {
-            RuleManagementScreen(onNavigateBack = { navController.popBackStack() })
+            AdminOnly(navController) {
+                RuleManagementScreen(onNavigateBack = { navController.popBackStack() })
+            }
         }
 
         composable(Screen.MetricManagement.route) {
-            MetricManagementScreen(onNavigateBack = { navController.popBackStack() })
+            AdminOnly(navController) {
+                MetricManagementScreen(onNavigateBack = { navController.popBackStack() })
+            }
         }
 
         composable(Screen.SystemLogs.route) {
-            SystemLogsScreen(onNavigateBack = { navController.popBackStack() })
+            AdminOnly(navController) {
+                SystemLogsScreen(onNavigateBack = { navController.popBackStack() })
+            }
         }
     }
 }
@@ -693,6 +721,26 @@ private fun LecturerOnly(
                 UserRole.STUDENT -> Screen.StudentDashboard.route
                 UserRole.ADMIN -> Screen.AdminDashboard.route
                 UserRole.LECTURER -> Screen.LecturerDashboard.route
+                null -> Screen.GetStarted.route
+            }
+            navController.clearTo(destination)
+        },
+        content = content
+    )
+}
+
+@Composable
+private fun AdminOnly(
+    navController: NavHostController,
+    content: @Composable () -> Unit
+) {
+    RoleGuard(
+        requiredRole = UserRole.ADMIN,
+        onDenied = { role ->
+            val destination = when (role) {
+                UserRole.STUDENT -> Screen.StudentDashboard.route
+                UserRole.LECTURER -> Screen.LecturerDashboard.route
+                UserRole.ADMIN -> Screen.AdminDashboard.route
                 null -> Screen.GetStarted.route
             }
             navController.clearTo(destination)

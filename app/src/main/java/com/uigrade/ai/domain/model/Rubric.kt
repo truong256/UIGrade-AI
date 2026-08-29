@@ -32,5 +32,7 @@ data class Rubric(
     val version: String,
     val criteria: List<RubricCriterion>,
     val totalMaxScore: Int = criteria.sumOf { it.maxScore },
-    val lecturerId: String = ""
+    val lecturerId: String = "",
+    val isActive: Boolean = true,
+    val usedByAssignmentIds: List<String> = emptyList()
 )

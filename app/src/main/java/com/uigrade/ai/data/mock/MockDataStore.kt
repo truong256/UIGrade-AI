@@ -10,9 +10,13 @@ import com.uigrade.ai.domain.model.JoinRequest
 import com.uigrade.ai.domain.model.LecturerNotification
 import com.uigrade.ai.domain.model.LearningMaterial
 import com.uigrade.ai.domain.model.Rubric
+import com.uigrade.ai.domain.model.Rule
+import com.uigrade.ai.domain.model.Metric
 import com.uigrade.ai.domain.model.Submission
 import com.uigrade.ai.domain.model.StudentNotification
+import com.uigrade.ai.domain.model.SystemLog
 import com.uigrade.ai.domain.model.User
+import com.uigrade.ai.domain.model.UserAccountStatus
 import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -24,7 +28,15 @@ import javax.inject.Singleton
  */
 @Singleton
 class MockDataStore @Inject constructor() {
-    val users: MutableList<User> = MockData.allUsers.toMutableList()
+    val users: MutableList<User> = MockData.allUsers.mapIndexed { index, user ->
+        user.copy(
+            staffId = if (user.role.name == "LECTURER") "GV${(index + 1).toString().padStart(3, '0')}" else user.staffId,
+            accountStatus = if (user.id == "s4") UserAccountStatus.LOCKED else UserAccountStatus.ACTIVE,
+            createdAt = LocalDateTime.of(2025, 9, 1, 8, 0).plusDays(index.toLong() * 17),
+            lastLoginAt = LocalDateTime.of(2026, 8, 28, 9, 0).minusHours(index.toLong() * 3),
+            isSuperAdmin = user.id == "a1"
+        )
+    }.toMutableList()
     val assignments: MutableList<Assignment> = MockData.assignments
         .sortedByDescending { it.id == "a3" }
         .map { assignment ->
@@ -53,7 +65,9 @@ class MockDataStore @Inject constructor() {
             else -> assignment
         }
     }.toMutableList()
-    val rubrics: MutableList<Rubric> = MockData.allRubrics.toMutableList()
+    val rubrics: MutableList<Rubric> = MockData.allRubrics.map { rubric ->
+        rubric.copy(usedByAssignmentIds = assignments.filter { it.rubricId == rubric.id }.map { it.id })
+    }.toMutableList()
     val submissions: MutableList<Submission> = MockData.submissions.toMutableList()
     val gradingResults: MutableList<GradingResult> = MockData.allGradingResults.map {
         it.copy(
@@ -63,6 +77,16 @@ class MockDataStore @Inject constructor() {
         )
     }.toMutableList()
     val feedbacks: MutableList<Feedback> = MockData.allFeedbacks.toMutableList()
+    val adminRules: MutableList<Rule> = rubrics
+        .flatMap { rubric -> rubric.criteria.flatMap { it.rules } }
+        .distinctBy { it.id }
+        .mapIndexed { index, rule -> rule.copy(isCritical = index == 0) }
+        .toMutableList()
+    val adminMetrics: MutableList<Metric> = gradingResults
+        .flatMap { result -> result.criteriaScores.flatMap { it.metrics } }
+        .distinctBy { it.id }
+        .toMutableList()
+    val systemLogs: MutableList<SystemLog> = MockData.systemLogs.toMutableList()
 
     // Classroom data
     val classrooms: MutableList<Classroom> = MockData.classrooms.map { classroom ->

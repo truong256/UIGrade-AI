@@ -1,6 +1,5 @@
 package com.uigrade.ai.data.repository
 
-import com.uigrade.ai.data.mock.MockData
 import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.*
 import com.uigrade.ai.domain.repository.StatsRepository
@@ -29,7 +28,17 @@ class MockStatsRepository @Inject constructor(
                 }
             ),
             feedbackStats = FeedbackStats(generated = dataStore.feedbacks.size, failed = 0),
-            aiEnabled = dataStore.aiFeedbackEnabled
+            aiEnabled = dataStore.aiFeedbackEnabled,
+            activeUsers = dataStore.users.count { it.accountStatus == UserAccountStatus.ACTIVE },
+            lockedUsers = dataStore.users.count { it.accountStatus == UserAccountStatus.LOCKED },
+            totalClassrooms = dataStore.classrooms.size,
+            totalAssignments = dataStore.assignments.size,
+            totalSubmissions = dataStore.submissions.count { !it.isDraft },
+            pendingGrading = dataStore.submissions.count {
+                !it.isDraft && it.status in setOf(SubmissionStatus.PENDING, SubmissionStatus.PROCESSING, SubmissionStatus.SUBMITTED, SubmissionStatus.LATE)
+            },
+            activeRubrics = dataStore.rubrics.count { it.isActive },
+            recentAlerts = dataStore.systemLogs.count { it.level != LogLevel.INFO }
         )
     }
 
@@ -51,7 +60,7 @@ class MockStatsRepository @Inject constructor(
 
     override suspend fun getSystemLogs(): List<SystemLog> {
         delay(400)
-        return MockData.systemLogs
+        return dataStore.systemLogs.sortedByDescending { it.timestamp }
     }
 
     override suspend fun setAiFeedbackEnabled(enabled: Boolean) {
