@@ -1,77 +1,75 @@
 # UIGrade AI
 
-**Intelligent Android UI Assignment Grading Platform**
+**Nền tảng chấm điểm bài tập giao diện Android thông minh**
 
 ---
 
-## Product Overview
+## Tổng quan sản phẩm
 
-UIGrade AI is an educational platform for grading Android UI assignments using **deterministic metrics and rules**, with AI-generated textual feedback.
+UIGrade AI là nền tảng giáo dục hỗ trợ chấm điểm bài tập giao diện Android bằng **các chỉ số và quy tắc xác định**, kết hợp với phản hồi bằng văn bản do AI tạo ra.
 
-### Core Principle
+### Nguyên tắc cốt lõi
 
-> **AI does NOT determine scores.**
+> **AI không quyết định điểm số.**
 >
-> Scores are calculated by deterministic metrics and rules.
-> AI is only used to write feedback, explain issues, and suggest improvements
-> based on the already-computed grading result.
+> Điểm số được tính bằng các chỉ số và quy tắc xác định. AI chỉ viết phản hồi, giải thích vấn đề và đề xuất cách cải thiện dựa trên kết quả chấm đã được tính toán.
 
-Grading pipeline:
+Quy trình chấm điểm:
 
-```
-UI Submission
+```text
+Bài nộp giao diện
      ↓
-Metric Extraction  (Python Baseline / Mock Engine)
+Trích xuất chỉ số       (Python Baseline / Mock Engine)
      ↓
-Rule Evaluation    (deterministic thresholds)
+Đánh giá quy tắc        (ngưỡng xác định)
      ↓
-Score Calculation  (weight × pass/fail)
+Tính điểm               (trọng số × đạt/không đạt)
      ↓
-Grading Result     (totalScore, criteriaScores, metrics, rules)
+Kết quả chấm            (tổng điểm, điểm tiêu chí, chỉ số, quy tắc)
      ↓
-AI Feedback        (text only — summary, strengths, problems, recommendations)
+Phản hồi AI             (chỉ gồm văn bản: tổng kết, ưu điểm, vấn đề, đề xuất)
 ```
 
 ---
 
-## Architecture
+## Kiến trúc
 
-```
-Android App (Kotlin + Jetpack Compose)
+```text
+Ứng dụng Android (Kotlin + Jetpack Compose)
      ↓
-Domain Layer (use cases, repository interfaces)
+Tầng Domain (use case, repository interface)
      ↓
-Data Layer (mock repositories / real API repositories)
+Tầng Data (mock repository / API repository)
      ↓
-Backend REST API
+REST API phía máy chủ
      ↓
 Python Baseline Grading Engine
      ↓
-AI Feedback Service (text generation only)
+Dịch vụ phản hồi AI (chỉ sinh văn bản)
 ```
 
-Package structure:
+Cấu trúc package:
 
-```
+```text
 app/src/main/java/com/uigrade/ai/
 ├── data/
-│   ├── mock/          MockData.kt + MockDataStore.kt (shared in-memory state)
-│   └── repository/    Mock implementations of domain interfaces
+│   ├── mock/          MockData.kt + MockDataStore.kt (trạng thái in-memory dùng chung)
+│   └── repository/    Các bản cài đặt mock của domain interface
 │
 ├── domain/
-│   ├── model/         Pure Kotlin data classes
-│   ├── repository/    Interfaces (AuthRepository, GradingRepository, etc.)
-│   └── usecase/       Single-responsibility use cases
+│   ├── model/         Các data class Kotlin thuần
+│   ├── repository/    Interface (AuthRepository, GradingRepository, v.v.)
+│   └── usecase/       Các use case đơn nhiệm
 │
 ├── presentation/
 │   ├── navigation/    NavGraph.kt, Screen.kt
 │   ├── auth/          LoginScreen, SplashScreen, LoginViewModel
-│   ├── student/       Dashboard, Assignments, Submit, GradingResult
-│   ├── lecturer/      Dashboard, Assignments, Rubrics, Submissions, Statistics
-│   └── admin/         Dashboard, Users, Rules, Metrics, Rubrics, Logs
+│   ├── student/       Dashboard, bài tập, nộp bài, kết quả chấm
+│   ├── lecturer/      Dashboard, bài tập, rubric, bài nộp, thống kê
+│   └── admin/         Dashboard, người dùng, quy tắc, chỉ số, rubric, nhật ký
 │
 ├── ui/
-│   ├── components/    MetricCard, RuleCard, AIFeedbackCard, StatusBadge, etc.
+│   ├── components/    MetricCard, RuleCard, AIFeedbackCard, StatusBadge, v.v.
 │   └── theme/         Color, Type, Shape, Theme (Material 3)
 │
 ├── di/                AppModule.kt (Hilt bindings)
@@ -81,14 +79,16 @@ app/src/main/java/com/uigrade/ai/
 
 ---
 
-## Android Setup
+## Yêu cầu môi trường Android
 
-**Requirements:**
-- Android Studio Ladybug or later
+### Yêu cầu
+
+- Android Studio Ladybug trở lên
 - JDK 17
 - Android SDK 35
 
-**Dependencies (key):**
+### Thư viện chính
+
 - Kotlin 2.0.21
 - AGP 8.7.3
 - Compose BOM 2024.12.01
@@ -98,18 +98,18 @@ app/src/main/java/com/uigrade/ai/
 
 ---
 
-## Build & Run
+## Cài đặt và chạy dự án
 
 ```bash
-# Clone the project
+# Sao chép dự án
 git clone https://github.com/truong256/UIGrade-AI.git
 cd UIGrade-AI
 
-# Open in Android Studio and sync Gradle
-# Run on emulator or device (API 26+)
+# Mở dự án bằng Android Studio và đồng bộ Gradle
+# Chạy trên máy ảo hoặc thiết bị Android (API 26+)
 ```
 
-Or via command line:
+Hoặc sử dụng dòng lệnh:
 
 ```bash
 ./gradlew assembleDebug
@@ -118,21 +118,21 @@ Or via command line:
 
 ---
 
-## Demo Accounts
+## Tài khoản demo
 
-| Email | Password | Role |
+| Email | Mật khẩu | Vai trò |
 |---|---|---|
-| `student@uigrade.ai` | `password123` | Student |
-| `lecturer@uigrade.ai` | `password123` | Lecturer |
-| `admin@uigrade.ai` | `password123` | Admin |
+| `student@uigrade.ai` | `password123` | Sinh viên |
+| `lecturer@uigrade.ai` | `password123` | Giảng viên |
+| `admin@uigrade.ai` | `password123` | Quản trị viên |
 
-Additional students: `binh.tran@uigrade.ai`, `cuong.le@uigrade.ai`, `dung.pham@uigrade.ai`, `em.hoang@uigrade.ai`
+Các tài khoản sinh viên bổ sung: `binh.tran@uigrade.ai`, `cuong.le@uigrade.ai`, `dung.pham@uigrade.ai`, `em.hoang@uigrade.ai`.
 
 ---
 
-## API Contract
+## Hợp đồng API
 
-The Android app is designed to work with a Python Baseline backend. The JSON contract:
+Ứng dụng Android được thiết kế để làm việc với Python Baseline backend. Dữ liệu JSON tuân theo cấu trúc sau:
 
 ```json
 {
@@ -172,55 +172,57 @@ The Android app is designed to work with a Python Baseline backend. The JSON con
 }
 ```
 
-In MVP, `MockData.kt` provides all data in this structure.
+Trong phiên bản MVP, `MockData.kt` cung cấp toàn bộ dữ liệu theo cấu trúc này.
 
 ---
 
-## Grading Engine
+## Bộ máy chấm điểm
 
-The mock grading engine in `MockData.kt` demonstrates the full pipeline:
+Bộ máy chấm mock trong `MockData.kt` mô phỏng đầy đủ quy trình:
 
-1. **Metrics** — measured values from submitted UI (e.g. `font_size_body = 14sp`)
-2. **Rules** — deterministic thresholds (e.g. `body text >= 16sp`)
-3. **Score** — computed from rules: `earnedScore = maxScore - penalty if fail`
-4. **Total** — sum of all criterion scores
+1. **Chỉ số (Metrics)** — giá trị đo được từ giao diện đã nộp, ví dụ `font_size_body = 14sp`.
+2. **Quy tắc (Rules)** — ngưỡng đánh giá xác định, ví dụ `body text >= 16sp`.
+3. **Điểm số (Score)** — được tính từ quy tắc: `earnedScore = maxScore - penalty` nếu không đạt.
+4. **Tổng điểm (Total)** — tổng điểm của tất cả tiêu chí.
 
-**Example:**
+Ví dụ:
+
+```text
+Chỉ số:  body_text_size = 14sp
+Quy tắc: >= 16sp → FAIL
+Điểm:    10 (tối đa) - 4 (điểm trừ) = 6
 ```
-Metric: body_text_size = 14sp
-Rule:   >= 16sp → FAIL
-Score:  10 (max) - 4 (penalty) = 6 earned
-```
 
-Score is never set by AI.
+Điểm số không bao giờ do AI thiết lập.
 
 ---
 
-## Rubric
+## Rubric chấm điểm
 
-Each rubric contains weighted criteria:
+Mỗi rubric chứa các tiêu chí có trọng số:
 
-| Criterion | Weight | Max Score |
-|---|---|---|
-| Layout | 25% | 25 |
-| Typography | 20% | 20 |
-| Color | 20% | 20 |
-| Spacing | 20% | 20 |
-| Accessibility | 15% | 15 |
+| Tiêu chí | Trọng số | Điểm tối đa |
+|---|---:|---:|
+| Bố cục | 25% | 25 |
+| Kiểu chữ | 20% | 20 |
+| Màu sắc | 20% | 20 |
+| Khoảng cách | 20% | 20 |
+| Khả năng tiếp cận | 15% | 15 |
 
-Each criterion has rules with:
-- `ruleId` — unique identifier
-- `description` — human-readable
-- `metricId` — which metric it evaluates
-- `threshold` — the passing condition
-- `weight`, `maxScore`, `penalty`
-- `scoreFormula` — transparent calculation
+Mỗi tiêu chí gồm các quy tắc với:
+
+- `ruleId` — mã định danh duy nhất.
+- `description` — mô tả dễ hiểu.
+- `metricId` — chỉ số được đánh giá.
+- `threshold` — điều kiện để đạt.
+- `weight`, `maxScore`, `penalty` — trọng số, điểm tối đa và điểm trừ.
+- `scoreFormula` — công thức tính điểm minh bạch.
 
 ---
 
-## AI Feedback
+## Phản hồi AI
 
-The `FeedbackRepository` interface accepts a completed `GradingResult` and returns a `Feedback` object:
+Interface `FeedbackRepository` nhận một `GradingResult` đã hoàn thành và trả về đối tượng `Feedback`:
 
 ```kotlin
 interface FeedbackRepository {
@@ -230,71 +232,69 @@ interface FeedbackRepository {
 data class Feedback(
     val id: String,
     val gradingResultId: String,
-    val summary: String,           // Text only
-    val strengths: List<String>,   // Text only
-    val problems: List<FeedbackProblem>, // Text only
-    val recommendations: List<String>,   // Text only
+    val summary: String,                  // Chỉ chứa văn bản
+    val strengths: List<String>,          // Chỉ chứa văn bản
+    val problems: List<FeedbackProblem>,  // Chỉ chứa văn bản
+    val recommendations: List<String>,    // Chỉ chứa văn bản
     val generatedAt: String,
     val modelVersion: String
-    // NO score, weight, threshold, or metric result fields
+    // Không có trường điểm, trọng số, ngưỡng hoặc kết quả chỉ số
 )
 ```
 
-The UI always displays: *"AI generated feedback · Score was calculated by deterministic rules"*
+Giao diện luôn hiển thị thông báo: *“Phản hồi do AI tạo · Điểm số được tính bằng các quy tắc xác định.”*
 
 ---
 
-## Testing
+## Kiểm thử
 
 ```bash
-# Unit tests
+# Chạy unit test
 ./gradlew test
 
-# Build the Compose UI-test APK (no emulator required)
+# Biên dịch APK kiểm thử Compose (không cần máy ảo)
 ./gradlew assembleDebugAndroidTest
 
-# Execute instrumentation tests (requires emulator/device)
+# Chạy instrumentation test (cần máy ảo hoặc thiết bị)
 ./gradlew connectedAndroidTest
 ```
 
-Key test: `GradingEngineTest.kt` verifies:
-- Total score = sum of criterion scores (not AI-set)
-- Failing metrics reduce rule scores by exact penalty
-- Passing metrics earn full rule score
-- Feedback object has no score-modifying fields
-- Data integrity of mock dataset
+`GradingEngineTest.kt` kiểm tra:
 
-`MockRepositoryTest.kt` verifies authentication, shared submission state,
-deterministic result creation, rubric/user mutations, and dashboard statistics.
+- Tổng điểm bằng tổng điểm các tiêu chí và không do AI thiết lập.
+- Chỉ số không đạt làm giảm điểm đúng theo mức phạt.
+- Chỉ số đạt nhận đầy đủ điểm của quy tắc.
+- Đối tượng phản hồi không chứa trường có thể thay đổi điểm.
+- Tính toàn vẹn của bộ dữ liệu mock.
 
-`CriticalFlowsTest.kt` contains seven Compose integration tests covering Student,
-Lecturer, and Admin navigation. These tests compile in CI; executing them still
-requires an Android emulator or device.
+`MockRepositoryTest.kt` kiểm tra đăng nhập, trạng thái bài nộp dùng chung, quá trình tạo kết quả xác định, thao tác với rubric/người dùng và số liệu dashboard.
+
+`CriticalFlowsTest.kt` gồm bảy bài kiểm thử tích hợp Compose cho các luồng Sinh viên, Giảng viên và Quản trị viên. Các bài kiểm thử này được biên dịch trong CI; việc chạy trực tiếp vẫn cần máy ảo hoặc thiết bị Android.
 
 ---
 
-## Current Limitations
+## Giới hạn hiện tại
 
-- All data is stored in memory and resets when the application process restarts.
-- Authentication uses the documented demo accounts; no Firebase/JWT backend is connected.
-- Submission analysis and AI feedback are deterministic mock simulations for the demo flow.
-- The Compose UI tests require an emulator/device for runtime execution.
-
----
-
-## Future Development
-
-- [ ] Connect Python Baseline grading engine via REST API
-- [ ] Replace `MockAuthRepository` with Firebase/JWT
-- [ ] Implement APK analysis via instrumentation runner
-- [ ] Build Next.js web demo using same API contract
-- [ ] Add room persistence for offline support
-- [ ] Implement real AI feedback via Gemini/GPT API
-- [ ] Screenshot testing for UI regression
-- [ ] Multi-language support (Vietnamese/English)
+- Toàn bộ dữ liệu được lưu trong bộ nhớ và sẽ đặt lại khi tiến trình ứng dụng khởi động lại.
+- Xác thực sử dụng các tài khoản demo; chưa kết nối Firebase hoặc JWT backend.
+- Phân tích bài nộp và phản hồi AI hiện là mô phỏng xác định phục vụ luồng demo.
+- Compose UI tests cần máy ảo hoặc thiết bị để chạy trực tiếp.
 
 ---
 
-## License
+## Kế hoạch phát triển
+
+- [ ] Kết nối Python Baseline grading engine qua REST API.
+- [ ] Thay `MockAuthRepository` bằng Firebase/JWT.
+- [ ] Phân tích APK qua instrumentation runner.
+- [ ] Xây dựng web demo Next.js dùng chung hợp đồng API.
+- [ ] Thêm Room để lưu dữ liệu ngoại tuyến.
+- [ ] Tích hợp phản hồi AI thực tế qua Gemini/GPT API.
+- [ ] Thêm screenshot testing để phát hiện hồi quy giao diện.
+- [ ] Hỗ trợ đa ngôn ngữ Việt/Anh.
+
+---
+
+## Giấy phép
 
 MIT — UIGrade AI MVP
