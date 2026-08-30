@@ -11,7 +11,7 @@ hoặc GitHub; chức năng backend/AI chưa có không được chấm như đ�
 | Quản lý mã nguồn Internet | 5 | 5 | 5 | Repo public, lịch sử Git, PR #1–#6, CI | Chưa bật branch protection |
 | Giấy phép OSI | 10 | 0 | 9 | `LICENSE` MIT, `NOTICE`, SPDX, third-party notice | Chưa chạy REUSE/license scanner đầy đủ |
 | Release theo phiên bản | 5 | 1 | 3 | `versionName=1.0.0`, changelog, release workflow/notes | Chưa có tag/GitHub Release thực tế |
-| Build from source | 10 | 7 | 9 | Wrapper, JDK 17, CI, hướng dẫn build, config mẫu | Local audit bị chặn tải Gradle; cần CI mới |
+| Build from source | 10 | 7 | 10 | Wrapper, JDK 17, CI #37 xanh, hướng dẫn build, config mẫu | Cần chạy UI test runtime trên thiết bị |
 | Thư viện/gói | 10 | 6 | 8 | Version catalog, bỏ dependency thừa, notice, SBOM trực tiếp, Dependabot | SBOM chưa gồm dependency bắc cầu |
 | Tài liệu/giao tiếp | 10 | 3 | 9 | README Việt hóa và bộ tài liệu `docs/` | Chưa có screenshot/video thật |
 | Tính nguyên gốc | 10 | 7 | 8 | Deterministic rubric + feedback tách điểm, ba role, audit | Metric extractor/backend chưa có |
@@ -19,7 +19,7 @@ hoặc GitHub; chức năng backend/AI chưa có không được chấm như đ�
 | Thân thiện người dùng | 10 | 8 | 8.5 | Material 3, xanh, mascot, state/error/validation | Chưa QA ma trận thiết bị/font scale đầy đủ |
 | Tích hợp AI | 10 | 5 | 6 | Ranh giới `FeedbackRepository`, contract/tài liệu an toàn | Không có AI/backend thật |
 | Demo/cộng đồng | 10 | 3 | 8 | Demo script, contribution/security templates, roadmap, CI artifact | Chưa có release, screenshot/video, cộng đồng thực tế |
-| **Tổng** | **100** | **53** | **81.5** | | Điểm sau phụ thuộc CI và kiểm tra thủ công |
+| **Tổng** | **100** | **53** | **82.5** | | Điểm sau vẫn phụ thuộc kiểm tra thủ công/giám khảo |
 
 ## I. Tiêu chí PoF — 50 điểm
 
@@ -47,14 +47,16 @@ hoặc GitHub; chức năng backend/AI chưa có không được chấm như đ�
   draft release khi chủ repo đẩy tag.
 - Chưa có tag/release thật; không tuyên bố APK production-signed.
 
-### 4. Build from source — 9/10 ước tính
+### 4. Build from source — 10/10 ước tính
 
 - Wrapper Gradle 8.13, AGP 8.13.2, Kotlin 2.0.21, SDK 35, JDK/JVM target 17.
 - `docs/BUILD_FROM_SOURCE.md`, `local.properties.example`, script Windows không
   còn đường dẫn người dùng cụ thể.
 - CI chạy unit, lint, UI-test compilation và assemble, lưu report/APK.
-- Baseline local 2026-08-30 không tải được Gradle do network sandbox. Run gần nhất
-  của `main` trước thay đổi đã xanh; thay đổi mới phải được xác nhận bằng CI PR.
+- Baseline local 2026-08-30 không tải được Gradle do network sandbox. GitHub
+  Actions [run #37](https://github.com/truong256/UIGrade-AI/actions/runs/33319441697)
+  từ clean checkout đã chạy thành công static checks, unit test, lint, biên dịch
+  Compose UI test và assemble debug; report và APK debug được lưu làm artifact.
 
 ### 5. Dependency — 8/10 ước tính
 
@@ -120,7 +122,7 @@ liệu nguồn mở. Chưa có release thực tế, video/screenshot thật ho�
 
 ## Thao tác thủ công ưu tiên trước khi nộp
 
-1. Chờ CI của PR này xanh rồi review/merge.
+1. Review và merge PR #7 sau khi xác nhận phạm vi thay đổi.
 2. Chạy `connectedDebugAndroidTest` trên Pixel 8/API 35 và thiết bị thật.
 3. Chụp screenshot/quay video thật, thêm vào README.
 4. Xác nhận quyền tác giả của mascot/vector và font bundle.
