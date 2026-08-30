@@ -1,0 +1,14 @@
+UIGrade AI
+Copyright (c) 2026 UIGrade AI contributors
+
+UIGrade AI là ứng dụng Android hỗ trợ quản lý lớp học, bài tập, chấm điểm
+theo rubric và trình bày phản hồi hỗ trợ từ AI.
+
+Mã nguồn do dự án sở hữu được phân phối theo MIT License; xem LICENSE.
+
+Tài sản bên thứ ba được giữ theo giấy phép riêng:
+- Inter Variable Font: SIL Open Font License 1.1; xem licenses/OFL-Inter.txt.
+- Các dependency Android/Kotlin/test: xem THIRD_PARTY_NOTICES.md.
+
+NOTICE này chỉ cung cấp thông tin ghi nhận và không thay đổi giấy phép của
+bất kỳ thành phần bên thứ ba nào.

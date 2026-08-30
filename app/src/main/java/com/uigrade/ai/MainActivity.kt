@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai
 
 import android.os.Bundle

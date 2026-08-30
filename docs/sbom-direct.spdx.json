@@ -1,0 +1,38 @@
+{
+  "spdxVersion": "SPDX-2.3",
+  "dataLicense": "CC0-1.0",
+  "SPDXID": "SPDXRef-DOCUMENT",
+  "name": "UIGrade-AI-direct-dependencies",
+  "documentNamespace": "https://github.com/truong256/UIGrade-AI/sbom/direct/1.0.0",
+  "creationInfo": {
+    "created": "2026-08-30T00:00:00Z",
+    "creators": ["Organization: UIGrade AI contributors"],
+    "comment": "Inventory of direct Gradle catalog dependencies only; transitive resolved dependencies are not included."
+  },
+  "packages": [
+    {"name":"androidx.core:core-ktx","SPDXID":"SPDXRef-CoreKtx","versionInfo":"1.15.0","downloadLocation":"NOASSERTION","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"Apache-2.0","copyrightText":"NOASSERTION"},
+    {"name":"androidx.lifecycle:lifecycle-runtime-ktx","SPDXID":"SPDXRef-Lifecycle","versionInfo":"2.8.7","downloadLocation":"NOASSERTION","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"Apache-2.0","copyrightText":"NOASSERTION"},
+    {"name":"androidx.activity:activity-compose","SPDXID":"SPDXRef-ActivityCompose","versionInfo":"1.9.3","downloadLocation":"NOASSERTION","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"Apache-2.0","copyrightText":"NOASSERTION"},
+    {"name":"androidx.compose:compose-bom","SPDXID":"SPDXRef-ComposeBom","versionInfo":"2024.12.01","downloadLocation":"NOASSERTION","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"Apache-2.0","copyrightText":"NOASSERTION"},
+    {"name":"androidx.navigation:navigation-compose","SPDXID":"SPDXRef-Navigation","versionInfo":"2.8.5","downloadLocation":"NOASSERTION","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"Apache-2.0","copyrightText":"NOASSERTION"},
+    {"name":"com.google.dagger:hilt-android","SPDXID":"SPDXRef-Hilt","versionInfo":"2.53.1","downloadLocation":"NOASSERTION","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"Apache-2.0","copyrightText":"NOASSERTION"},
+    {"name":"org.jetbrains.kotlinx:kotlinx-coroutines-core","SPDXID":"SPDXRef-Coroutines","versionInfo":"1.9.0","downloadLocation":"NOASSERTION","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"Apache-2.0","copyrightText":"NOASSERTION"},
+    {"name":"junit:junit","SPDXID":"SPDXRef-JUnit","versionInfo":"4.13.2","downloadLocation":"NOASSERTION","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"EPL-1.0","copyrightText":"NOASSERTION"},
+    {"name":"io.mockk:mockk","SPDXID":"SPDXRef-MockK","versionInfo":"1.13.13","downloadLocation":"NOASSERTION","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"Apache-2.0","copyrightText":"NOASSERTION"},
+    {"name":"app.cash.turbine:turbine","SPDXID":"SPDXRef-Turbine","versionInfo":"1.2.0","downloadLocation":"NOASSERTION","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"Apache-2.0","copyrightText":"NOASSERTION"},
+    {"name":"Inter Variable Font","SPDXID":"SPDXRef-InterFont","versionInfo":"bundled","downloadLocation":"NOASSERTION","filesAnalyzed":false,"licenseConcluded":"NOASSERTION","licenseDeclared":"OFL-1.1","copyrightText":"NOASSERTION"}
+  ],
+  "relationships": [
+    {"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-CoreKtx"},
+    {"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-Lifecycle"},
+    {"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-ActivityCompose"},
+    {"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-ComposeBom"},
+    {"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-Navigation"},
+    {"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-Hilt"},
+    {"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-Coroutines"},
+    {"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-JUnit"},
+    {"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-MockK"},
+    {"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-Turbine"},
+    {"spdxElementId":"SPDXRef-DOCUMENT","relationshipType":"DESCRIBES","relatedSpdxElement":"SPDXRef-InterFont"}
+  ]
+}
