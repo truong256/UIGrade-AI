@@ -1,0 +1,39 @@
+# SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+# SPDX-License-Identifier: MIT
+
+name: Đề xuất tính năng
+description: Đề xuất cải tiến có nghiệp vụ và tiêu chí chấp nhận rõ ràng
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: dropdown
+    id: role
+    attributes:
+      label: Đối tượng hưởng lợi
+      multiple: true
+      options: [Sinh viên, Giảng viên, Admin, Người đóng góp]
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Vấn đề cần giải quyết
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Giải pháp đề xuất
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Tiêu chí chấp nhận
+      placeholder: "- [ ] ..."
+    validations:
+      required: true
+  - type: textarea
+    id: security
+    attributes:
+      label: Ảnh hưởng dữ liệu, phân quyền hoặc AI

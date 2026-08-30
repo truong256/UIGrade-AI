@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai.presentation.admin
 
 import androidx.compose.foundation.layout.Arrangement
@@ -80,6 +85,12 @@ fun AdminDashboardScreen(
         uiState.successMessage?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.clearMessage()
+        }
+    }
+    LaunchedEffect(uiState.errorMessage, uiState.stats) {
+        if (uiState.errorMessage != null && uiState.stats != null) {
+            snackbarHostState.showSnackbar(uiState.errorMessage.orEmpty())
+            viewModel.clearError()
         }
     }
 

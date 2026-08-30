@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai.presentation.admin
 
 import androidx.lifecycle.ViewModel
@@ -81,7 +86,7 @@ class AdminDashboardViewModel @Inject constructor(
                     )
                 }
             } catch (error: Exception) {
-                _uiState.update { it.copy(isSubmitting = false, successMessage = adminMessage(error)) }
+                _uiState.update { it.copy(isSubmitting = false, errorMessage = adminMessage(error), successMessage = null) }
             }
         }
     }
@@ -96,6 +101,7 @@ class AdminDashboardViewModel @Inject constructor(
     }
 
     fun clearMessage() = _uiState.update { it.copy(successMessage = null) }
+    fun clearError() = _uiState.update { it.copy(errorMessage = null) }
 }
 
 enum class UserSortOption(val label: String) {
@@ -214,6 +220,7 @@ class UserManagementViewModel @Inject constructor(
     }
 
     fun clearMessage() = _uiState.update { it.copy(successMessage = null) }
+    fun clearError() = _uiState.update { it.copy(errorMessage = null) }
 
     private fun mutate(success: String, operation: suspend () -> Unit) {
         if (_uiState.value.isSubmitting) return
@@ -223,7 +230,9 @@ class UserManagementViewModel @Inject constructor(
                 operation()
                 replaceUsers(adminOperations.users(), success, submitting = false)
             } catch (error: Exception) {
-                _uiState.update { it.copy(isSubmitting = false, successMessage = adminMessage(error)) }
+                _uiState.update {
+                    it.copy(isSubmitting = false, errorMessage = adminMessage(error), successMessage = null)
+                }
             }
         }
     }
@@ -328,13 +337,16 @@ class AdminRubricViewModel @Inject constructor(
     }
     fun delete(rubric: Rubric) = mutate("Đã xóa rubric.") { adminOperations.deleteRubric(rubric.id) }
     fun clearMessage() = _uiState.update { it.copy(successMessage = null) }
+    fun clearError() = _uiState.update { it.copy(errorMessage = null) }
 
     private fun mutate(message: String, action: suspend () -> Unit) {
         if (_uiState.value.isSubmitting) return
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true) }
             try { action(); replace(adminOperations.rubrics(), message, submitting = false) }
-            catch (error: Exception) { _uiState.update { it.copy(isSubmitting = false, successMessage = adminMessage(error)) } }
+            catch (error: Exception) {
+                _uiState.update { it.copy(isSubmitting = false, errorMessage = adminMessage(error), successMessage = null) }
+            }
         }
     }
 
@@ -397,13 +409,16 @@ class RuleManagementViewModel @Inject constructor(
         adminOperations.setRuleActive(rule.id, active)
     }
     fun clearMessage() = _uiState.update { it.copy(successMessage = null) }
+    fun clearError() = _uiState.update { it.copy(errorMessage = null) }
 
     private fun mutate(message: String, action: suspend () -> Unit) {
         if (_uiState.value.isSubmitting) return
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true) }
             try { action(); replace(adminOperations.rules(), message) }
-            catch (error: Exception) { _uiState.update { it.copy(isSubmitting = false, successMessage = adminMessage(error)) } }
+            catch (error: Exception) {
+                _uiState.update { it.copy(isSubmitting = false, errorMessage = adminMessage(error), successMessage = null) }
+            }
         }
     }
     private fun replace(rules: List<Rule>, message: String? = null) = _uiState.update { state ->
@@ -461,13 +476,16 @@ class MetricManagementViewModel @Inject constructor(
         adminOperations.setMetricActive(metric.id, active)
     }
     fun clearMessage() = _uiState.update { it.copy(successMessage = null) }
+    fun clearError() = _uiState.update { it.copy(errorMessage = null) }
 
     private fun mutate(message: String, action: suspend () -> Unit) {
         if (_uiState.value.isSubmitting) return
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true) }
             try { action(); replace(adminOperations.metrics(), message) }
-            catch (error: Exception) { _uiState.update { it.copy(isSubmitting = false, successMessage = adminMessage(error)) } }
+            catch (error: Exception) {
+                _uiState.update { it.copy(isSubmitting = false, errorMessage = adminMessage(error), successMessage = null) }
+            }
         }
     }
     private fun replace(metrics: List<Metric>, message: String? = null) = _uiState.update { state ->

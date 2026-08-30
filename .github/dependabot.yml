@@ -1,0 +1,18 @@
+# SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+# SPDX-License-Identifier: MIT
+
+version: 2
+updates:
+  - package-ecosystem: gradle
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    labels: ["dependencies"]
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: monthly
+    open-pull-requests-limit: 3
+    labels: ["dependencies", "ci"]

@@ -1,10 +1,14 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai.data.repository
 
 import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.Feedback
 import com.uigrade.ai.domain.model.GradingResult
 import com.uigrade.ai.domain.repository.FeedbackRepository
-import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.Inject
@@ -25,12 +29,10 @@ class MockFeedbackRepository @Inject constructor(
     private val feedbacks get() = dataStore.feedbacks
 
     override suspend fun getFeedbackForResult(gradingResultId: String): Feedback? {
-        delay(400)
         return feedbacks.find { it.gradingResultId == gradingResultId }
     }
 
     override suspend fun generateFeedback(gradingResult: GradingResult): Feedback {
-        delay(1500) // Simulate AI generation time
         feedbacks.find { it.gradingResultId == gradingResult.id }?.let { return it }
 
         val strongCriteria = gradingResult.criteriaScores

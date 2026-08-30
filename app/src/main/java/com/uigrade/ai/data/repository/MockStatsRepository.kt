@@ -1,9 +1,13 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai.data.repository
 
 import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.*
 import com.uigrade.ai.domain.repository.StatsRepository
-import kotlinx.coroutines.delay
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -13,7 +17,6 @@ class MockStatsRepository @Inject constructor(
 ) : StatsRepository {
 
     override suspend fun getAdminStats(): AdminStats {
-        delay(500)
         val completed = dataStore.gradingResults.size
         val failed = dataStore.submissions.count { it.status == SubmissionStatus.FAILED }
         return AdminStats(
@@ -43,7 +46,6 @@ class MockStatsRepository @Inject constructor(
     }
 
     override suspend fun getLecturerStats(lecturerId: String): LecturerStats {
-        delay(400)
         val assignments = dataStore.assignments.filter { it.lecturerId == lecturerId }
         val assignmentIds = assignments.map { it.id }.toSet()
         val submissions = dataStore.submissions.filter { it.assignmentId in assignmentIds }
@@ -59,12 +61,10 @@ class MockStatsRepository @Inject constructor(
     }
 
     override suspend fun getSystemLogs(): List<SystemLog> {
-        delay(400)
         return dataStore.systemLogs.sortedByDescending { it.timestamp }
     }
 
     override suspend fun setAiFeedbackEnabled(enabled: Boolean) {
-        delay(300)
         dataStore.aiFeedbackEnabled = enabled
     }
 }

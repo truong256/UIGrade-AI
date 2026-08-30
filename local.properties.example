@@ -1,0 +1,11 @@
+# SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+# SPDX-License-Identifier: MIT
+
+# Copy thành local.properties và sửa đường dẫn SDK cho máy của bạn.
+# Không commit local.properties.
+# Windows (phải escape dấu gạch chéo ngược):
+# sdk.dir=C\:\\Users\\YOUR_NAME\\AppData\\Local\\Android\\Sdk
+# macOS:
+# sdk.dir=/Users/YOUR_NAME/Library/Android/sdk
+# Linux:
+# sdk.dir=/home/YOUR_NAME/Android/Sdk

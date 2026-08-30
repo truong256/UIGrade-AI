@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai.data.repository
 
 import com.uigrade.ai.data.mock.MockData
@@ -6,7 +11,6 @@ import com.uigrade.ai.domain.model.User
 import com.uigrade.ai.domain.model.UserRole
 import com.uigrade.ai.domain.model.UserAccountStatus
 import com.uigrade.ai.domain.repository.AuthRepository
-import kotlinx.coroutines.delay
 import java.security.MessageDigest
 import java.time.LocalDateTime
 import javax.inject.Inject
@@ -23,7 +27,6 @@ class MockAuthRepository @Inject constructor(
     private val registeredPasswordHashes = mutableMapOf<String, String>()
 
     override suspend fun login(email: String, password: String): User? {
-        delay(600) // Simulate network latency
         val normalizedEmail = email.trim().lowercase()
         val passwordHash = hashPassword(password)
         val demoCredential = MockData.credentialHashes[normalizedEmail]
@@ -48,7 +51,6 @@ class MockAuthRepository @Inject constructor(
         password: String,
         role: UserRole
     ): User? {
-        delay(600) // Simulate network latency
         val trimmedEmail = email.trim()
         val exists = dataStore.users.any { it.email.equals(trimmedEmail, ignoreCase = true) }
         if (exists) {
@@ -94,12 +96,10 @@ class MockAuthRepository @Inject constructor(
     }
 
     override suspend fun logout() {
-        delay(200)
         currentUser = null
     }
 
     override suspend fun changePassword(currentPassword: String, newPassword: String): Result<Unit> {
-        delay(500)
         val user = getCurrentUser()
             ?: return Result.failure(IllegalArgumentException("Bạn chưa đăng nhập"))
         val normalizedEmail = user.email.lowercase()

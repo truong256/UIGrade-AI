@@ -1,0 +1,51 @@
+# SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+# SPDX-License-Identifier: MIT
+
+name: Báo lỗi
+description: Báo một lỗi có thể tái hiện trong UIGrade AI
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: "Không đăng secret hoặc dữ liệu cá nhân. Lỗ hổng bảo mật xem SECURITY.md."
+  - type: input
+    id: version
+    attributes:
+      label: Phiên bản/commit
+      placeholder: v1.0.0 hoặc SHA commit
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Thiết bị và Android
+      placeholder: Pixel 8, Android 15
+    validations:
+      required: true
+  - type: dropdown
+    id: role
+    attributes:
+      label: Vai trò
+      options: [Sinh viên, Giảng viên, Admin, Chưa đăng nhập]
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Các bước tái hiện
+      placeholder: "1. Mở...\n2. Nhấn...\n3. Quan sát..."
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Kết quả mong đợi
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Kết quả thực tế và log đã loại dữ liệu nhạy cảm
+    validations:
+      required: true
