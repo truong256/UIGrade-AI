@@ -1,6 +1,13 @@
 *.iml
 .gradle
 /local.properties
+.env
+.env.*
+!.env.example
+*.jks
+*.keystore
+keystore.properties
+signing.properties
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
@@ -20,4 +27,3 @@ captures/
 output.json
 .kotlin
 .kotlin/
-

@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai.presentation.admin
 
 import androidx.compose.foundation.layout.Arrangement
@@ -83,6 +88,12 @@ fun RubricAdminScreen(
     var confirmation by remember { mutableStateOf<RubricConfirmation?>(null) }
     LaunchedEffect(uiState.successMessage) {
         uiState.successMessage?.let { snackbar.showSnackbar(it); viewModel.clearMessage() }
+    }
+    LaunchedEffect(uiState.errorMessage, uiState.allRubrics) {
+        if (uiState.errorMessage != null && uiState.allRubrics.isNotEmpty()) {
+            snackbar.showSnackbar(uiState.errorMessage.orEmpty())
+            viewModel.clearError()
+        }
     }
     Scaffold(
         topBar = {
@@ -250,6 +261,12 @@ fun RuleManagementScreen(
     LaunchedEffect(uiState.successMessage) {
         uiState.successMessage?.let { snackbar.showSnackbar(it); viewModel.clearMessage() }
     }
+    LaunchedEffect(uiState.errorMessage, uiState.allRules) {
+        if (uiState.errorMessage != null && uiState.allRules.isNotEmpty()) {
+            snackbar.showSnackbar(uiState.errorMessage.orEmpty())
+            viewModel.clearError()
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -262,7 +279,11 @@ fun RuleManagementScreen(
     ) { padding ->
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
-            uiState.errorMessage != null -> ErrorScreen(uiState.errorMessage.orEmpty(), { viewModel.load() }, Modifier.padding(padding))
+            uiState.errorMessage != null && uiState.allRules.isEmpty() -> ErrorScreen(
+                uiState.errorMessage.orEmpty(),
+                { viewModel.load() },
+                Modifier.padding(padding)
+            )
             else -> CatalogListLayout(
                 modifier = Modifier.padding(padding),
                 search = uiState.searchQuery,
@@ -356,7 +377,16 @@ private fun RuleEditDialog(rule: Rule, processing: Boolean, onDismiss: () -> Uni
                     parsedPenalty == null || parsedPenalty < 0 -> "Điểm trừ không hợp lệ."
                     else -> null
                 }
-                if (error == null) onSave(rule.copy(description = description.trim(), threshold = threshold.trim(), maxScore = parsedMax!!, penalty = parsedPenalty!!))
+                if (error == null && parsedMax != null && parsedPenalty != null) {
+                    onSave(
+                        rule.copy(
+                            description = description.trim(),
+                            threshold = threshold.trim(),
+                            maxScore = parsedMax,
+                            penalty = parsedPenalty
+                        )
+                    )
+                }
             }, enabled = !processing) {
                 if (processing) CircularProgressIndicator(Modifier.size(18.dp), strokeWidth = 2.dp) else { Icon(Icons.Default.Edit, null); Text("Lưu") }
             }
@@ -376,6 +406,12 @@ fun MetricManagementScreen(
     LaunchedEffect(uiState.successMessage) {
         uiState.successMessage?.let { snackbar.showSnackbar(it); viewModel.clearMessage() }
     }
+    LaunchedEffect(uiState.errorMessage, uiState.allMetrics) {
+        if (uiState.errorMessage != null && uiState.allMetrics.isNotEmpty()) {
+            snackbar.showSnackbar(uiState.errorMessage.orEmpty())
+            viewModel.clearError()
+        }
+    }
     Scaffold(
         topBar = {
             TopAppBar(
@@ -388,7 +424,11 @@ fun MetricManagementScreen(
     ) { padding ->
         when {
             uiState.isLoading -> LoadingScreen(Modifier.padding(padding))
-            uiState.errorMessage != null -> ErrorScreen(uiState.errorMessage.orEmpty(), { viewModel.load() }, Modifier.padding(padding))
+            uiState.errorMessage != null && uiState.allMetrics.isEmpty() -> ErrorScreen(
+                uiState.errorMessage.orEmpty(),
+                { viewModel.load() },
+                Modifier.padding(padding)
+            )
             else -> CatalogListLayout(
                 modifier = Modifier.padding(padding),
                 search = uiState.searchQuery,

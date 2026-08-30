@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai.data.repository
 
 import com.uigrade.ai.data.mock.MockDataStore
@@ -7,7 +12,6 @@ import com.uigrade.ai.domain.model.AssignmentStatus
 import com.uigrade.ai.domain.model.AssignmentWithStatus
 import com.uigrade.ai.domain.repository.AssignmentRepository
 import com.uigrade.ai.domain.usecase.StudentAssignmentPolicy
-import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -51,7 +55,6 @@ class MockAssignmentRepository @Inject constructor(
     }
 
     override suspend fun getAssignmentsForStudent(studentId: String): List<AssignmentWithStatus> {
-        delay(600)
         val enrolledIds = dataStore.memberships
             .filter { it.studentId == studentId }
             .map { it.classroomId }
@@ -67,29 +70,24 @@ class MockAssignmentRepository @Inject constructor(
     }
 
     override suspend fun getAssignmentsForLecturer(lecturerId: String): List<Assignment> {
-        delay(500)
         return assignments.filter { it.lecturerId == lecturerId }
     }
 
     override suspend fun getAllAssignments(): List<Assignment> {
-        delay(500)
         return assignments.toList()
     }
 
     override suspend fun getAssignmentById(id: String): Assignment? {
-        delay(300)
         return assignments.find { it.id == id }
     }
 
     override suspend fun createAssignment(assignment: Assignment): Assignment {
-        delay(700)
         require(assignments.none { it.id == assignment.id }) { "Mã bài tập đã tồn tại" }
         assignments.add(assignment)
         return assignment
     }
 
     override suspend fun updateAssignment(assignment: Assignment): Assignment {
-        delay(700)
         val index = assignments.indexOfFirst { it.id == assignment.id }
         if (index < 0) throw IllegalArgumentException("Không tìm thấy bài tập")
         assignments[index] = assignment
@@ -97,12 +95,10 @@ class MockAssignmentRepository @Inject constructor(
     }
 
     override suspend fun deleteAssignment(id: String): Boolean {
-        delay(500)
         return assignments.removeIf { it.id == id }
     }
 
     override suspend fun getPublishedAssignmentsForClassroom(classroomId: String): List<Assignment> {
-        delay(400)
         return assignments.filter {
             it.classroomId == classroomId &&
                 it.publishStatus == AssignmentPublishStatus.PUBLISHED &&
@@ -111,7 +107,6 @@ class MockAssignmentRepository @Inject constructor(
     }
 
     override suspend fun getAllAssignmentsForClassroom(classroomId: String): List<Assignment> {
-        delay(400)
         return assignments.filter { it.classroomId == classroomId }
     }
 
@@ -119,7 +114,6 @@ class MockAssignmentRepository @Inject constructor(
         studentId: String,
         classroomId: String
     ): List<AssignmentWithStatus> {
-        delay(500)
         return assignments
             .filter {
                 it.classroomId == classroomId &&

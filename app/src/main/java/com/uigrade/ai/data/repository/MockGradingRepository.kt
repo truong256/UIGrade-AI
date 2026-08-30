@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai.data.repository
 
 import com.uigrade.ai.data.mock.MockDataStore
@@ -6,7 +11,6 @@ import com.uigrade.ai.domain.model.SubmissionStatus
 import com.uigrade.ai.domain.model.StudentNotification
 import com.uigrade.ai.domain.model.StudentNotificationType
 import com.uigrade.ai.domain.repository.GradingRepository
-import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.Inject
@@ -20,8 +24,6 @@ class MockGradingRepository @Inject constructor(
     private val results get() = dataStore.gradingResults
 
     override suspend fun getGradingResultForSubmission(submissionId: String): GradingResult? {
-        delay(400)
-        // Students can only see officially released results.
         return results.find { it.submissionId == submissionId && it.isReleased && !it.isDraft }
     }
 
@@ -29,28 +31,22 @@ class MockGradingRepository @Inject constructor(
      * Lecturer-only view — returns the result regardless of release status.
      */
     override suspend fun getGradingResultForSubmissionForLecturer(submissionId: String): GradingResult? {
-        delay(400)
         return results.find { it.submissionId == submissionId }
     }
 
     override suspend fun getGradingResultsForStudent(studentId: String): List<GradingResult> {
-        delay(500)
-        // Only released results visible to student
         return results.filter { it.studentId == studentId && it.isReleased && !it.isDraft }
     }
 
     override suspend fun getGradingResultsForAssignment(assignmentId: String): List<GradingResult> {
-        delay(500)
         return results.filter { it.assignmentId == assignmentId }
     }
 
     override suspend fun getAllGradingResults(): List<GradingResult> {
-        delay(500)
         return results
     }
 
     override suspend fun saveGradingDraft(result: GradingResult): Result<GradingResult> {
-        delay(700)
         return try {
             val draftResult = result.copy(isDraft = true, isReleased = false)
             val existingIndex = results.indexOfFirst { it.submissionId == result.submissionId }
@@ -69,7 +65,6 @@ class MockGradingRepository @Inject constructor(
     }
 
     override suspend fun finalizeGrading(resultId: String): Result<GradingResult> {
-        delay(600)
         val index = results.indexOfFirst { it.id == resultId }
         return if (index >= 0) {
             val updated = results[index].copy(
@@ -86,7 +81,6 @@ class MockGradingRepository @Inject constructor(
     }
 
     override suspend fun releaseGrading(resultId: String): Result<GradingResult> {
-        delay(600)
         val index = results.indexOfFirst { it.id == resultId }
         return if (index >= 0) {
             val updated = results[index].copy(isReleased = true, isDraft = false)

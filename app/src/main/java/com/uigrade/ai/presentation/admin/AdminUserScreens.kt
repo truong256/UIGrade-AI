@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai.presentation.admin
 
 import androidx.compose.foundation.background
@@ -106,6 +111,12 @@ fun UserManagementScreen(
         uiState.successMessage?.let {
             snackbarHostState.showSnackbar(it)
             viewModel.clearMessage()
+        }
+    }
+    LaunchedEffect(uiState.errorMessage, uiState.allUsers) {
+        if (uiState.errorMessage != null && uiState.allUsers.isNotEmpty()) {
+            snackbarHostState.showSnackbar(uiState.errorMessage.orEmpty())
+            viewModel.clearError()
         }
     }
 
@@ -427,14 +438,14 @@ private fun UserFormDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
                 ExposedDropdownMenuBox(expanded = roleExpanded, onExpandedChange = { roleExpanded = it }) {
-                    OutlinedTextField(
-                        value = roleLabel(role),
-                        onValueChange = {},
-                        readOnly = true,
-                        label = { Text("Vai trò *") },
-                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(roleExpanded) },
+                    OutlinedButton(
+                        onClick = { roleExpanded = true },
+                        enabled = !isProcessing,
                         modifier = Modifier.menuAnchor().fillMaxWidth()
-                    )
+                    ) {
+                        Text("Vai trò: ${roleLabel(role)}", modifier = Modifier.weight(1f))
+                        ExposedDropdownMenuDefaults.TrailingIcon(roleExpanded)
+                    }
                     ExposedDropdownMenu(expanded = roleExpanded, onDismissRequest = { roleExpanded = false }) {
                         UserRole.entries.forEach { option ->
                             DropdownMenuItem(text = { Text(roleLabel(option)) }, onClick = { role = option; roleExpanded = false; identifierError = null })

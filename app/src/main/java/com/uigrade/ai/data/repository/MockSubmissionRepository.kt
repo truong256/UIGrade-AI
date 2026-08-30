@@ -1,3 +1,8 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai.data.repository
 
 import com.uigrade.ai.data.mock.MockDataStore
@@ -8,7 +13,6 @@ import com.uigrade.ai.domain.model.SubmissionStatus
 import com.uigrade.ai.domain.model.StudentNotification
 import com.uigrade.ai.domain.model.StudentNotificationType
 import com.uigrade.ai.domain.repository.SubmissionRepository
-import kotlinx.coroutines.delay
 import java.time.LocalDateTime
 import java.util.UUID
 import javax.inject.Inject
@@ -22,22 +26,18 @@ class MockSubmissionRepository @Inject constructor(
     private val submissions get() = dataStore.submissions
 
     override suspend fun getSubmissionsForStudent(studentId: String): List<Submission> {
-        delay(500)
         return submissions.filter { it.studentId == studentId }
     }
 
     override suspend fun getSubmissionsForAssignment(assignmentId: String): List<Submission> {
-        delay(500)
         return submissions.filter { it.assignmentId == assignmentId }
     }
 
     override suspend fun getAllSubmissions(): List<Submission> {
-        delay(500)
         return submissions.toList()
     }
 
     override suspend fun getSubmissionById(id: String): Submission? {
-        delay(300)
         return submissions.find { it.id == id }
     }
 
@@ -45,7 +45,6 @@ class MockSubmissionRepository @Inject constructor(
         studentId: String,
         assignmentId: String
     ): List<Submission> {
-        delay(350)
         return submissions
             .filter { it.studentId == studentId && it.assignmentId == assignmentId }
             .sortedWith(compareByDescending<Submission> { it.attemptNumber }.thenByDescending { it.savedAt })
@@ -56,7 +55,6 @@ class MockSubmissionRepository @Inject constructor(
         studentId: String,
         fileUri: String?
     ): Submission {
-        delay(1200)
         require(dataStore.assignments.any { it.id == assignmentId }) { "Bài tập không tồn tại" }
         require(!fileUri.isNullOrBlank()) { "Vui lòng chọn file bài tập" }
 
@@ -115,7 +113,6 @@ class MockSubmissionRepository @Inject constructor(
         fileUri: String?,
         fileName: String
     ): Submission {
-        delay(1200)
         require(!fileUri.isNullOrBlank()) { "Vui lòng chọn file bài tập" }
 
         val assignment = dataStore.assignments.find { it.id == assignmentId }
@@ -194,7 +191,6 @@ class MockSubmissionRepository @Inject constructor(
         linkUrl: String,
         attachments: List<SubmissionAttachment>
     ): Submission {
-        delay(550)
         val assignment = dataStore.assignments.find { it.id == assignmentId }
             ?: throw IllegalArgumentException("Không tìm thấy bài tập.")
         require(assignment.classroomId == classroomId) { "Bài tập không thuộc lớp học này." }
@@ -231,7 +227,6 @@ class MockSubmissionRepository @Inject constructor(
     }
 
     override suspend fun deleteDraft(submissionId: String, studentId: String): Result<Unit> {
-        delay(350)
         val removed = submissions.removeAll {
             it.id == submissionId && it.studentId == studentId && it.isDraft
         }
@@ -240,7 +235,6 @@ class MockSubmissionRepository @Inject constructor(
     }
 
     override suspend fun submitDraft(submissionId: String, studentId: String): Submission {
-        delay(900)
         val index = submissions.indexOfFirst {
             it.id == submissionId && it.studentId == studentId && it.isDraft
         }
@@ -275,7 +269,6 @@ class MockSubmissionRepository @Inject constructor(
         classroomId: String,
         assignmentId: String
     ): List<Submission> {
-        delay(400)
         return submissions.filter {
             it.classroomId == classroomId && it.assignmentId == assignmentId
         }
@@ -285,7 +278,6 @@ class MockSubmissionRepository @Inject constructor(
         submissionId: String,
         status: SubmissionStatus
     ): Submission? {
-        delay(300)
         val index = submissions.indexOfFirst { it.id == submissionId }
         if (index < 0) return null
         submissions[index] = submissions[index].copy(status = status)
@@ -297,7 +289,6 @@ class MockSubmissionRepository @Inject constructor(
         needsReview: Boolean,
         resubmissionRequested: Boolean
     ): Submission? {
-        delay(300)
         val index = submissions.indexOfFirst { it.id == submissionId }
         if (index < 0) return null
         submissions[index] = submissions[index].copy(

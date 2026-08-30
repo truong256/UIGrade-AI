@@ -1,9 +1,13 @@
+/*
+ * SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+ * SPDX-License-Identifier: MIT
+ */
+
 package com.uigrade.ai.data.repository
 
 import com.uigrade.ai.data.mock.MockDataStore
 import com.uigrade.ai.domain.model.Rubric
 import com.uigrade.ai.domain.repository.RubricRepository
-import kotlinx.coroutines.delay
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -15,24 +19,20 @@ class MockRubricRepository @Inject constructor(
     private val rubrics get() = dataStore.rubrics
 
     override suspend fun getRubricById(id: String): Rubric? {
-        delay(300)
         return rubrics.find { it.id == id }
     }
 
     override suspend fun getAllRubrics(): List<Rubric> {
-        delay(400)
         return rubrics.toList()
     }
 
     override suspend fun createRubric(rubric: Rubric): Rubric {
-        delay(600)
         require(rubrics.none { it.id == rubric.id }) { "Mã rubric đã tồn tại" }
         rubrics.add(rubric)
         return rubric
     }
 
     override suspend fun updateRubric(rubric: Rubric): Rubric {
-        delay(600)
         val index = rubrics.indexOfFirst { it.id == rubric.id }
         if (index < 0) throw IllegalArgumentException("Không tìm thấy rubric")
         rubrics[index] = rubric
@@ -40,7 +40,6 @@ class MockRubricRepository @Inject constructor(
     }
 
     override suspend fun deleteRubric(id: String): Boolean {
-        delay(400)
         return rubrics.removeIf { it.id == id }
     }
 }
