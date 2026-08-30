@@ -1,0 +1,95 @@
+# SPDX-FileCopyrightText: 2026 UIGrade AI contributors
+# SPDX-License-Identifier: MIT
+
+name: Prepare Android Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Phiên bản dạng 1.0.0 (không có ký tự v)"
+        required: true
+        type: string
+  push:
+    tags:
+      - "v*.*.*"
+
+permissions:
+  contents: write
+
+jobs:
+  prepare-release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK 35
+        run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Validate version
+        id: version
+        env:
+          INPUT_VERSION: ${{ inputs.version }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          if [[ "${GITHUB_EVENT_NAME}" == "workflow_dispatch" ]]; then VERSION="${INPUT_VERSION}"; fi
+          if [[ ! "${VERSION}" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Phiên bản phải theo Semantic Versioning MAJOR.MINOR.PATCH" >&2
+            exit 1
+          fi
+          CONFIGURED=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts)
+          if [[ "${CONFIGURED}" != "${VERSION}" ]]; then
+            echo "versionName ${CONFIGURED} không khớp ${VERSION}" >&2
+            exit 1
+          fi
+          echo "value=${VERSION}" >> "$GITHUB_OUTPUT"
+
+      - name: Quality gates
+        run: |
+          bash scripts/check-project-quality.sh
+          ./gradlew clean testDebugUnitTest lintDebug assembleDebugAndroidTest --stacktrace
+
+      - name: Build unsigned demo release APK
+        run: ./gradlew assembleRelease --stacktrace
+
+      - name: Name artifact and create checksum
+        env:
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          mkdir -p release-artifacts
+          cp app/build/outputs/apk/release/app-release-unsigned.apk "release-artifacts/uigrade-ai-${VERSION}-demo-unsigned.apk"
+          cp docs/sbom-direct.spdx.json release-artifacts/
+          cd release-artifacts
+          sha256sum "uigrade-ai-${VERSION}-demo-unsigned.apk" > "uigrade-ai-${VERSION}-demo-unsigned.apk.sha256"
+
+      - name: Upload release candidate
+        uses: actions/upload-artifact@v4
+        with:
+          name: uigrade-ai-${{ steps.version.outputs.value }}-release-candidate
+          path: release-artifacts/
+          if-no-files-found: error
+
+      - name: Create draft GitHub Release for tag
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.version.outputs.value }}
+        run: |
+          gh release create "v${VERSION}" release-artifacts/* \
+            --draft \
+            --title "UIGrade AI ${VERSION}" \
+            --notes-file docs/RELEASE_NOTES_1.0.0.md
