@@ -27,7 +27,7 @@ type RouteContext = {
 
 export async function PATCH(request: Request, context: RouteContext) {
     try {
-        const currentUser = getCurrentUserFromRequest(request);
+        const currentUser = await getCurrentUserFromRequest(request);
         requireAdmin(currentUser); // throws 401 / 403
 
         await connectDB();
@@ -48,7 +48,7 @@ export async function PATCH(request: Request, context: RouteContext) {
 
 export async function DELETE(request: Request, context: RouteContext) {
     try {
-        const currentUser = getCurrentUserFromRequest(request);
+        const currentUser = await getCurrentUserFromRequest(request);
         requireAdmin(currentUser); // throws 401 / 403
 
         await connectDB();

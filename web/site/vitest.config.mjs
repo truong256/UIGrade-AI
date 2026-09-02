@@ -11,6 +11,7 @@ export default defineConfig({
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
     env: {
       JWT_SECRET: "test-jwt-secret-for-vitest-only-32chars",
+      MONGODB_URI: "mongodb://localhost:27017/android_grader_test_db",
     },
   },
   resolve: {

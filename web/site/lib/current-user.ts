@@ -1,26 +1,35 @@
 /**
  * lib/current-user.ts
  *
- * Server-side identity resolution.
+ * Server-side authoritative identity and authorization resolution.
  *
- * SECURITY RULES:
- *  1. Role MUST come from a server-verified source:
- *       a. JWT signed with JWT_SECRET (cookie "token") — trusted.
- *       b. Supabase session verified by supabase.auth.getUser() — trusted.
- *     Supabase profiles.role (DB) is preferred over user_metadata.role (client-writable).
+ * SECURITY DESIGN:
+ *  1. Tokens / Sessions are cryptographically verified:
+ *       a. Supabase: supabase.auth.getUser() -> verifies session & signature with Supabase auth.
+ *       b. JWT: verifyToken(token) -> verifies signature & expiration with JWT_SECRET.
  *
- *  2. x-user-id / x-user-role / x-user-email / x-student-code headers from
- *     incoming requests are NEVER trusted for identity or authorization.
- *     These headers are NOT read anywhere in this module.
+ *  2. STALE TOKEN DEFENSE (P0 Hardening):
+ *     The role in the JWT token is NEVER treated as the final authorization authority.
+ *     After verifying the token signature, the actor's current status and role are
+ *     ALWAYS revalidated from the authoritative database:
+ *       - MongoDB: User.findById(userId) -> checks existence, isActive status, and current role.
+ *       - Supabase: public.profiles.select("role, status") -> checks existence, status, and current role.
  *
- *  3. Default role when no valid session exists: null (deny).
- *     There is NO default escalation to any privileged role.
+ *     If the account was locked (isActive=false / status=locked), demoted, or deleted
+ *     after token issuance, the permissions drop IMMEDIATELY on the next request.
+ *
+ *  3. x-user-* headers (x-user-id, x-user-role, x-user-email, x-student-code)
+ *     are NEVER read or trusted.
+ *
+ *  4. Default state when not authenticated or invalid: null (deny all).
  */
 
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { normalizeRole, type CanonicalRole, AuthorizationError } from "@/lib/authorization";
+import { connectDB } from "@/lib/mongodb";
+import User from "@/models/User.model";
 
 export type CurrentUserPayload = {
     userId: string;
@@ -46,20 +55,54 @@ function parseCookieToken(cookieHeader?: string | null): string | null {
     return decodeURIComponent(tokenPair.slice("token=".length)) || null;
 }
 
-function verifyTokenSafe(token?: string | null): CurrentUserPayload | null {
+/**
+ * Revalidates a verified JWT payload against the authoritative database.
+ *
+ * Ensures:
+ *  1. The user account still exists (if deleted -> null / 401).
+ *  2. The account is active (if isActive=false -> null / 403).
+ *  3. The current role is loaded from DB (prevents stale admin JWT privilege).
+ */
+async function resolveAuthoritativeActorFromToken(token?: string | null): Promise<CurrentUserPayload | null> {
     if (!token) return null;
 
+    let payload: ReturnType<typeof verifyToken>;
     try {
-        const payload = verifyToken(token);
+        payload = verifyToken(token);
+    } catch {
+        // Expired, tampered, or malformed token -> reject immediately
+        return null;
+    }
+
+    if (!payload?.userId) return null;
+
+    try {
+        await connectDB();
+        const user = await User.findById(payload.userId)
+            .select("_id name email role studentCode isActive isVerified")
+            .lean();
+
+        if (!user) {
+            // User was deleted from DB -> token revoked
+            return null;
+        }
+
+        if (user.isActive === false) {
+            // Account is locked/suspended -> access revoked immediately
+            return null;
+        }
+
+        // Authoritative role from database (not stale token claim)
+        const authoritativeRole = normalizeRole(user.role);
+
         return {
-            userId: payload.userId,
-            email: payload.email,
-            // Role in JWT was set at login time from the DB — normalize it.
-            role: normalizeRole(payload.role),
-            studentCode: payload.studentCode,
+            userId: String(user._id),
+            email: user.email || payload.email || "",
+            role: authoritativeRole,
+            studentCode: user.studentCode || undefined,
         };
     } catch {
-        // Expired, tampered, or malformed token → treat as unauthenticated.
+        // DB error -> fail secure (do not grant unverified access)
         return null;
     }
 }
@@ -69,16 +112,16 @@ function verifyTokenSafe(token?: string | null): CurrentUserPayload | null {
 // ---------------------------------------------------------------------------
 
 /**
- * Get the current authenticated user in a server component or server action.
+ * Get the current authenticated actor in a Server Component or Server Action.
  *
  * Priority:
- *  1. Supabase verified session (profiles.role from DB is authoritative).
- *  2. JWT cookie "token" (signed by server at login time).
+ *  1. Supabase verified session (profiles.role and profiles.status from DB).
+ *  2. MongoDB verified user (User.role and User.isActive from DB).
  *
- * Returns null when the user is not authenticated or the session is invalid.
+ * Returns null when unauthenticated, invalid, locked, or deleted.
  */
 export async function getCurrentUserFromCookie(): Promise<CurrentUserPayload | null> {
-    // 1. Try Supabase session first (most current, DB-backed role)
+    // 1. Try Supabase session first (DB-backed profile)
     try {
         const supabase = await createSupabaseServerClient();
         const {
@@ -86,38 +129,33 @@ export async function getCurrentUserFromCookie(): Promise<CurrentUserPayload | n
         } = await supabase.auth.getUser();
 
         if (user) {
-            // Prefer DB profile role over user_metadata.role
-            // user_metadata is client-writable and must NOT be used as the
-            // authoritative role source.
             const { data: profile } = await (supabase as any)
                 .from("profiles")
                 .select("role, student_code, status")
                 .eq("id", user.id)
                 .single();
 
-            const rawRole = profile?.role ?? null; // null if profile not found
-            const role = normalizeRole(rawRole); // safe default: "student"
+            if (!profile) return null; // Fail secure if profile does not exist
 
-            // If the account is locked in Supabase profiles, deny access.
-            if (profile?.status === "locked" || profile?.status === "inactive") {
-                return null;
+            if (profile.status === "locked" || profile.status === "inactive") {
+                return null; // Locked in Supabase -> revoked
             }
 
             return {
                 userId: user.id,
                 email: user.email ?? "",
-                role,
-                studentCode: profile?.student_code ?? undefined,
+                role: normalizeRole(profile.role),
+                studentCode: profile.student_code ?? undefined,
             };
         }
     } catch {
-        // Supabase not configured / network error → fall through to JWT.
+        // Supabase not configured -> fall through to MongoDB JWT path
     }
 
-    // 2. Fall back to JWT cookie (used by the MongoDB auth path)
+    // 2. JWT cookie revalidated against MongoDB
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
-    return verifyTokenSafe(token);
+    return resolveAuthoritativeActorFromToken(token);
 }
 
 // ---------------------------------------------------------------------------
@@ -125,19 +163,24 @@ export async function getCurrentUserFromCookie(): Promise<CurrentUserPayload | n
 // ---------------------------------------------------------------------------
 
 /**
- * Get the current authenticated user from an API route's Request object.
+ * Get the current authenticated actor from an API route's Request object.
+ * Revalidates user status and role against the database on every request.
  *
- * SECURITY: This function ONLY reads the "token" cookie from the request.
- * It does NOT read x-user-id, x-user-role, x-user-email, or any other
- * client-controlled header. Those headers are completely ignored.
+ * SECURITY:
+ *  - Only reads the "token" cookie. Untrusted headers (x-user-*) are ignored.
+ *  - Queries DB for current status and role — prevents stale JWT privilege escalation.
  *
- * Returns null when the request has no valid authentication.
+ * Returns null when unauthenticated, token is invalid, or user is locked/deleted.
  */
-export function getCurrentUserFromRequest(request: Request): CurrentUserPayload | null {
-    // Extract only the cookie header — no other headers are trusted.
+export async function getCurrentUserFromRequest(request: Request): Promise<CurrentUserPayload | null> {
     const cookieToken = parseCookieToken(request.headers.get("cookie"));
-    return verifyTokenSafe(cookieToken);
+    return resolveAuthoritativeActorFromToken(cookieToken);
 }
+
+/**
+ * Explicit semantic alias for getCurrentUserFromRequest.
+ */
+export const resolveAuthenticatedActor = getCurrentUserFromRequest;
 
 // ---------------------------------------------------------------------------
 // Convenience error classes
@@ -159,14 +202,13 @@ export { AuthorizationError };
 // ---------------------------------------------------------------------------
 
 /**
- * Get the actor's userId from a request, throwing UnauthorizedError if missing.
- * @deprecated Prefer getCurrentUserFromRequest() with explicit role checks.
+ * Get the actor's userId from a request, throwing UnauthorizedError if missing or revoked.
  */
-export function getActorIdFromRequest(request: Request): string {
-    const currentUser = getCurrentUserFromRequest(request);
+export async function getActorIdFromRequest(request: Request): Promise<string> {
+    const currentUser = await getCurrentUserFromRequest(request);
 
     if (!currentUser?.userId) {
-        throw new UnauthorizedError("Bạn chưa đăng nhập");
+        throw new UnauthorizedError("Bạn chưa đăng nhập hoặc tài khoản đã bị khóa");
     }
 
     return currentUser.userId;

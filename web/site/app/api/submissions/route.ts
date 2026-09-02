@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     try {
         await connectDB();
 
-        const currentUser = getCurrentUserFromRequest(request);
+        const currentUser = await getCurrentUserFromRequest(request);
 
         if (!currentUser?.userId) {
             return errorResponse("Bạn chưa đăng nhập", 401);

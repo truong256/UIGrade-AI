@@ -39,6 +39,7 @@ import {
     assertCanDeleteUser,
     assertCanChangeRole,
     assertCanCreateUserWithRole,
+    validateRoleInput,
     normalizeRole,
     ROLES,
 } from "@/lib/authorization";
@@ -255,14 +256,13 @@ export const userManagementService = {
         const name = normalizeText(payload.name);
         const email = normalizeEmail(payload.email);
         const password = normalizeText(payload.password);
-        const rawRole = normalizeText(payload.role) || "student";
-        const canonicalRole = normalizeRole(rawRole);
+        const canonicalRole = validateRoleInput(payload.role !== undefined ? payload.role : "student");
         const studentCode = normalizeText(payload.studentCode).toUpperCase();
         const department = normalizeText(payload.department);
         const cohort = normalizeText(payload.cohort);
 
         // Authorization: can actor create a user with this role?
-        assertCanCreateUserWithRole(actor, rawRole);
+        assertCanCreateUserWithRole(actor, canonicalRole);
 
         // Validation
         if (!name) throw new Error("Tên người dùng không được để trống");
@@ -332,13 +332,15 @@ export const userManagementService = {
             assertCanDeactivateUser(actor, targetUser as any, activeAdminCount);
         }
 
+        let dbRole: string | undefined;
         if (payload.role !== undefined) {
-            const newRole = normalizeText(payload.role);
+            const canonicalRole = validateRoleInput(payload.role);
             const activeAdminCount = await countActiveAdmins();
-            assertCanChangeRole(actor, targetUser as any, newRole, activeAdminCount);
+            assertCanChangeRole(actor, targetUser as any, canonicalRole, activeAdminCount);
+            dbRole = canonicalRole;
         }
 
-        // Field-level validation
+        // Field-level extraction & validation
         const name = payload.name !== undefined ? normalizeText(payload.name) : undefined;
         const email = payload.email !== undefined ? normalizeEmail(payload.email) : undefined;
         const studentCode = payload.studentCode !== undefined
@@ -347,11 +349,6 @@ export const userManagementService = {
         const department = payload.department !== undefined ? normalizeText(payload.department) : undefined;
         const cohort = payload.cohort !== undefined ? String(payload.cohort) : undefined;
         const password = payload.password !== undefined ? normalizeText(payload.password) : undefined;
-
-        let dbRole: string | undefined;
-        if (payload.role !== undefined) {
-            dbRole = normalizeRole(normalizeText(payload.role));
-        }
 
         if (name !== undefined && !name) throw new Error("Tên không được để trống");
 

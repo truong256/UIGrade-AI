@@ -5,7 +5,7 @@ import User from "@/models/User.model";
 
 export async function PATCH(request: Request) {
     try {
-        const currentUser = getCurrentUserFromRequest(request);
+        const currentUser = await getCurrentUserFromRequest(request);
 
         if (!currentUser?.userId) {
             return NextResponse.json({ message: "Bạn chưa đăng nhập" }, { status: 401 });

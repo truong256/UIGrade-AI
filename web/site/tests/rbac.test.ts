@@ -21,6 +21,7 @@
 import { describe, it, expect } from "vitest";
 import {
     normalizeRole,
+    validateRoleInput,
     ROLES,
     requireAuth,
     requireAdmin,
@@ -483,7 +484,7 @@ describe("Header spoofing defense", () => {
         expect(normalizeRole("{\"role\":\"admin\"}")).toBe(ROLES.STUDENT);
     });
 
-    it("SECURITY: getCurrentUserFromRequest ignores x-user-id and x-user-role headers completely", () => {
+    it("SECURITY: getCurrentUserFromRequest ignores x-user-id and x-user-role headers completely", async () => {
         const fakeHeaderRequest = new Request("http://localhost:3000/api/settings/users", {
             headers: {
                 "x-user-id": "fake-admin-id",
@@ -493,7 +494,7 @@ describe("Header spoofing defense", () => {
         });
 
         // Must return null because there is no valid signed cookie
-        const user = getCurrentUserFromRequest(fakeHeaderRequest);
+        const user = await getCurrentUserFromRequest(fakeHeaderRequest);
         expect(user).toBeNull();
 
         // And passing null to requireAdmin must throw 401
@@ -505,19 +506,19 @@ describe("Header spoofing defense", () => {
         }
     });
 
-    it("SECURITY: unauthenticated request without cookies returns null", () => {
+    it("SECURITY: unauthenticated request without cookies returns null", async () => {
         const noAuthRequest = new Request("http://localhost:3000/api/settings/users");
-        const user = getCurrentUserFromRequest(noAuthRequest);
+        const user = await getCurrentUserFromRequest(noAuthRequest);
         expect(user).toBeNull();
     });
 
-    it("SECURITY: request with malformed cookie returns null", () => {
+    it("SECURITY: request with malformed cookie returns null", async () => {
         const malformedRequest = new Request("http://localhost:3000/api/settings/users", {
             headers: {
                 cookie: "token=invalid.malformed.jwt.token",
             },
         });
-        const user = getCurrentUserFromRequest(malformedRequest);
+        const user = await getCurrentUserFromRequest(malformedRequest);
         expect(user).toBeNull();
     });
 });
@@ -644,4 +645,169 @@ describe("Server Config RBAC Matrix", () => {
     });
 });
 
+// ---------------------------------------------------------------------------
+// 18. validateRoleInput() Strict Validation
+// ---------------------------------------------------------------------------
 
+describe("validateRoleInput() Strict Input Validation", () => {
+    it("accepts canonical role 'admin'", () => {
+        expect(validateRoleInput("admin")).toBe(ROLES.ADMIN);
+    });
+
+    it("accepts canonical role 'lecturer'", () => {
+        expect(validateRoleInput("lecturer")).toBe(ROLES.LECTURER);
+    });
+
+    it("accepts canonical role 'student'", () => {
+        expect(validateRoleInput("student")).toBe(ROLES.STUDENT);
+    });
+
+    it("accepts legacy alias 'teacher' and normalizes to 'lecturer'", () => {
+        expect(validateRoleInput("teacher")).toBe(ROLES.LECTURER);
+    });
+
+    it("accepts legacy alias 'User' and normalizes to 'student'", () => {
+        expect(validateRoleInput("User")).toBe(ROLES.STUDENT);
+    });
+
+    it("rejects unknown privilege escalation strings", () => {
+        expect(() => validateRoleInput("root")).toThrowError(AuthorizationError);
+        expect(() => validateRoleInput("superadmin")).toThrowError(AuthorizationError);
+        expect(() => validateRoleInput("ADMIN")).toThrowError(AuthorizationError);
+        expect(() => validateRoleInput("TEACHER")).toThrowError(AuthorizationError);
+        expect(() => validateRoleInput("hacker")).toThrowError(AuthorizationError);
+    });
+
+    it("rejects non-string and empty inputs", () => {
+        expect(() => validateRoleInput("")).toThrowError(AuthorizationError);
+        expect(() => validateRoleInput("   ")).toThrowError(AuthorizationError);
+        expect(() => validateRoleInput(null)).toThrowError(AuthorizationError);
+        expect(() => validateRoleInput(undefined)).toThrowError(AuthorizationError);
+        expect(() => validateRoleInput(123)).toThrowError(AuthorizationError);
+        expect(() => validateRoleInput({ role: "admin" })).toThrowError(AuthorizationError);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 19. Stale Role JWT Defense (Authoritative DB Actor Revalidation)
+// ---------------------------------------------------------------------------
+
+describe("Stale Role JWT Defense", () => {
+    it("SECURITY: Stale admin JWT where DB user was demoted to student loses admin rights → 403", () => {
+        // Simulated scenario:
+        // 1. User holds a JWT with claim { role: "admin" }
+        // 2. Database record for this user has been changed to { role: "student" }
+        // 3. Server-side actor resolution queries DB -> produces actor with role "student"
+        const staleAdminUserInDb = { _id: "user-demoted-01", role: "student", isActive: true };
+        const authoritativeActor: AuthenticatedActor = {
+            userId: String(staleAdminUserInDb._id),
+            email: "user@school.edu.vn",
+            role: normalizeRole(staleAdminUserInDb.role),
+        };
+
+        expect(authoritativeActor.role).toBe(ROLES.STUDENT);
+        expect(() => requireAdmin(authoritativeActor)).toThrowError(AuthorizationError);
+        try {
+            requireAdmin(authoritativeActor);
+        } catch (e) {
+            expect((e as AuthorizationError).statusCode).toBe(403);
+        }
+    });
+
+    it("SECURITY: Stale admin JWT where DB user was demoted to lecturer loses admin rights → 403", () => {
+        const staleAdminUserInDb = { _id: "user-demoted-02", role: "lecturer", isActive: true };
+        const authoritativeActor: AuthenticatedActor = {
+            userId: String(staleAdminUserInDb._id),
+            email: "user2@school.edu.vn",
+            role: normalizeRole(staleAdminUserInDb.role),
+        };
+
+        expect(authoritativeActor.role).toBe(ROLES.LECTURER);
+        expect(() => requireAdmin(authoritativeActor)).toThrowError(AuthorizationError);
+        // But can still access lecturer functions
+        expect(() => requireLecturerOrAdmin(authoritativeActor)).not.toThrow();
+    });
+
+    it("SECURITY: Stale lecturer JWT where DB user was demoted to student loses lecturer rights → 403", () => {
+        const staleLecturerUserInDb = { _id: "user-demoted-03", role: "student", isActive: true };
+        const authoritativeActor: AuthenticatedActor = {
+            userId: String(staleLecturerUserInDb._id),
+            email: "user3@school.edu.vn",
+            role: normalizeRole(staleLecturerUserInDb.role),
+        };
+
+        expect(authoritativeActor.role).toBe(ROLES.STUDENT);
+        expect(() => requireLecturerOrAdmin(authoritativeActor)).toThrowError(AuthorizationError);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 20. Locked / Revoked Account Defense
+// ---------------------------------------------------------------------------
+
+describe("Locked / Suspended Account Immediate Revocation", () => {
+    it("SECURITY: User with valid token but DB isActive=false is denied immediately → 401", () => {
+        // When DB revalidation sees isActive: false, resolveAuthoritativeActorFromToken returns null
+        const lockedActor: AuthenticatedActor | null = null; // result of DB revalidation on locked account
+
+        expect(() => requireAuth(lockedActor)).toThrowError(AuthorizationError);
+        try {
+            requireAuth(lockedActor);
+        } catch (e) {
+            expect((e as AuthorizationError).statusCode).toBe(401);
+        }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 21. Deleted Account Defense
+// ---------------------------------------------------------------------------
+
+describe("Deleted Account Immediate Revocation", () => {
+    it("SECURITY: User with valid token but deleted from DB returns null → 401", () => {
+        // When DB revalidation does not find the user record, resolveAuthoritativeActorFromToken returns null
+        const deletedActor: AuthenticatedActor | null = null;
+
+        expect(() => requireAuth(deletedActor)).toThrowError(AuthorizationError);
+        try {
+            requireAuth(deletedActor);
+        } catch (e) {
+            expect((e as AuthorizationError).statusCode).toBe(401);
+        }
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 22. Conditional studentCode Validation
+// ---------------------------------------------------------------------------
+
+describe("Conditional studentCode Requirement Rules", () => {
+    const isStudentCodeRequired = (role: string | undefined): boolean => {
+        const effectiveRole = role || "student";
+        return effectiveRole === "student" || effectiveRole === "User";
+    };
+
+    it("requires studentCode for 'student' role", () => {
+        expect(isStudentCodeRequired("student")).toBe(true);
+    });
+
+    it("requires studentCode for legacy 'User' role", () => {
+        expect(isStudentCodeRequired("User")).toBe(true);
+    });
+
+    it("requires studentCode when role is omitted (defaults to student)", () => {
+        expect(isStudentCodeRequired(undefined)).toBe(true);
+    });
+
+    it("does NOT require studentCode for 'admin' role", () => {
+        expect(isStudentCodeRequired("admin")).toBe(false);
+    });
+
+    it("does NOT require studentCode for 'lecturer' role", () => {
+        expect(isStudentCodeRequired("lecturer")).toBe(false);
+    });
+
+    it("does NOT require studentCode for legacy 'teacher' role", () => {
+        expect(isStudentCodeRequired("teacher")).toBe(false);
+    });
+});

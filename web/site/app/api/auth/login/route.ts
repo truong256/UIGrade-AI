@@ -1,9 +1,9 @@
-
 import { NextRequest, NextResponse } from "next/server";
 import bcrypt from "bcryptjs";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User.model";
-import { authCookieOptions, signToken } from "@/lib/auth";
+import { signToken } from "@/lib/auth";
+import { normalizeRole } from "@/lib/authorization";
 
 export async function POST(req: NextRequest) {
     try {
@@ -33,9 +33,9 @@ export async function POST(req: NextRequest) {
         // chặn user khi bị khóa
         if (user.isActive === false) {
             return NextResponse.json(
-                {message : "tài khoản bị tạm khóa"},
-                {status : 403}
-            )
+                { message: "Tài khoản đã bị tạm khóa" },
+                { status: 403 }
+            );
         }
 
         const isPasswordMatched = await bcrypt.compare(password, user.password);
@@ -50,10 +50,12 @@ export async function POST(req: NextRequest) {
         user.lastLoginAt = new Date();
         await user.save();
 
+        const canonicalRole = normalizeRole(user.role);
+
         const token = signToken({
             userId: user._id.toString(),
             email: user.email,
-            role: user.role,
+            role: canonicalRole,
         });
 
         const response = NextResponse.json(
@@ -63,7 +65,7 @@ export async function POST(req: NextRequest) {
                     id: user._id,
                     name: user.name,
                     email: user.email,
-                    role: user.role,
+                    role: canonicalRole,
                 },
             },
             { status: 200 }

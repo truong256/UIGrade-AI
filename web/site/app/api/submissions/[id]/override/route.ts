@@ -31,7 +31,7 @@ export async function POST(request: Request, context: RouteContext) {
     try {
         await connectDB();
 
-        const actorId = getActorIdFromRequest(request);
+        const actorId = await getActorIdFromRequest(request);
         const id = await resolveId(context);
 
         const body: OverrideSubmissionBody = await request.json().catch(() => ({}));

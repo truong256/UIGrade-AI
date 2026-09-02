@@ -71,7 +71,10 @@ const UserSchema = new Schema<IUser>(
         studentCode: {
             type: String,
             unique: true,
-            required: [true, "Mã sinh viên là bắt buộc"],
+            required: function(this: any) {
+                const role = this.role || "student";
+                return role === "student" || role === "User";
+            },
             trim: true,
             uppercase: true,
             sparse: true,

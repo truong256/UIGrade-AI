@@ -33,7 +33,7 @@ function handleError(error: unknown) {
 
 export async function joinClassController(request: NextRequest) {
     try {
-        const actorId = getActorIdFromRequest(request);
+        const actorId = await getActorIdFromRequest(request);
         const body = await request.json().catch(() => ({}));
         const data = await joinClassByCode(actorId, body);
 
@@ -51,7 +51,7 @@ export async function getStudentsController(
     classroomId: string
 ) {
     try {
-        const actorId = getActorIdFromRequest(request);
+        const actorId = await getActorIdFromRequest(request);
 
         const mode = request.nextUrl.searchParams.get("mode");
         const status = request.nextUrl.searchParams.get("status");
@@ -77,7 +77,7 @@ export async function addStudentController(
     classroomId: string
 ) {
     try {
-        const actorId = getActorIdFromRequest(request);
+        const actorId = await getActorIdFromRequest(request);
         const body = await request.json().catch(() => ({}));
         const data = await addStudentToClass(actorId, classroomId, body);
 
@@ -96,7 +96,7 @@ export async function updateStudentController(
     studentId: string
 ) {
     try {
-        const actorId = getActorIdFromRequest(request);
+        const actorId = await getActorIdFromRequest(request);
         const body = await request.json().catch(() => ({}));
 
         const data = await updateStudentInClass(
@@ -121,7 +121,7 @@ export async function deleteStudentController(
     studentId: string
 ) {
     try {
-        const actorId = getActorIdFromRequest(request);
+        const actorId = await getActorIdFromRequest(request);
         const data = await removeStudentFromClass(actorId, classroomId, studentId);
 
         return NextResponse.json({

@@ -13,9 +13,9 @@ function hasCronAccess(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const currentUser = getCurrentUserFromRequest(request);
+        const currentUser = await getCurrentUserFromRequest(request);
         const canRunAsUser = Boolean(
-            currentUser?.userId && ["admin", "teacher"].includes(currentUser.role)
+            currentUser?.userId && ["admin", "lecturer"].includes(currentUser.role)
         );
 
         if (!canRunAsUser && !hasCronAccess(request)) {

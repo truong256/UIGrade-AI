@@ -21,7 +21,7 @@ export const runtime = "nodejs";
 
 export async function GET(request: Request) {
     try {
-        const currentUser = getCurrentUserFromRequest(request);
+        const currentUser = await getCurrentUserFromRequest(request);
         requireAdmin(currentUser); // throws 401 if null, 403 if not admin
 
         await connectDB();
@@ -49,7 +49,7 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
     try {
-        const currentUser = getCurrentUserFromRequest(request);
+        const currentUser = await getCurrentUserFromRequest(request);
         requireAdmin(currentUser); // throws 401 if null, 403 if not admin
 
         await connectDB();

@@ -28,10 +28,35 @@ export type CanonicalRole = (typeof ROLES)[keyof typeof ROLES];
 type RawRole = CanonicalRole | "teacher" | "User" | string | undefined | null;
 
 /**
+ * Validate user role input from client mutations (Create/Update User).
+ * Strictly accepts only valid canonical roles ("admin", "lecturer", "student")
+ * and legacy aliases ("teacher", "User") for backward compatibility.
+ * Rejects arbitrary strings (e.g. "root", "superadmin", "ADMIN") with an error.
+ */
+export function validateRoleInput(raw: unknown): CanonicalRole {
+    if (typeof raw !== "string") {
+        throw new AuthorizationError("Vai trò người dùng không hợp lệ");
+    }
+
+    const trimmed = raw.trim();
+
+    if (trimmed === "admin") return ROLES.ADMIN;
+    if (trimmed === "lecturer") return ROLES.LECTURER;
+    if (trimmed === "student") return ROLES.STUDENT;
+
+    // Legacy aliases allowed for compatibility
+    if (trimmed === "teacher") return ROLES.LECTURER;
+    if (trimmed === "User") return ROLES.STUDENT;
+
+    throw new AuthorizationError(`Vai trò người dùng không hợp lệ: "${raw}"`);
+}
+
+/**
  * Normalize any raw role string to a canonical role.
+ * Safe fallback for persisted/legacy data — defaults to "student" (least privilege).
  * - "teacher" → "lecturer"
  * - "User"    → "student"
- * - Unknown   → "student" (safe default — least privilege)
+ * - Unknown   → "student" (safe default — never escalate)
  */
 export function normalizeRole(raw: RawRole): CanonicalRole {
     if (raw === "admin") return ROLES.ADMIN;
