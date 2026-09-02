@@ -3,28 +3,14 @@ import { getCurrentUserFromRequest } from "@/lib/current-user";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { emailService } from "@/services/email.service";
 import { systemConfigService } from "@/services/system-config.service";
+import { requireAdmin, resolveHttpStatus } from "@/lib/authorization";
 
 export const runtime = "nodejs";
 
-function resolveStatus(error: unknown) {
-    const message = error instanceof Error ? error.message : "Không thể gửi email thử";
-
-    if (message.includes("chưa đăng nhập")) return 401;
-    if (message.includes("không có quyền")) return 403;
-    return 400;
-}
-
 export async function POST(request: Request) {
     try {
-        const currentUser = getCurrentUserFromRequest(request);
-
-        if (!currentUser?.userId) {
-            throw new Error("Bạn chưa đăng nhập");
-        }
-
-        if (!["admin", "teacher"].includes(currentUser.role)) {
-            throw new Error("Bạn không có quyền gửi email thử");
-        }
+        const currentUser = await getCurrentUserFromRequest(request);
+        requireAdmin(currentUser);
 
         await connectDB();
 
@@ -43,7 +29,7 @@ export async function POST(request: Request) {
     } catch (error) {
         return errorResponse(
             error instanceof Error ? error.message : "Không thể gửi email thử",
-            resolveStatus(error)
+            resolveHttpStatus(error)
         );
     }
 }

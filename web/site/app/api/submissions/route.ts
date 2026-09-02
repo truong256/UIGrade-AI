@@ -8,7 +8,7 @@ export async function GET(request: Request) {
     try {
         await connectDB();
 
-        const currentUser = getCurrentUserFromRequest(request);
+        const currentUser = await getCurrentUserFromRequest(request);
 
         if (!currentUser?.userId) {
             return errorResponse("Bạn chưa đăng nhập", 401);
@@ -29,7 +29,7 @@ export async function GET(request: Request) {
             filter.classroomId = classroomId;
         }
 
-        if (currentUser.role === "User") {
+        if (currentUser.role === "student") {
             filter.studentId = currentUser.userId;
         } else if (studentIdParam) {
             filter.studentId = studentIdParam;

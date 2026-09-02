@@ -9,7 +9,7 @@ function normalizeText(value: unknown) {
 
 export async function GET(request: Request) {
     try {
-        const currentUser = getCurrentUserFromRequest(request);
+        const currentUser = await getCurrentUserFromRequest(request);
 
         if (!currentUser?.userId) {
             return NextResponse.json({ message: "Bạn chưa đăng nhập" }, { status: 401 });
@@ -34,7 +34,7 @@ export async function GET(request: Request) {
 
 export async function PATCH(request: Request) {
     try {
-        const currentUser = getCurrentUserFromRequest(request);
+        const currentUser = await getCurrentUserFromRequest(request);
 
         if (!currentUser?.userId) {
             return NextResponse.json({ message: "Bạn chưa đăng nhập" }, { status: 401 });

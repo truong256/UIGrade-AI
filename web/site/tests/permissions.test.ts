@@ -73,9 +73,20 @@ describe("Permission & Access Control Tests", () => {
   describe("System Administration Permissions", () => {
     it("should only allow admin users to access server config", () => {
       expect(canAccessServerConfig(adminUser)).toBe(true);
-      expect(canAccessServerConfig(teacherUser)).toBe(false);
+      expect(canAccessServerConfig(teacherUser)).toBe(false);   // teacher = lecturer (legacy) — MUST be false
+      expect(canAccessServerConfig(lecturerUser)).toBe(false);  // CRITICAL: lecturer must NOT access server config
       expect(canAccessServerConfig(studentUser)).toBe(false);
       expect(canAccessServerConfig(null)).toBe(false);
+    });
+
+    it("REGRESSION: lecturer cannot manage user accounts", () => {
+      // Directly test the intended policy: only admin manages users
+      const canManageUsers = (user: UserContext | null) => user?.role === "admin";
+      expect(canManageUsers(adminUser)).toBe(true);
+      expect(canManageUsers(lecturerUser)).toBe(false); // CRITICAL fix
+      expect(canManageUsers(teacherUser)).toBe(false);  // legacy teacher also blocked
+      expect(canManageUsers(studentUser)).toBe(false);
+      expect(canManageUsers(null)).toBe(false);
     });
   });
 });

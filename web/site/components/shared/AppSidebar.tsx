@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { navItems, isActivePath } from "@/lib/navigation";
+import { getNavItemsForRole, isActivePath } from "@/lib/navigation";
 import { useMemo, useState } from "react";
 
 type AppSidebarProps = {
@@ -26,19 +26,12 @@ export function AppSidebar({
     const router = useRouter();
     const [loggingOut, setLoggingOut] = useState(false);
 
+    // Role-aware navigation: each role sees only items appropriate to their permissions.
+    // This is a UX control — server-side authorization independently enforces access.
     const visibleNavItems = useMemo(() => {
-        return navItems.filter((item) => {
-            if (
-                item.href === "/ui/create_assignment" ||
-                item.href === "/ui/server_config" ||
-                item.href === "/ui/grading_detail"
-            ) {
-                return currentUserRole === "teacher" || currentUserRole === "lecturer" || currentUserRole === "admin";
-            }
-
-            return true;
-        });
+        return getNavItemsForRole(currentUserRole);
     }, [currentUserRole]);
+
 
     const handleLogout = async () => {
         try {

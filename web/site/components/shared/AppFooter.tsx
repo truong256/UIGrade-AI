@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { navItems } from "@/lib/navigation";
+import { studentNavItems } from "@/lib/navigation";
 
 export function AppFooter() {
     return (
@@ -18,7 +18,7 @@ export function AppFooter() {
                 </div>
 
                 <nav className="flex flex-wrap gap-4 text-xs">
-                    {navItems.slice(0, 6).map((item) => (
+                    {studentNavItems.slice(0, 6).map((item: { href: string; label: string }) => (
                         <Link key={item.href} href={item.href} className="text-slate-600 hover:text-sky-600 transition">
                             {item.label}
                         </Link>

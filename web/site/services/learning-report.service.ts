@@ -93,7 +93,7 @@ function ensureCanViewReport(currentUser: CurrentUserPayload | null) {
         throw new Error("Bạn chưa đăng nhập");
     }
 
-    if (!["admin", "teacher"].includes(currentUser.role)) {
+    if (!["admin", "lecturer"].includes(currentUser.role)) {
         throw new Error("Chức năng báo cáo chỉ dành cho giáo viên hoặc quản trị viên");
     }
 }

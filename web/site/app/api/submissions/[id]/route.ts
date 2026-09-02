@@ -26,7 +26,7 @@ export async function GET(request: Request, context: RouteContext) {
     try {
         await connectDB();
 
-        getActorIdFromRequest(request);
+        await getActorIdFromRequest(request);
 
         const id = await resolveId(context);
         const data = await gradingService.getSubmissionDetail(id);

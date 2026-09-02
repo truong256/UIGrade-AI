@@ -1,67 +1,67 @@
-import {CurrentUserPayload, getCurrentUserFromRequest} from "@/lib/current-user";
-import {connectDB} from "@/lib/mongodb";
-import {errorResponse, successResponse} from "@/lib/api-response";
-import {userManagementService} from "@/services/user-management.service";
+/**
+ * app/api/settings/users/route.ts
+ *
+ * GET  /api/settings/users   — List users (Admin only)
+ * POST /api/settings/users   — Create user (Admin only)
+ *
+ * SECURITY:
+ *  - Only Admin role can access these endpoints.
+ *  - Teacher/Lecturer/Student → 403 Forbidden.
+ *  - Unauthenticated → 401 Unauthorized.
+ *  - Authorization is enforced server-side via requireAdmin() in the service.
+ */
+
+import { getCurrentUserFromRequest } from "@/lib/current-user";
+import { connectDB } from "@/lib/mongodb";
+import { errorResponse, successResponse } from "@/lib/api-response";
+import { userManagementService } from "@/services/user-management.service";
+import { requireAdmin, resolveHttpStatus } from "@/lib/authorization";
 
 export const runtime = "nodejs";
 
-function ensureCanManage(request: Request) {
-    const curentUsert = getCurrentUserFromRequest(request);
-
-    if (!curentUsert?.userId) {
-        throw new Error("bạn chưa đăng nhập");
-    }
-
-    if (!["admin","teacher"].includes(curentUsert.role)) {
-        throw new Error("bạn không có quyền người dùng")
-    }
-
-    return curentUsert;
-}
-
-function resolveStatus(error: unknown){
-    const message = error instanceof Error ? error.message : "không thể xử lý yêu cầu";
-
-    if (message.includes("chưa đăng nhập")) return 401;
-    if (message.includes("không có quyền")) return 403;
-    if (message.includes("Không tìm thấy")) return 404;
-    return 400;
-}
-
-export async function GET(request: Request){
+export async function GET(request: Request) {
     try {
-        ensureCanManage(request);
+        const currentUser = await getCurrentUserFromRequest(request);
+        requireAdmin(currentUser); // throws 401 if null, 403 if not admin
+
         await connectDB();
 
-        const {searchParams} = new URL(request.url);
-        const data = await userManagementService.listUsers({
-            keyword: searchParams.get("keyword") || undefined,
-            roles:(searchParams.get("role") as "all" | "admin" | "teacher" | "User" | null) || "all",
-            status: (searchParams.get("status") as "all" | "active" | "locked" | null) || "all",
-            page: Number(searchParams.get("page") || 1),
-            limit: Number(searchParams.get("limit") || 1),
-        });
-        return successResponse(data, "lấy danh sách người dùng thành công");
-    }catch (error){
+        const { searchParams } = new URL(request.url);
+        const data = await userManagementService.listUsers(
+            {
+                keyword: searchParams.get("keyword") ?? undefined,
+                roles: (searchParams.get("role") as any) ?? "all",
+                status: (searchParams.get("status") as any) ?? "all",
+                page: Number(searchParams.get("page") ?? 1),
+                limit: Number(searchParams.get("limit") ?? 10),
+            },
+            currentUser
+        );
+
+        return successResponse(data, "Lấy danh sách người dùng thành công");
+    } catch (error) {
         return errorResponse(
-            error instanceof Error ? error.message : "không tìm thấy danh sách người dùng",
-            resolveStatus(error)
+            error instanceof Error ? error.message : "Không thể lấy danh sách người dùng",
+            resolveHttpStatus(error)
         );
     }
 }
-export async function POST( request: Request){
+
+export async function POST(request: Request) {
     try {
-        ensureCanManage(request);
+        const currentUser = await getCurrentUserFromRequest(request);
+        requireAdmin(currentUser); // throws 401 if null, 403 if not admin
+
         await connectDB();
 
         const body = await request.json();
-        const data = await userManagementService.createUser(body)
+        const data = await userManagementService.createUser(body, currentUser);
 
-        return successResponse(data, "tạo người dùng thành công", 201);
-    }catch (error){
+        return successResponse(data, "Tạo người dùng thành công", 201);
+    } catch (error) {
         return errorResponse(
-            error instanceof Error ? error.message : "không thể tạo người dùng",
-            resolveStatus(error)
-        )
+            error instanceof Error ? error.message : "Không thể tạo người dùng",
+            resolveHttpStatus(error)
+        );
     }
 }

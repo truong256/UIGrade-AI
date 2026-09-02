@@ -140,7 +140,7 @@ function mapClassroomResponse(
 function ensureCanManageClass(currentUser: CurrentUser, teacherId: unknown) {
     if (currentUser.role === "admin") return;
 
-    if (currentUser.role !== "teacher") {
+    if (currentUser.role !== "lecturer") {
         throw new Error("Bạn không có quyền thực hiện thao tác này");
     }
 
@@ -194,7 +194,7 @@ export const classroomService = {
             return attachStudentCount(docs as RepoClassroom[]);
         }
 
-        if (currentUser.role === "teacher") {
+        if (currentUser.role === "lecturer") {
             const [ownedClasses, supportedClassIds] = await Promise.all([
                 classroomRepository.findAllByTeacherId(currentUser.userId),
                 classroomMemberRepo.findClassroomIdsByUserId(currentUser.userId, {
@@ -246,7 +246,7 @@ export const classroomService = {
             throw new Error("Bạn chưa đăng nhập");
         }
 
-        if (!["admin", "teacher"].includes(currentUser.role)) {
+        if (!["admin", "lecturer"].includes(currentUser.role)) {
             throw new Error("Bạn không có quyền tạo lớp học");
         }
 

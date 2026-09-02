@@ -1,35 +1,28 @@
+/**
+ * app/api/server-config/route.ts
+ *
+ * GET   /api/server-config   — Get system configuration (Admin only)
+ * PATCH /api/server-config   — Update system configuration (Admin only)
+ *
+ * SECURITY:
+ *  - Only Admin role can access these endpoints.
+ *  - Teacher/Lecturer/Student → 403 Forbidden.
+ *  - Unauthenticated → 401 Unauthorized.
+ */
+
 import { connectDB } from "@/lib/mongodb";
 import { getCurrentUserFromRequest } from "@/lib/current-user";
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { systemConfigService } from "@/services/system-config.service";
+import { requireAdmin, resolveHttpStatus } from "@/lib/authorization";
 
 export const runtime = "nodejs";
 
-function ensureCanManage(request: Request) {
-    const currentUser = getCurrentUserFromRequest(request);
-
-    if (!currentUser?.userId) {
-        throw new Error("Bạn chưa đăng nhập");
-    }
-
-    if (!["admin", "teacher"].includes(currentUser.role)) {
-        throw new Error("Bạn không có quyền cấu hình hệ thống");
-    }
-
-    return currentUser;
-}
-
-function resolveStatus(error: unknown) {
-    const message = error instanceof Error ? error.message : "Không thể xử lý yêu cầu";
-
-    if (message.includes("chưa đăng nhập")) return 401;
-    if (message.includes("không có quyền")) return 403;
-    return 400;
-}
-
 export async function GET(request: Request) {
     try {
-        ensureCanManage(request);
+        const currentUser = await getCurrentUserFromRequest(request);
+        requireAdmin(currentUser); // throws 401 if null, 403 if not admin
+
         await connectDB();
 
         const data = await systemConfigService.getPublicConfig();
@@ -37,14 +30,16 @@ export async function GET(request: Request) {
     } catch (error) {
         return errorResponse(
             error instanceof Error ? error.message : "Không thể lấy cấu hình",
-            resolveStatus(error)
+            resolveHttpStatus(error)
         );
     }
 }
 
 export async function PATCH(request: Request) {
     try {
-        ensureCanManage(request);
+        const currentUser = await getCurrentUserFromRequest(request);
+        requireAdmin(currentUser); // throws 401 if null, 403 if not admin
+
         await connectDB();
 
         const body = await request.json();
@@ -53,7 +48,7 @@ export async function PATCH(request: Request) {
     } catch (error) {
         return errorResponse(
             error instanceof Error ? error.message : "Không thể lưu cấu hình",
-            resolveStatus(error)
+            resolveHttpStatus(error)
         );
     }
 }

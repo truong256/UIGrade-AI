@@ -187,7 +187,7 @@ async function getAccessibleClassrooms(currentUser: CurrentUserPayload) {
         return docs as unknown[];
     }
 
-    if (currentUser.role === "teacher") {
+    if (currentUser.role === "lecturer") {
         const [ownedClasses, supportedClassIds] = await Promise.all([
             classroomRepository.findAllByTeacherId(currentUser.userId),
             classroomMemberRepo.findClassroomIdsByUserId(currentUser.userId, {
@@ -231,14 +231,14 @@ function createEmptyDashboard(currentUser: CurrentUserPayload, name: string, ran
         summary: {
             totalClasses: 0,
             totalAssignments: 0,
-            totalStudents: currentUser.role === "User" ? 1 : 0,
+            totalStudents: currentUser.role === "student" ? 1 : 0,
             totalSubmissions: 0,
         },
         stats: {
             totalSubmissions: { current: 0, previous: 0, trend: buildTrend(0, 0), subtitle: `Trong ${rangeDays} ngày qua` },
             completionRate: { current: 0, previous: 0, trend: buildTrend(0, 0), subtitle: "Tỷ lệ bài đã được chấm" },
             averageScore: { current: 0, previous: 0, trend: buildTrend(0, 0), subtitle: "Điểm trung bình bài đã chấm" },
-            needsAttention: { current: 0, previous: 0, trend: buildTrend(0, 0), subtitle: currentUser.role === "User" ? "Bài đang chờ chấm" : "Bài cần xử lý" },
+            needsAttention: { current: 0, previous: 0, trend: buildTrend(0, 0), subtitle: currentUser.role === "student" ? "Bài đang chờ chấm" : "Bài cần xử lý" },
         },
         charts: {
             submissionsByDay: [],
@@ -261,7 +261,7 @@ export const dashboardService = {
             .select("name role")
             .lean();
 
-        const userName = toText(toObject(userDoc).name, currentUser?.role === "admin" ? "Admin" : currentUser?.role === "teacher" ? "Giáo viên" : "Học viên");
+        const userName = toText(toObject(userDoc).name, currentUser?.role === "admin" ? "Admin" : currentUser?.role === "lecturer" ? "Giáo viên" : "Học viên");
         const accessibleClasses = await getAccessibleClassrooms(currentUser as CurrentUserPayload);
         const normalizedClasses = accessibleClasses
             .map((raw) => {
@@ -333,7 +333,7 @@ export const dashboardService = {
             latest: true,
         };
 
-        if (currentUser?.role === "User") {
+        if (currentUser?.role === "student") {
             submissionFilter.studentId = currentUser.userId;
         }
 
@@ -410,7 +410,7 @@ export const dashboardService = {
             )
             : 0;
 
-        const attentionStatuses = currentUser?.role === "User"
+        const attentionStatuses = currentUser?.role === "student"
             ? ["pending"]
             : ["pending", "needs_teacher_review"];
 
@@ -477,7 +477,7 @@ export const dashboardService = {
             occurredAt: string;
         }> = [];
 
-        if (currentUser?.role === "User") {
+        if (currentUser?.role === "student") {
             const myAssignmentIds = new Set(normalizedSubmissions.map((item) => item.assignmentId));
 
             const dueSoon = normalizedAssignments
@@ -593,7 +593,7 @@ export const dashboardService = {
             status: item.gradeStatus,
             submittedAt: item.submittedAt?.toISOString() || null,
             actionHref:
-                currentUser?.role === "User"
+                currentUser?.role === "student"
                     ? "/ui/my_results"
                     : `/ui/grading_detail?submissionId=${item._id}`,
         }));
@@ -609,7 +609,7 @@ export const dashboardService = {
             summary: {
                 totalClasses: normalizedClasses.length,
                 totalAssignments: normalizedAssignments.length,
-                totalStudents: currentUser?.role === "User" ? 1 : uniqueStudents.size,
+                totalStudents: currentUser?.role === "student" ? 1 : uniqueStudents.size,
                 totalSubmissions: normalizedSubmissions.length,
             },
             stats: {
@@ -636,7 +636,7 @@ export const dashboardService = {
                     previous: previousNeedsAttention,
                     trend: buildTrend(currentNeedsAttention, previousNeedsAttention, 0),
                     subtitle:
-                        currentUser?.role === "User"
+                        currentUser?.role === "student"
                             ? "Bài đang chờ chấm"
                             : "Bài cần chấm hoặc xem lại",
                 },

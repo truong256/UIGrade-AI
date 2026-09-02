@@ -12,7 +12,7 @@ export async function POST(request: Request) {
             return errorResponse("Bạn chưa đăng nhập", 401);
         }
 
-        if (currentUser.role !== "teacher" && currentUser.role !== "admin") {
+        if (currentUser.role !== "lecturer" && currentUser.role !== "admin") {
             return errorResponse("Bạn không có quyền phân tích rubric", 403);
         }
 
