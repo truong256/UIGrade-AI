@@ -122,14 +122,14 @@ export function AddStudentDialog({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
             <div
-                className="w-full max-w-xl rounded-3xl border border-sky-100 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+                className="w-full max-w-xl rounded-3xl border border-blue-100 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
                 role="dialog"
                 aria-modal="true"
             >
                 <div className="flex items-start justify-between gap-4 border-b border-slate-100 pb-3">
                     <div>
                         <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sky-600 text-[22px]">person_add</span>
+                            <span className="material-symbols-outlined text-blue-600 text-[22px]">person_add</span>
                             Thêm Sinh viên vào Lớp
                         </h3>
                         <p className="mt-0.5 text-xs text-slate-500">
@@ -164,12 +164,12 @@ export function AddStudentDialog({
                                     setSelected(null);
                                 }}
                                 placeholder="Nhập tên, email hoặc mã SV (tối thiểu 2 ký tự)..."
-                                className="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-4 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-11 w-full rounded-xl border border-slate-200 pl-10 pr-4 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
                     </div>
 
-                    <div className="max-h-60 overflow-y-auto rounded-2xl border border-sky-100 divide-y divide-slate-100">
+                    <div className="max-h-60 overflow-y-auto rounded-2xl border border-blue-100 divide-y divide-slate-100">
                         {loading ? (
                             <div className="px-4 py-6 text-center text-xs text-slate-500">
                                 <span className="inline-block animate-spin mr-2">⏳</span> Đang tìm kiếm...
@@ -191,12 +191,12 @@ export function AddStudentDialog({
                                         onClick={() => setSelected(student)}
                                         className={`flex w-full items-center justify-between gap-4 px-4 py-3 text-left transition ${
                                             isSelected
-                                                ? "bg-sky-50"
-                                                : "hover:bg-sky-50/50"
+                                                ? "bg-blue-50"
+                                                : "hover:bg-blue-50/50"
                                         }`}
                                     >
                                         <div className="flex items-center gap-3 min-w-0">
-                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-sky-100 text-sky-700 font-bold text-xs">
+                                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700 font-bold text-xs">
                                                 {student.name?.slice(0, 1).toUpperCase()}
                                             </div>
                                             <div className="min-w-0">
@@ -211,12 +211,12 @@ export function AddStudentDialog({
 
                                         <div className="flex items-center gap-2">
                                             {student.studentCode && (
-                                                <span className="text-[11px] font-mono text-sky-700 bg-sky-50 border border-sky-200 px-2 py-0.5 rounded-md">
+                                                <span className="text-[11px] font-mono text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-md">
                                                     {student.studentCode}
                                                 </span>
                                             )}
                                             {isSelected && (
-                                                <span className="rounded-lg bg-sky-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-xs">
+                                                <span className="rounded-lg bg-blue-600 px-2.5 py-1 text-[11px] font-bold text-white shadow-xs">
                                                     Đã chọn
                                                 </span>
                                             )}
@@ -247,7 +247,7 @@ export function AddStudentDialog({
                             type="submit"
                             onClick={handleAddStudent}
                             disabled={!selected || saving}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 hover:bg-sky-700 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             <span className="material-symbols-outlined text-[16px]">person_add</span>
                             {saving ? "Đang thêm..." : "Thêm vào lớp"}

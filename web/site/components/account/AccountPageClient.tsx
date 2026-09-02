@@ -293,14 +293,14 @@ export function AccountPageClient() {
     if (loading) {
         return (
             <div className="space-y-6">
-                <div className="rounded-[28px] bg-white p-8 shadow-sm">
+                <div className="rounded-2xl bg-white p-8 shadow-sm">
                     <div className="animate-pulse space-y-4">
                         <div className="mx-auto h-32 w-32 rounded-full bg-slate-200" />
                         <div className="mx-auto h-6 w-48 rounded bg-slate-200" />
                         <div className="mx-auto h-4 w-64 rounded bg-slate-200" />
                     </div>
                 </div>
-                <div className="rounded-[28px] bg-white p-8 shadow-sm">
+                <div className="rounded-2xl bg-white p-8 shadow-sm">
                     <div className="h-40 animate-pulse rounded-2xl bg-slate-100" />
                 </div>
             </div>
@@ -309,7 +309,7 @@ export function AccountPageClient() {
 
     if (error || !user) {
         return (
-            <div className="rounded-[28px] border border-red-100 bg-white p-8 text-center shadow-sm">
+            <div className="rounded-2xl border border-red-100 bg-white p-8 text-center shadow-sm">
                 <p className="text-lg font-semibold text-red-600">Không tải được trang tài khoản</p>
                 <p className="mt-2 text-sm text-slate-500">{error || "Bạn cần đăng nhập lại để tiếp tục."}</p>
             </div>

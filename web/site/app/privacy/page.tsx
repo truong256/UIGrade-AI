@@ -4,13 +4,13 @@ import { topBarData, footerLinks } from "@/lib/login-data";
 
 export default function PrivacyPage() {
     return (
-        <div className="flex min-h-screen flex-col bg-sky-50/40 text-slate-900">
+        <div className="flex min-h-screen flex-col bg-blue-50/40 text-slate-900">
             <LoginTopBar data={topBarData} />
 
             <main className="flex-1 px-4 py-10 sm:px-6">
                 <div className="mx-auto max-w-3xl space-y-6">
                     <div className="text-center space-y-1">
-                        <div className="inline-block rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-sky-700">
+                        <div className="inline-block rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-700">
                             BẢO VỆ DỮ LIỆU
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
@@ -19,7 +19,7 @@ export default function PrivacyPage() {
                         <p className="text-xs text-slate-500">Cập nhật lần cuối: Tháng 8/2026</p>
                     </div>
 
-                    <div className="rounded-3xl border border-sky-100 bg-white p-6 sm:p-8 shadow-xs text-xs sm:text-sm text-slate-600 leading-relaxed space-y-5">
+                    <div className="rounded-3xl border border-blue-100 bg-white p-6 sm:p-8 shadow-xs text-xs sm:text-sm text-slate-600 leading-relaxed space-y-5">
                         <section className="space-y-2">
                             <h2 className="text-base font-bold text-slate-900">1. Thông tin thu thập</h2>
                             <p>

@@ -10,32 +10,69 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#0284C7", // Sky 600
-          hover: "#0369A1",   // Sky 700
-          light: "#E0F2FE",   // Sky 100
-          dark: "#075985",    // Sky 800
+          DEFAULT: "#2563EB", // BluePrimaryLight
+          hover: "#1D4ED8",   // Blue 700
+          light: "#DCE9FF",   // BluePrimaryContainerLight
+          container: "#DCE9FF",
+          dark: "#1E40AF",    // Blue 800
         },
         secondary: {
-          DEFAULT: "#0EA5E9", // Sky 500
-          hover: "#0284C7",
+          DEFAULT: "#4F75B9", // BlueSecondaryLight
+          hover: "#3B62A4",
+          container: "#E6F0FD",
         },
         accent: {
-          DEFAULT: "#38BDF8", // Sky 400
+          DEFAULT: "#3B82F6",
+          mint: "#10B981",
+          peach: "#F97316",
         },
-        "background-light": "#F0F9FF", // Sky 50
-        "background-subtle": "#E0F2FE", // Sky 100
-        "surface": "#FFFFFF",
-        "border-sky": "#BAE6FD", // Sky 200
-        "text-primary": "#0F172A",
-        "text-secondary": "#475569",
+        surface: {
+          DEFAULT: "#FFFFFF",
+          variant: "#EAF1FB", // BlueSurfaceVariantLight
+          dark: "#151E2D",
+        },
+        "background-light": "#F6F9FF", // BlueBackgroundLight
+        "background-subtle": "#EAF1FB",
+        outline: {
+          DEFAULT: "#A9B8CD",
+          variant: "#E2E8F0",
+        },
+        "border-sky": "#DCE9FF",
+        "text-primary": "#172033",
+        "text-secondary": "#4A5568",
+        "text-muted": "#64748B",
+        success: {
+          DEFAULT: "#16A34A",
+          container: "#DCFCE7",
+        },
+        warning: {
+          DEFAULT: "#D97706",
+          container: "#FEF3C7",
+        },
+        error: {
+          DEFAULT: "#DC2626",
+          container: "#FFDAD6",
+        },
+        info: {
+          DEFAULT: "#0284C7",
+          container: "#E0F2FE",
+        },
       },
       fontFamily: {
-        display: ["Public Sans", "sans-serif"],
-        sans: ["Public Sans", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+        display: ["var(--font-inter)", "Inter", "sans-serif"],
+        sans: ["var(--font-inter)", "Inter", "-apple-system", "BlinkMacSystemFont", "Segoe UI", "Roboto", "sans-serif"],
+      },
+      borderRadius: {
+        xs: "4px",
+        sm: "8px",
+        md: "12px",
+        lg: "16px",
+        xl: "24px",
       },
       boxShadow: {
-        sky: "0 10px 25px -5px rgba(2, 132, 199, 0.1), 0 8px 10px -6px rgba(2, 132, 199, 0.1)",
-        "sky-lg": "0 20px 30px -10px rgba(2, 132, 199, 0.15), 0 10px 15px -5px rgba(2, 132, 199, 0.1)",
+        card: "0 1px 3px rgba(16, 42, 86, 0.05), 0 1px 2px rgba(16, 42, 86, 0.03)",
+        "card-hover": "0 8px 24px -4px rgba(37, 99, 235, 0.08), 0 4px 8px -2px rgba(37, 99, 235, 0.04)",
+        button: "0 4px 14px 0 rgba(37, 99, 235, 0.25)",
       },
     },
   },

@@ -79,7 +79,7 @@ export default function UiScenarioEditor({ value, onChange, compact = false }: P
     const tags = collectTags(config.uiActions);
 
     const fieldClass =
-        "h-10 w-full min-w-0 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100";
+        "h-10 w-full min-w-0 rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100";
 
     const smallButtonClass =
         "rounded-xl bg-slate-100 px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-200 transition";
@@ -166,11 +166,11 @@ export default function UiScenarioEditor({ value, onChange, compact = false }: P
     }
 
     return (
-        <section className={`rounded-2xl border border-sky-100 bg-white shadow-xs ${compact ? "p-4" : "p-5"}`}>
+        <section className={`rounded-2xl border border-blue-100 bg-white shadow-xs ${compact ? "p-4" : "p-5"}`}>
             <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
                 <div className="min-w-0">
                     <h2 className="text-sm font-bold text-slate-900 flex items-center gap-1.5">
-                        <span className="material-symbols-outlined text-sky-600 text-[18px]">settings_suggest</span>
+                        <span className="material-symbols-outlined text-blue-600 text-[18px]">settings_suggest</span>
                         Cấu hình kiểm thử UI Android
                     </h2>
                 </div>
@@ -178,7 +178,7 @@ export default function UiScenarioEditor({ value, onChange, compact = false }: P
                 <select
                     value={config.scenarioId || ""}
                     onChange={(event) => applyTemplate(event.target.value)}
-                    className="h-9 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 lg:max-w-xs bg-white"
+                    className="h-9 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 lg:max-w-xs bg-white"
                 >
                     {UI_SCENARIO_TEMPLATES.map((item) => (
                         <option key={item.scenarioId} value={item.scenarioId}>
@@ -188,8 +188,8 @@ export default function UiScenarioEditor({ value, onChange, compact = false }: P
                 </select>
             </div>
 
-            <div className="mt-3 rounded-2xl border border-sky-200 bg-sky-50/50 p-3">
-                <p className="text-xs font-bold text-sky-900">
+            <div className="mt-3 rounded-2xl border border-blue-200 bg-blue-50/50 p-3">
+                <p className="text-xs font-bold text-blue-900">
                     Danh sách testTag cần ghi vào đề bài cho sinh viên
                 </p>
 
@@ -198,14 +198,14 @@ export default function UiScenarioEditor({ value, onChange, compact = false }: P
                         {tags.map((tag) => (
                             <code
                                 key={tag}
-                                className="rounded-lg bg-white border border-sky-200 px-2.5 py-0.5 text-xs font-mono font-bold text-sky-700 shadow-2xs"
+                                className="rounded-lg bg-white border border-blue-200 px-2.5 py-0.5 text-xs font-mono font-bold text-blue-700 shadow-2xs"
                             >
                                 {tag}
                             </code>
                         ))}
                     </div>
                 ) : (
-                    <p className="mt-1 text-xs text-sky-700">
+                    <p className="mt-1 text-xs text-blue-700">
                         Chưa có testTag nào trong kịch bản.
                     </p>
                 )}
@@ -220,7 +220,7 @@ export default function UiScenarioEditor({ value, onChange, compact = false }: P
                     <button
                         type="button"
                         onClick={addScreen}
-                        className="rounded-xl bg-sky-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-sky-700 transition active:scale-95"
+                        className="rounded-xl bg-blue-600 px-3.5 py-1.5 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition active:scale-95"
                     >
                         + Thêm màn hình
                     </button>

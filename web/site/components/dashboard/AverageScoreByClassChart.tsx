@@ -19,24 +19,24 @@ type AverageScoreByClassChartProps = {
 };
 
 export default function AverageScoreByClassChart({
-                                                     data,
-                                                 }: AverageScoreByClassChartProps) {
-    const barColors = ["#0284c7", "#0ea5e9", "#38bdf8", "#7dd3fc", "#bae6fd"];
+    data,
+}: AverageScoreByClassChartProps) {
+    const barColors = ["#2563EB", "#4F75B9", "#60A5FA", "#93C5FD", "#DCE9FF"];
 
     return (
-        <div className="rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs">
             <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sky-600 text-[20px]">bar_chart</span>
+                    <h2 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                        <span className="material-symbols-outlined text-blue-600 text-[20px]">bar_chart</span>
                         Điểm trung bình theo lớp
                     </h2>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-[#4A5568]">
                         Tổng hợp điểm các bài đã chấm trong kỳ đang xem.
                     </p>
                 </div>
 
-                <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 border border-sky-200">
+                <span className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-200/60">
                     Tối đa 6 lớp
                 </span>
             </div>
@@ -52,7 +52,7 @@ export default function AverageScoreByClassChart({
                             <CartesianGrid
                                 strokeDasharray="3 3"
                                 vertical={false}
-                                stroke="#f0f9ff"
+                                stroke="#f1f5f9"
                             />
                             <XAxis
                                 dataKey="label"
@@ -68,9 +68,9 @@ export default function AverageScoreByClassChart({
                             />
                             <Tooltip
                                 content={<ScoreTooltip />}
-                                cursor={{ fill: "rgba(2, 132, 199, 0.05)" }}
+                                cursor={{ fill: "rgba(37, 99, 235, 0.04)" }}
                             />
-                            <Bar dataKey="value" radius={[12, 12, 0, 0]}>
+                            <Bar dataKey="value" radius={[8, 8, 0, 0]}>
                                 {data.map((item, index) => (
                                     <Cell
                                         key={`${item.label}-${index}`}

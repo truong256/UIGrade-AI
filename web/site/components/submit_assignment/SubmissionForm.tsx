@@ -65,7 +65,7 @@ export function SubmissionForm({
                             onChange={(e) => onStudentNameChange(e.target.value)}
                             disabled={disabled || submitting}
                             placeholder="VD: Nguyễn Văn A - MSSV: 2026001"
-                            className="h-11 w-full rounded-xl border border-slate-200 px-4 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-100"
+                            className="h-11 w-full rounded-xl border border-slate-200 px-4 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                         />
                     </div>
                 )}
@@ -79,7 +79,7 @@ export function SubmissionForm({
                         onChange={(e) => onContentChange?.(e.target.value)}
                         disabled={disabled || submitting}
                         placeholder="Ghi chú thêm về kiến trúc, tài khoản test, hoặc hướng dẫn chạy..."
-                        className="min-h-[100px] w-full rounded-xl border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-100"
+                        className="min-h-[100px] w-full rounded-xl border border-slate-200 p-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                     />
                 </div>
 
@@ -88,7 +88,7 @@ export function SubmissionForm({
                         type="button"
                         onClick={() => handleSubmit("submit")}
                         disabled={disabled || submitting}
-                        className="inline-flex items-center gap-2 rounded-xl bg-sky-600 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 hover:bg-sky-700 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <span className="material-symbols-outlined text-[18px]">send</span>
                         {submitting ? "Đang gửi bài..." : "Nộp bài tập"}
@@ -133,7 +133,7 @@ export function SubmissionForm({
                         onChange={(e) => onRepositoryUrlChange?.(e.target.value)}
                         disabled={disabled || submitting || !canSubmit}
                         placeholder="https://github.com/username/android-project"
-                        className="h-10 w-full rounded-xl border border-slate-200 pl-9 pr-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-100"
+                        className="h-10 w-full rounded-xl border border-slate-200 pl-9 pr-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                     />
                 </div>
             </div>
@@ -148,7 +148,7 @@ export function SubmissionForm({
                     disabled={disabled || submitting || !canSubmit}
                     rows={3}
                     placeholder="Mô tả các màn hình đã hoàn thành, các testTag đặc biệt hoặc ghi chú khác..."
-                    className="w-full rounded-xl border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-100"
+                    className="w-full rounded-xl border border-slate-200 p-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                 />
             </div>
 
@@ -167,7 +167,7 @@ export function SubmissionForm({
                     type="button"
                     onClick={() => handleSubmit("submit")}
                     disabled={disabled || submitting || !canSubmit}
-                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     <span className="material-symbols-outlined text-[16px]">send</span>
                     {submitting ? "Đang gửi bài..." : "Nộp bài chính thức"}

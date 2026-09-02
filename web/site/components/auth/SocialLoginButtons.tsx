@@ -44,11 +44,11 @@ export function SocialLoginButtons({ disabled = false, onError }: Props) {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={disabled || loadingGoogle}
-                className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-sky-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-sky-50/70 hover:border-sky-300 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-sky-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-blue-50/70 hover:border-blue-300 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
             >
                 {loadingGoogle ? (
                     <>
-                        <span className="material-symbols-outlined animate-spin text-[18px] text-sky-600">
+                        <span className="material-symbols-outlined animate-spin text-[18px] text-blue-600">
                             progress_activity
                         </span>
                         <span>Đang chuyển hướng Google...</span>

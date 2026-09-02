@@ -132,7 +132,7 @@ function getRoleLabel(role: UserRole) {
 
 function getRoleBadgeClass(role: UserRole) {
     if (role === "admin") return "bg-violet-50 text-violet-600";
-    if (role === "teacher") return "bg-sky-50 text-sky-700 font-semibold";
+    if (role === "teacher") return "bg-blue-50 text-blue-700 font-semibold";
     return "bg-slate-100 text-slate-600";
 }
 
@@ -399,11 +399,11 @@ export function UserManagementClient() {
     return (
         <div className="flex min-h-screen gap-6 overflow-hidden">
             <main className="min-w-0 flex-1 space-y-6">
-                <section className="rounded-[28px] border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-                    <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
-                            <h1 className="text-3xl font-bold tracking-tight text-slate-900">Quản lý người dùng</h1>
-                            <p className="mt-2 text-slate-500">
+                            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#172033]">Quản lý người dùng</h1>
+                            <p className="mt-1 text-sm text-[#4A5568]">
                                 Quản trị tài khoản giảng viên, sinh viên và quản trị viên ngay trong khu vực Cấu hình hệ thống.
                             </p>
                         </div>
@@ -411,7 +411,7 @@ export function UserManagementClient() {
                         <button
                             type="button"
                             onClick={() => setShowCreateModal(true)}
-                            className="inline-flex items-center justify-center gap-2 rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-95"
+                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 active:scale-98 shrink-0"
                         >
                             <span className="material-symbols-outlined text-[18px]">person_add</span>
                             Thêm người dùng
@@ -419,50 +419,48 @@ export function UserManagementClient() {
                     </div>
                 </section>
 
-                <section className="grid grid-cols-1 gap-4 md:grid-cols-3">
-                    <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-xs">
-                        <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="rounded-xl bg-sky-50 p-2.5 text-sky-600">
-                                    <span className="material-symbols-outlined text-[24px]">groups</span>
-                                </div>
-                                <div>
-                                    <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Tổng cộng</p>
-                                    <p className="mt-0.5 text-2xl font-black text-slate-900">{responseData.stats.total}</p>
-                                </div>
+                <section className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
+                        <div className="flex items-center gap-3.5">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-100">
+                                <span className="material-symbols-outlined text-[22px]">groups</span>
+                            </div>
+                            <div>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Tổng cộng</p>
+                                <p className="mt-0.5 text-2xl font-bold text-[#172033]">{responseData.stats.total}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
-                        <div className="flex items-center gap-3">
-                            <div className="rounded-xl bg-emerald-50 p-2.5 text-emerald-600">
-                                <span className="material-symbols-outlined text-[24px]">verified_user</span>
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
+                        <div className="flex items-center gap-3.5">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 border border-emerald-100">
+                                <span className="material-symbols-outlined text-[22px]">verified_user</span>
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Đang hoạt động</p>
-                                <p className="mt-0.5 text-2xl font-black text-slate-900">{responseData.stats.active}</p>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Đang hoạt động</p>
+                                <p className="mt-0.5 text-2xl font-bold text-[#172033]">{responseData.stats.active}</p>
                             </div>
                         </div>
                     </div>
 
-                    <div className="rounded-2xl border border-slate-100 bg-white p-5 shadow-xs">
-                        <div className="flex items-center gap-3">
-                            <div className="rounded-xl bg-rose-50 p-2.5 text-rose-600">
-                                <span className="material-symbols-outlined text-[24px]">lock</span>
+                    <div className="rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs">
+                        <div className="flex items-center gap-3.5">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-rose-50 text-rose-600 border border-rose-100">
+                                <span className="material-symbols-outlined text-[22px]">lock</span>
                             </div>
                             <div>
-                                <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Tài khoản khóa</p>
-                                <p className="mt-0.5 text-2xl font-black text-slate-900">{responseData.stats.locked}</p>
+                                <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">Tài khoản khóa</p>
+                                <p className="mt-0.5 text-2xl font-bold text-[#172033]">{responseData.stats.locked}</p>
                             </div>
                         </div>
                     </div>
                 </section>
 
-                <section className="overflow-hidden rounded-3xl border border-sky-100 bg-white shadow-xs">
+                <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
                     <div className="border-b border-slate-100 p-5">
                         <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
-                            <div className="flex flex-wrap gap-2">
+                            <div className="flex flex-wrap gap-1.5">
                                 {roleTabs.map((item) => (
                                     <button
                                         key={item.value}
@@ -471,10 +469,10 @@ export function UserManagementClient() {
                                             setRole(item.value as UserRole | "all");
                                             setPage(1);
                                         }}
-                                        className={`rounded-xl px-3.5 py-1.5 text-xs font-semibold transition ${
+                                        className={`rounded-lg px-3 py-1.5 text-xs font-semibold transition ${
                                             role === item.value
-                                                ? "bg-sky-50 text-sky-700 border border-sky-200 shadow-2xs"
-                                                : "text-slate-500 hover:bg-slate-100 hover:text-slate-900"
+                                                ? "bg-blue-50 text-blue-700 border border-blue-200/80 shadow-xs font-bold"
+                                                : "text-slate-600 hover:bg-slate-100 hover:text-[#172033]"
                                         }`}
                                     >
                                         {item.label}
@@ -482,9 +480,9 @@ export function UserManagementClient() {
                                 ))}
                             </div>
 
-                            <div className="flex flex-col gap-3 sm:flex-row">
+                            <div className="flex flex-col gap-2.5 sm:flex-row sm:items-center">
                                 <div className="relative">
-                                    <span className="material-symbols-outlined pointer-events-none absolute left-4 top-1/2 -translate-y-1/2 text-slate-400">
+                                    <span className="material-symbols-outlined pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
                                         search
                                     </span>
                                     <input
@@ -494,7 +492,7 @@ export function UserManagementClient() {
                                             setPage(1);
                                         }}
                                         placeholder="Tìm tên, email, mã SV..."
-                                        className="w-full rounded-xl border border-slate-200 px-10 py-2.5 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 sm:w-64"
+                                        className="h-10 w-full rounded-xl border border-slate-200 bg-white pl-9 pr-3.5 text-xs sm:text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 sm:w-64"
                                     />
                                 </div>
 
@@ -504,7 +502,7 @@ export function UserManagementClient() {
                                         setStatus(e.target.value as UserStatus);
                                         setPage(1);
                                     }}
-                                    className="rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 bg-white"
+                                    className="h-10 rounded-xl border border-slate-200 px-3 text-xs sm:text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white"
                                 >
                                     <option value="all">Tất cả trạng thái</option>
                                     <option value="active">Đang hoạt động</option>
@@ -515,26 +513,26 @@ export function UserManagementClient() {
                     </div>
 
                     {message ? (
-                        <div className="mx-6 mt-6 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-700 font-medium">
+                        <div className="mx-6 mt-4 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs text-emerald-700 font-medium">
                             {message}
                         </div>
                     ) : null}
 
                     {error ? (
-                        <div className="mx-6 mt-6 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700 font-medium">
+                        <div className="mx-6 mt-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs text-rose-700 font-medium">
                             {error}
                         </div>
                     ) : null}
 
-                    <div className="overflow-x-auto p-6">
-                        <table className="min-w-full text-left">
-                            <thead className="bg-slate-50">
+                    <div className="overflow-x-auto p-5 sm:p-6">
+                        <table className="w-full min-w-[760px] table-fixed text-left">
+                            <thead className="bg-slate-50/80 text-xs font-semibold text-slate-600 border-b border-slate-200/80">
                             <tr>
-                                <th className="rounded-l-2xl px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Người dùng</th>
-                                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Vai trò</th>
-                                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Trạng thái</th>
-                                <th className="px-5 py-3 text-[11px] font-bold uppercase tracking-wider text-slate-500">Lần đăng nhập cuối</th>
-                                <th className="rounded-r-2xl px-5 py-3 text-right text-[11px] font-bold uppercase tracking-wider text-slate-500">Thao tác</th>
+                                <th className="w-[280px] rounded-l-xl px-5 py-3.5">Người dùng</th>
+                                <th className="w-[140px] px-5 py-3.5">Vai trò</th>
+                                <th className="w-[160px] px-5 py-3.5">Trạng thái</th>
+                                <th className="w-[180px] px-5 py-3.5">Lần đăng nhập cuối</th>
+                                <th className="w-[90px] rounded-r-xl px-5 py-3.5 text-right">Thao tác</th>
                             </tr>
                             </thead>
                             <tbody
@@ -545,48 +543,48 @@ export function UserManagementClient() {
                                 Array.from({ length: 5 }).map((_, index) => (
                                     <tr key={index}>
                                         <td className="px-5 py-4" colSpan={5}>
-                                            <div className="h-12 animate-pulse rounded-xl bg-slate-100" />
+                                            <div className="h-10 animate-pulse rounded-xl bg-slate-100" />
                                         </td>
                                     </tr>
                                 ))
                             ) : responseData.users.length ? (
                                 responseData.users.map((user) => (
-                                    <tr key={user._id} className="transition hover:bg-sky-50/30">
+                                    <tr key={user._id} className="transition hover:bg-slate-50/60">
                                         <td className="px-5 py-3.5">
-                                            <div className="flex items-center gap-3">
-                                                <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-100 text-xs font-bold text-sky-700">
+                                            <div className="flex items-center gap-3 min-w-0">
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-xs font-bold text-white shadow-xs">
                                                     {getInitials(user.name) || "U"}
                                                 </div>
-                                                <div>
-                                                    <p className="font-semibold text-xs text-slate-900">{user.name}</p>
-                                                    <p className="text-[11px] text-slate-500">{user.email}</p>
+                                                <div className="min-w-0 flex-1">
+                                                    <p className="font-semibold text-xs sm:text-sm text-[#172033] truncate">{user.name}</p>
+                                                    <p className="text-[11px] text-[#4A5568] truncate">{user.email}</p>
                                                     {user.studentCode ? (
-                                                        <p className="text-[10px] text-sky-700 font-mono">Mã: {user.studentCode}</p>
+                                                        <p className="text-[10px] text-blue-700 font-mono">Mã: {user.studentCode}</p>
                                                     ) : null}
                                                 </div>
                                             </div>
                                         </td>
-                                        <td className="px-5 py-4">
-                                                <span className={`inline-flex rounded-full px-3 py-1 text-xs font-semibold ${getRoleBadgeClass(user.role)}`}>
-                                                    {getRoleLabel(user.role)}
-                                                </span>
+                                        <td className="px-5 py-3.5">
+                                            <span className={`inline-flex items-center rounded-lg px-2.5 py-0.5 text-xs font-semibold ${getRoleBadgeClass(user.role)}`}>
+                                                {getRoleLabel(user.role)}
+                                            </span>
                                         </td>
-                                        <td className="px-5 py-4">
+                                        <td className="px-5 py-3.5">
+                                            <span
+                                                className={`inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-0.5 text-xs font-semibold ${
+                                                    user.isActive
+                                                        ? "bg-emerald-50 text-emerald-700 border-emerald-200/60"
+                                                        : "bg-rose-50 text-rose-700 border-rose-200/60"
+                                                }`}
+                                            >
                                                 <span
-                                                    className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-semibold ${
-                                                        user.isActive
-                                                            ? "bg-emerald-50 text-emerald-600"
-                                                            : "bg-rose-50 text-rose-600"
-                                                    }`}
-                                                >
-                                                    <span
-                                                        className={`h-2 w-2 rounded-full ${user.isActive ? "bg-emerald-500" : "bg-rose-500"}`}
-                                                    />
-                                                    {user.isActive ? "Đang hoạt động" : "Tạm khóa"}
-                                                </span>
+                                                    className={`h-1.5 w-1.5 rounded-full ${user.isActive ? "bg-emerald-500" : "bg-rose-500"}`}
+                                                />
+                                                {user.isActive ? "Đang hoạt động" : "Tạm khóa"}
+                                            </span>
                                         </td>
-                                        <td className="px-5 py-4 text-sm text-slate-500">{formatDate(user.lastLoginAt)}</td>
-                                        <td className="relative px-5 py-4">
+                                        <td className="px-5 py-3.5 text-xs text-slate-500">{formatDate(user.lastLoginAt)}</td>
+                                        <td className="relative px-5 py-3.5 text-right">
                                             <div className="flex justify-end">
                                                 <div className="relative" ref={openActionMenuId === user._id ? actionMenuRef : null}>
                                                     <button
@@ -595,14 +593,15 @@ export function UserManagementClient() {
                                                             e.stopPropagation();
                                                             toggleActionMenu(user._id);
                                                         }}
-                                                        className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-slate-200 bg-white text-slate-700 transition hover:bg-slate-50"
+                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                                                        aria-label="Tùy chọn người dùng"
                                                     >
-                                                        <span className="material-symbols-outlined text-[22px]">more_vert</span>
+                                                        <span className="material-symbols-outlined text-[20px]">more_vert</span>
                                                     </button>
 
                                                     {openActionMenuId === user._id ? (
                                                         <div
-                                                            className="absolute right-0 top-full z-50 mt-2 w-52 rounded-2xl border border-slate-200 bg-white p-2 shadow-xl"
+                                                            className="absolute right-0 top-full z-50 mt-1.5 w-48 rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-100"
                                                             onMouseDown={(e) => e.stopPropagation()}
                                                         >
                                                             <button
@@ -611,9 +610,9 @@ export function UserManagementClient() {
                                                                     handleOpenEditModal(user);
                                                                     setOpenActionMenuId(null);
                                                                 }}
-                                                                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-amber-50"
+                                                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-slate-700 transition hover:bg-slate-50"
                                                             >
-                                                                <span className="material-symbols-outlined text-[20px]">edit</span>
+                                                                <span className="material-symbols-outlined text-[18px] text-slate-500">edit</span>
                                                                 Sửa
                                                             </button>
 
@@ -623,15 +622,15 @@ export function UserManagementClient() {
                                                                     handleToggleUser(user);
                                                                     setOpenActionMenuId(null);
                                                                 }}
-                                                                className={`flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium transition ${
+                                                                className={`flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium transition ${
                                                                     user.isActive
                                                                         ? "text-rose-600 hover:bg-rose-50"
                                                                         : "text-emerald-600 hover:bg-emerald-50"
                                                                 }`}
                                                             >
-                        <span className="material-symbols-outlined text-[20px]">
-                            {user.isActive ? "lock" : "lock_open"}
-                        </span>
+                                                                <span className="material-symbols-outlined text-[18px]">
+                                                                    {user.isActive ? "lock" : "lock_open"}
+                                                                </span>
                                                                 {user.isActive ? "Khóa" : "Mở khóa"}
                                                             </button>
 
@@ -641,9 +640,9 @@ export function UserManagementClient() {
                                                                     handleDeleteUser(user);
                                                                     setOpenActionMenuId(null);
                                                                 }}
-                                                                className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-medium text-slate-700 transition hover:bg-slate-100"
+                                                                className="flex w-full items-center gap-2.5 rounded-lg px-3 py-2 text-left text-xs font-medium text-rose-600 transition hover:bg-rose-50"
                                                             >
-                                                                <span className="material-symbols-outlined text-[20px]">delete</span>
+                                                                <span className="material-symbols-outlined text-[18px]">delete</span>
                                                                 Xóa
                                                             </button>
                                                         </div>
@@ -665,7 +664,7 @@ export function UserManagementClient() {
                     </div>
 
                     <div className="flex flex-col gap-3 border-t border-slate-100 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
-                        <p className="text-sm text-slate-500">
+                        <p className="text-xs text-slate-500">
                             Hiển thị trang {responseData.pagination.page}/{responseData.pagination.totalPages} — tổng {responseData.pagination.total} người dùng
                         </p>
 
@@ -674,7 +673,7 @@ export function UserManagementClient() {
                                 type="button"
                                 disabled={page <= 1 || loading}
                                 onClick={() => handlePageChange(page - 1)}
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 <span className="material-symbols-outlined text-[18px]">chevron_left</span>
                             </button>
@@ -682,7 +681,7 @@ export function UserManagementClient() {
                                 type="button"
                                 disabled={page >= totalPages || loading}
                                 onClick={() => handlePageChange(page + 1)}
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 text-slate-600 transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40"
                             >
                                 <span className="material-symbols-outlined text-[18px]">chevron_right</span>
                             </button>
@@ -692,60 +691,60 @@ export function UserManagementClient() {
             </main>
 
             {showCreateModal ? (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4">
-                    <div className="w-full max-w-2xl rounded-[28px] bg-white p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+                    <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-900">Thêm người dùng</h2>
-                                <p className="mt-1 text-sm text-slate-500">Tạo nhanh tài khoản mới cho sinh viên, giảng viên hoặc quản trị viên.</p>
+                                <h2 className="text-xl font-bold text-[#172033]">Thêm người dùng</h2>
+                                <p className="mt-0.5 text-xs text-[#4A5568]">Tạo nhanh tài khoản mới cho sinh viên, giảng viên hoặc quản trị viên.</p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setShowCreateModal(false)}
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition hover:bg-slate-200"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition hover:bg-slate-200"
                             >
-                                <span className="material-symbols-outlined">close</span>
+                                <span className="material-symbols-outlined text-[18px]">close</span>
                             </button>
                         </div>
 
-                        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="text-sm font-semibold text-slate-700">Họ và tên</label>
+                        <div className="mt-5 grid grid-cols-1 gap-3.5 md:grid-cols-2">
+                            <div className="space-y-1.5 md:col-span-2">
+                                <label className="text-xs font-semibold text-slate-700">Họ và tên</label>
                                 <input
                                     value={createForm.name}
                                     onChange={(e) => setCreateForm((prev) => ({ ...prev, name: e.target.value }))}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                     placeholder="Nhập họ và tên"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Email</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Email</label>
                                 <input
                                     value={createForm.email}
                                     onChange={(e) => setCreateForm((prev) => ({ ...prev, email: e.target.value }))}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                     placeholder="Nhập email"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Mật khẩu mặc định</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Mật khẩu mặc định</label>
                                 <input
                                     type="password"
                                     value={createForm.password}
                                     onChange={(e) => setCreateForm((prev) => ({ ...prev, password: e.target.value }))}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                     placeholder="Tối thiểu 6 ký tự"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Vai trò</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Vai trò</label>
                                 <select
                                     value={createForm.role}
                                     onChange={(e) => setCreateForm((prev) => ({ ...prev, role: e.target.value as UserRole }))}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white"
                                 >
                                     <option value="User">Sinh viên</option>
                                     <option value="teacher">Giảng viên</option>
@@ -753,43 +752,43 @@ export function UserManagementClient() {
                                 </select>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Mã sinh viên</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Mã sinh viên</label>
                                 <input
                                     value={createForm.studentCode}
                                     onChange={(e) => setCreateForm((prev) => ({ ...prev, studentCode: e.target.value.toUpperCase() }))}
                                     disabled={createForm.role !== "User"}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                                     placeholder={createForm.role === "User" ? "Bắt buộc với sinh viên" : "Không bắt buộc"}
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Khoa/Bộ môn</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Khoa/Bộ môn</label>
                                 <input
                                     value={createForm.department}
                                     onChange={(e) => setCreateForm((prev) => ({ ...prev, department: e.target.value }))}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                     placeholder="Ví dụ: CNTT"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Khóa/Lớp</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Khóa/Lớp</label>
                                 <input
                                     value={createForm.cohort}
                                     onChange={(e) => setCreateForm((prev) => ({ ...prev, cohort: e.target.value }))}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                     placeholder="Ví dụ: K21B"
                                 />
                             </div>
                         </div>
 
-                        <div className="mt-6 flex items-center justify-end gap-3">
+                        <div className="mt-6 flex items-center justify-end gap-2.5">
                             <button
                                 type="button"
                                 onClick={() => setShowCreateModal(false)}
-                                className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
+                                className="h-10 rounded-xl border border-slate-200 px-4 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
                             >
                                 Hủy
                             </button>
@@ -797,7 +796,7 @@ export function UserManagementClient() {
                                 type="button"
                                 disabled={submitting}
                                 onClick={handleCreateUser}
-                                className="rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 px-5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700 active:scale-98 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {submitting ? "Đang tạo..." : "Tạo tài khoản"}
                             </button>
@@ -806,45 +805,45 @@ export function UserManagementClient() {
                 </div>
             ) : null}
             {showEditModal ? (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/45 p-4">
-                    <div className="w-full max-w-2xl rounded-[28px] bg-white p-6 shadow-2xl">
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
+                    <div className="w-full max-w-2xl rounded-2xl bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150">
                         <div className="flex items-start justify-between gap-4">
                             <div>
-                                <h2 className="text-2xl font-bold text-slate-900">Chỉnh sửa người dùng</h2>
-                                <p className="mt-1 text-sm text-slate-500">
+                                <h2 className="text-xl font-bold text-[#172033]">Chỉnh sửa người dùng</h2>
+                                <p className="mt-0.5 text-xs text-[#4A5568]">
                                     Cập nhật thông tin tài khoản, vai trò và trạng thái hoạt động.
                                 </p>
                             </div>
                             <button
                                 type="button"
                                 onClick={() => setShowEditModal(false)}
-                                className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-slate-600 transition hover:bg-slate-200"
+                                className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-slate-100 text-slate-500 transition hover:bg-slate-200"
                             >
-                                <span className="material-symbols-outlined">close</span>
+                                <span className="material-symbols-outlined text-[18px]">close</span>
                             </button>
                         </div>
 
-                        <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-2">
-                            <div className="space-y-2 md:col-span-2">
-                                <label className="text-sm font-semibold text-slate-700">Họ và tên</label>
+                        <div className="mt-5 grid grid-cols-1 gap-3.5 md:grid-cols-2">
+                            <div className="space-y-1.5 md:col-span-2">
+                                <label className="text-xs font-semibold text-slate-700">Họ và tên</label>
                                 <input
                                     value={editForm.name}
                                     onChange={(e) => setEditForm((prev) => ({ ...prev, name: e.target.value }))}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Email</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Email</label>
                                 <input
                                     value={editForm.email}
                                     onChange={(e) => setEditForm((prev) => ({ ...prev, email: e.target.value }))}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Vai trò</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Vai trò</label>
                                 <select
                                     value={editForm.role}
                                     onChange={(e) =>
@@ -853,7 +852,7 @@ export function UserManagementClient() {
                                             role: e.target.value as UserRole,
                                         }))
                                     }
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white"
                                 >
                                     <option value="User">Sinh viên</option>
                                     <option value="teacher">Giảng viên</option>
@@ -861,8 +860,8 @@ export function UserManagementClient() {
                                 </select>
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Mã sinh viên</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Mã sinh viên</label>
                                 <input
                                     value={editForm.studentCode}
                                     onChange={(e) =>
@@ -872,41 +871,41 @@ export function UserManagementClient() {
                                         }))
                                     }
                                     disabled={editForm.role !== "User"}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Khoa/Bộ môn</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Khoa/Bộ môn</label>
                                 <input
                                     value={editForm.department}
                                     onChange={(e) => setEditForm((prev) => ({ ...prev, department: e.target.value }))}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Khóa/Lớp</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Khóa/Lớp</label>
                                 <input
                                     value={editForm.cohort}
                                     onChange={(e) => setEditForm((prev) => ({ ...prev, cohort: e.target.value }))}
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Mật khẩu mới</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Mật khẩu mới</label>
                                 <input
                                     type="password"
                                     value={editForm.password}
                                     onChange={(e) => setEditForm((prev) => ({ ...prev, password: e.target.value }))}
                                     placeholder="Để trống nếu không đổi"
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 />
                             </div>
 
-                            <div className="space-y-2">
-                                <label className="text-sm font-semibold text-slate-700">Trạng thái</label>
+                            <div className="space-y-1.5">
+                                <label className="text-xs font-semibold text-slate-700">Trạng thái</label>
                                 <select
                                     value={editForm.isActive ? "active" : "locked"}
                                     onChange={(e) =>
@@ -915,7 +914,7 @@ export function UserManagementClient() {
                                             isActive: e.target.value === "active",
                                         }))
                                     }
-                                    className="w-full rounded-2xl border border-slate-200 px-4 py-3 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                    className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white"
                                 >
                                     <option value="active">Đang hoạt động</option>
                                     <option value="locked">Tạm khóa</option>
@@ -923,11 +922,11 @@ export function UserManagementClient() {
                             </div>
                         </div>
 
-                        <div className="mt-6 flex items-center justify-end gap-3">
+                        <div className="mt-6 flex items-center justify-end gap-2.5">
                             <button
                                 type="button"
                                 onClick={() => setShowEditModal(false)}
-                                className="rounded-2xl border border-slate-200 px-5 py-3 text-sm font-semibold text-slate-600 transition hover:bg-slate-100"
+                                className="h-10 rounded-xl border border-slate-200 px-4 text-xs font-semibold text-slate-600 transition hover:bg-slate-100"
                             >
                                 Hủy
                             </button>
@@ -935,7 +934,7 @@ export function UserManagementClient() {
                                 type="button"
                                 disabled={submitting}
                                 onClick={handleUpdateuser}
-                                className="rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                                className="inline-flex h-10 items-center justify-center rounded-xl bg-blue-600 px-5 text-xs font-bold text-white shadow-xs transition hover:bg-blue-700 active:scale-98 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {submitting ? "Đang lưu..." : "Lưu thay đổi"}
                             </button>

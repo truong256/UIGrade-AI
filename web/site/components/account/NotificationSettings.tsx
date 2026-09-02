@@ -23,16 +23,16 @@ const rows = [
 
 export function NotificationSettings({ value, loading = false, onChange }: Props) {
     return (
-        <section className="rounded-3xl border border-sky-100 bg-white p-5 shadow-xs sm:p-6">
+        <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-xs sm:p-6">
             <div className="mb-4 flex items-center justify-between gap-3">
                 <div>
                     <h2 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sky-600 text-[20px]">tune</span>
+                        <span className="material-symbols-outlined text-blue-600 text-[20px]">tune</span>
                         Cài đặt thông báo
                     </h2>
                 </div>
 
-                {loading && <span className="text-xs font-semibold text-sky-700 animate-pulse">Đang lưu...</span>}
+                {loading && <span className="text-xs font-semibold text-blue-700 animate-pulse">Đang lưu...</span>}
             </div>
 
             <div className="space-y-3">
@@ -42,10 +42,10 @@ export function NotificationSettings({ value, loading = false, onChange }: Props
                     return (
                         <div
                             key={item.key}
-                            className="flex items-center justify-between gap-4 rounded-2xl bg-sky-50/40 border border-sky-100 p-3.5"
+                            className="flex items-center justify-between gap-4 rounded-2xl bg-blue-50/40 border border-blue-100 p-3.5"
                         >
                             <div className="flex items-start gap-3">
-                                <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-white text-sky-600 shadow-xs border border-sky-100">
+                                <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-xl bg-white text-blue-600 shadow-xs border border-blue-100">
                                     <span className="material-symbols-outlined text-[18px]">{item.icon}</span>
                                 </div>
 
@@ -65,7 +65,7 @@ export function NotificationSettings({ value, loading = false, onChange }: Props
                                     })
                                 }
                                 className={`relative h-6 w-11 shrink-0 rounded-full transition ${
-                                    enabled ? "bg-sky-600" : "bg-slate-300"
+                                    enabled ? "bg-blue-600" : "bg-slate-300"
                                 } disabled:cursor-not-allowed disabled:opacity-70`}
                                 aria-pressed={enabled}
                                 aria-label={item.title}

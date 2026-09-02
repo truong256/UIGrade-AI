@@ -61,10 +61,10 @@ function EditProfileDialogForm({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-sky-100 bg-white shadow-2xl">
-                <div className="flex items-center justify-between border-b border-sky-100 px-6 py-4">
+            <div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-3xl border border-blue-100 bg-white shadow-2xl">
+                <div className="flex items-center justify-between border-b border-blue-100 px-6 py-4">
                     <div className="flex items-center gap-2">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-200">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
                             <span className="material-symbols-outlined text-[20px]">manage_accounts</span>
                         </div>
                         <div>
@@ -89,7 +89,7 @@ function EditProfileDialogForm({
                             <input
                                 value={form.name}
                                 onChange={(e) => handleChange("name", e.target.value)}
-                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 placeholder="Nguyễn Văn A"
                             />
                         </div>
@@ -99,7 +99,7 @@ function EditProfileDialogForm({
                             <input
                                 value={form.email}
                                 onChange={(e) => handleChange("email", e.target.value)}
-                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 placeholder="example@university.edu.vn"
                             />
                         </div>
@@ -111,7 +111,7 @@ function EditProfileDialogForm({
                             <input
                                 value={form.studentCode}
                                 onChange={(e) => handleChange("studentCode", e.target.value)}
-                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs font-mono font-bold uppercase outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs font-mono font-bold uppercase outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 placeholder="SV001"
                             />
                         </div>
@@ -121,7 +121,7 @@ function EditProfileDialogForm({
                             <input
                                 value={form.phone}
                                 onChange={(e) => handleChange("phone", e.target.value)}
-                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 placeholder="0912345678"
                             />
                         </div>
@@ -131,7 +131,7 @@ function EditProfileDialogForm({
                             <input
                                 value={form.department}
                                 onChange={(e) => handleChange("department", e.target.value)}
-                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 placeholder="Công nghệ thông tin"
                             />
                         </div>
@@ -141,7 +141,7 @@ function EditProfileDialogForm({
                             <input
                                 value={form.cohort}
                                 onChange={(e) => handleChange("cohort", e.target.value)}
-                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                 placeholder="Khóa 2021"
                             />
                         </div>
@@ -152,7 +152,7 @@ function EditProfileDialogForm({
                         <input
                             value={form.avatar}
                             onChange={(e) => handleChange("avatar", e.target.value)}
-                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             placeholder="/avatars/default.png hoặc https://..."
                         />
                     </div>
@@ -163,7 +163,7 @@ function EditProfileDialogForm({
                             value={form.bio}
                             onChange={(e) => handleChange("bio", e.target.value)}
                             rows={3}
-                            className="w-full rounded-xl border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="w-full rounded-xl border border-slate-200 p-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             placeholder="Mô tả ngắn về bạn..."
                         />
                     </div>
@@ -187,7 +187,7 @@ function EditProfileDialogForm({
                             type="button"
                             onClick={handleSave}
                             disabled={loading}
-                            className="rounded-xl bg-sky-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+                            className="rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {loading ? "Đang lưu..." : "Lưu thay đổi"}
                         </button>

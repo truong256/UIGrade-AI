@@ -29,14 +29,14 @@ export default function HelpPage() {
     const [openIndex, setOpenIndex] = useState<number | null>(0);
 
     return (
-        <div className="flex min-h-screen flex-col bg-sky-50/40 text-slate-900">
+        <div className="flex min-h-screen flex-col bg-blue-50/40 text-slate-900">
             <LoginTopBar data={topBarData} />
 
             <main className="flex-1 px-4 py-10 sm:px-6">
                 <div className="mx-auto max-w-4xl space-y-8">
                     {/* Header Banner */}
                     <div className="text-center space-y-2">
-                        <div className="inline-block rounded-full border border-sky-200 bg-sky-50 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-sky-700">
+                        <div className="inline-block rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-blue-700">
                             TRUNG TÂM TRỢ GIÚP
                         </div>
                         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
@@ -49,8 +49,8 @@ export default function HelpPage() {
 
                     {/* Quick Action Cards */}
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-                        <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-xs transition hover:shadow-md hover:border-sky-200">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-200 mb-3">
+                        <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-xs transition hover:shadow-md hover:border-blue-200">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200 mb-3">
                                 <span className="material-symbols-outlined text-[22px]">school</span>
                             </div>
                             <h2 className="text-sm font-bold text-slate-900">Dành cho Sinh viên</h2>
@@ -59,8 +59,8 @@ export default function HelpPage() {
                             </p>
                         </div>
 
-                        <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-xs transition hover:shadow-md hover:border-sky-200">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-200 mb-3">
+                        <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-xs transition hover:shadow-md hover:border-blue-200">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200 mb-3">
                                 <span className="material-symbols-outlined text-[22px]">assignment</span>
                             </div>
                             <h2 className="text-sm font-bold text-slate-900">Dành cho Giảng viên</h2>
@@ -69,24 +69,24 @@ export default function HelpPage() {
                             </p>
                         </div>
 
-                        <div className="rounded-2xl border border-sky-100 bg-white p-5 shadow-xs transition hover:shadow-md hover:border-sky-200">
-                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-200 mb-3">
+                        <div className="rounded-2xl border border-blue-100 bg-white p-5 shadow-xs transition hover:shadow-md hover:border-blue-200">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200 mb-3">
                                 <span className="material-symbols-outlined text-[22px]">contact_support</span>
                             </div>
                             <h2 className="text-sm font-bold text-slate-900">Hỗ trợ kỹ thuật</h2>
                             <p className="mt-1 text-xs text-slate-500 leading-relaxed">
                                 Gửi yêu cầu hỗ trợ trực tiếp đến ban quản trị hoặc xem hướng dẫn xử lý sự cố.
                             </p>
-                            <Link href="/contact" className="mt-2 inline-block text-xs font-bold text-sky-600 hover:text-sky-800">
+                            <Link href="/contact" className="mt-2 inline-block text-xs font-bold text-blue-600 hover:text-blue-800">
                                 Liên hệ ngay →
                             </Link>
                         </div>
                     </div>
 
                     {/* FAQ Accordion */}
-                    <div className="rounded-3xl border border-sky-100 bg-white p-6 sm:p-8 shadow-xs space-y-4">
+                    <div className="rounded-3xl border border-blue-100 bg-white p-6 sm:p-8 shadow-xs space-y-4">
                         <h2 className="text-lg font-bold text-slate-900 mb-2 flex items-center gap-2">
-                            <span className="material-symbols-outlined text-sky-600">help</span>
+                            <span className="material-symbols-outlined text-blue-600">help</span>
                             Câu hỏi thường gặp (FAQ)
                         </h2>
 
@@ -101,7 +101,7 @@ export default function HelpPage() {
                                         <button
                                             type="button"
                                             onClick={() => setOpenIndex(isOpen ? null : idx)}
-                                            className="flex w-full items-center justify-between p-4 text-left font-bold text-xs sm:text-sm text-slate-800 hover:text-sky-700 transition"
+                                            className="flex w-full items-center justify-between p-4 text-left font-bold text-xs sm:text-sm text-slate-800 hover:text-blue-700 transition"
                                         >
                                             <span>{item.q}</span>
                                             <span className="material-symbols-outlined text-slate-400 text-[20px] shrink-0">

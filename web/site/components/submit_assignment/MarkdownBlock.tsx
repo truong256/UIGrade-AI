@@ -13,9 +13,9 @@ export function MarkdownBlock({
     }
 
     const tableBorder =
-        variant === "rubric" ? "border-sky-200" : "border-slate-200";
+        variant === "rubric" ? "border-blue-200" : "border-slate-200";
     const tableHead =
-        variant === "rubric" ? "bg-sky-100/70 text-sky-900" : "bg-slate-100 text-slate-900";
+        variant === "rubric" ? "bg-blue-100/70 text-blue-900" : "bg-slate-100 text-slate-900";
 
     return (
         <div
@@ -29,9 +29,9 @@ export function MarkdownBlock({
                 "[&_ol]:mb-2 [&_ol]:list-decimal [&_ol]:pl-5",
                 "[&_li]:mb-1 [&_li]:break-words",
                 "[&_strong]:font-semibold [&_strong]:text-slate-900",
-                "[&_code]:break-words [&_code]:rounded [&_code]:bg-sky-50 [&_code]:text-sky-700 [&_code]:px-1.5 [&_code]:py-0.5",
+                "[&_code]:break-words [&_code]:rounded [&_code]:bg-blue-50 [&_code]:text-blue-700 [&_code]:px-1.5 [&_code]:py-0.5",
                 "[&_pre]:mb-3 [&_pre]:overflow-x-auto [&_pre]:rounded-xl [&_pre]:bg-slate-900 [&_pre]:p-3 [&_pre]:text-slate-100",
-                "[&_blockquote]:my-3 [&_blockquote]:border-l-4 [&_blockquote]:border-sky-400 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-slate-600",
+                "[&_blockquote]:my-3 [&_blockquote]:border-l-4 [&_blockquote]:border-blue-400 [&_blockquote]:pl-3 [&_blockquote]:italic [&_blockquote]:text-slate-600",
             ].join(" ")}
         >
             <ReactMarkdown

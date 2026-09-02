@@ -19,25 +19,25 @@ type SubmissionsByDayChartProps = {
 };
 
 export default function SubmissionsByDayChart({
-                                                  rangeDays,
-                                                  data,
-                                              }: SubmissionsByDayChartProps) {
+    rangeDays,
+    data,
+}: SubmissionsByDayChartProps) {
     const totalSubmissions = data.reduce((sum, item) => sum + item.value, 0);
 
     return (
-        <div className="rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs">
             <div className="mb-6 flex items-center justify-between gap-4">
                 <div>
-                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sky-600 text-[20px]">show_chart</span>
+                    <h2 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                        <span className="material-symbols-outlined text-blue-600 text-[20px]">show_chart</span>
                         Lượt nộp bài theo thời gian
                     </h2>
-                    <p className="mt-1 text-xs text-slate-500">
+                    <p className="mt-0.5 text-xs text-[#4A5568]">
                         Số lượt nộp bài trong {rangeDays} ngày gần nhất.
                     </p>
                 </div>
 
-                <span className="rounded-full bg-sky-50 px-3 py-1 text-xs font-semibold text-sky-700 border border-sky-200">
+                <span className="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-semibold text-blue-700 border border-blue-200/60">
                     {totalSubmissions} lượt
                 </span>
             </div>
@@ -57,14 +57,14 @@ export default function SubmissionsByDayChart({
                                     x2="0"
                                     y2="1"
                                 >
-                                    <stop offset="0%" stopColor="#0284c7" stopOpacity={0.3} />
-                                    <stop offset="100%" stopColor="#38bdf8" stopOpacity={0.02} />
+                                    <stop offset="0%" stopColor="#2563EB" stopOpacity={0.25} />
+                                    <stop offset="100%" stopColor="#2563EB" stopOpacity={0.01} />
                                 </linearGradient>
                             </defs>
                             <CartesianGrid
                                 strokeDasharray="3 3"
                                 vertical={false}
-                                stroke="#f0f9ff"
+                                stroke="#f1f5f9"
                             />
                             <XAxis
                                 dataKey="label"
@@ -80,13 +80,13 @@ export default function SubmissionsByDayChart({
                             />
                             <Tooltip
                                 content={<SubmissionTooltip />}
-                                cursor={{ stroke: "#bae6fd", strokeWidth: 2 }}
+                                cursor={{ stroke: "#93c5fd", strokeWidth: 2 }}
                             />
                             <Area
                                 type="monotone"
                                 dataKey="value"
-                                stroke="#0284c7"
-                                strokeWidth={3}
+                                stroke="#2563EB"
+                                strokeWidth={2.5}
                                 fill="url(#submissionGradientDashboard)"
                             />
                         </AreaChart>

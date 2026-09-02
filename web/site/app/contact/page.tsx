@@ -36,13 +36,13 @@ export default function ContactPage() {
     };
 
     return (
-        <div className="flex min-h-screen flex-col bg-sky-50/40 text-slate-900">
+        <div className="flex min-h-screen flex-col bg-blue-50/40 text-slate-900">
             <LoginTopBar data={topBarData} />
 
             <main className="flex-1 px-4 py-10 sm:px-6">
                 <div className="mx-auto max-w-4xl space-y-8">
                     <div className="text-center space-y-2">
-                        <div className="inline-block rounded-full border border-sky-200 bg-sky-50 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-sky-700">
+                        <div className="inline-block rounded-full border border-blue-200 bg-blue-50 px-3.5 py-1 text-xs font-bold uppercase tracking-wider text-blue-700">
                             KẾT NỐI VỚI CHÚNG TÔI
                         </div>
                         <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-slate-900">
@@ -56,26 +56,26 @@ export default function ContactPage() {
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-12">
                         {/* Info cards */}
                         <div className="space-y-4 md:col-span-5">
-                            <div className="rounded-3xl border border-sky-100 bg-white p-6 shadow-xs space-y-4">
+                            <div className="rounded-3xl border border-blue-100 bg-white p-6 shadow-xs space-y-4">
                                 <h2 className="text-sm font-bold text-slate-900 border-b border-slate-100 pb-3">
                                     Thông tin liên hệ
                                 </h2>
 
                                 <div className="space-y-3.5 text-xs text-slate-600">
                                     <div className="flex items-start gap-3">
-                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-200">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
                                             <span className="material-symbols-outlined text-[18px]">mail</span>
                                         </div>
                                         <div>
                                             <span className="block font-bold text-slate-800">Email hỗ trợ</span>
-                                            <a href="mailto:support@uigrade.edu.vn" className="text-sky-600 hover:underline">
+                                            <a href="mailto:support@uigrade.edu.vn" className="text-blue-600 hover:underline">
                                                 support@uigrade.edu.vn
                                             </a>
                                         </div>
                                     </div>
 
                                     <div className="flex items-start gap-3">
-                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-200">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
                                             <span className="material-symbols-outlined text-[18px]">call</span>
                                         </div>
                                         <div>
@@ -85,7 +85,7 @@ export default function ContactPage() {
                                     </div>
 
                                     <div className="flex items-start gap-3">
-                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-200">
+                                        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
                                             <span className="material-symbols-outlined text-[18px]">location_on</span>
                                         </div>
                                         <div>
@@ -99,7 +99,7 @@ export default function ContactPage() {
 
                         {/* Form */}
                         <div className="md:col-span-7">
-                            <div className="rounded-3xl border border-sky-100 bg-white p-6 sm:p-8 shadow-xs">
+                            <div className="rounded-3xl border border-blue-100 bg-white p-6 sm:p-8 shadow-xs">
                                 {submitted ? (
                                     <div className="py-8 text-center space-y-3">
                                         <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200">
@@ -118,7 +118,7 @@ export default function ContactPage() {
                                                 setSubject("");
                                                 setMessage("");
                                             }}
-                                            className="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-sky-200 bg-sky-50 px-4 py-2 text-xs font-bold text-sky-700 hover:bg-sky-100 transition"
+                                            className="mt-2 inline-flex items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700 hover:bg-blue-100 transition"
                                         >
                                             Gửi tin nhắn khác
                                         </button>
@@ -135,7 +135,7 @@ export default function ContactPage() {
                                                     value={name}
                                                     onChange={(e) => setName(e.target.value)}
                                                     placeholder="Nguyễn Văn A"
-                                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                                     required
                                                 />
                                             </div>
@@ -149,7 +149,7 @@ export default function ContactPage() {
                                                     value={email}
                                                     onChange={(e) => setEmail(e.target.value)}
                                                     placeholder="example@university.edu.vn"
-                                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                                    className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                                     required
                                                 />
                                             </div>
@@ -164,7 +164,7 @@ export default function ContactPage() {
                                                 value={subject}
                                                 onChange={(e) => setSubject(e.target.value)}
                                                 placeholder="Ví dụ: Báo lỗi nộp bài APK, thắc mắc Rubric..."
-                                                className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                                className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                             />
                                         </div>
 
@@ -177,7 +177,7 @@ export default function ContactPage() {
                                                 onChange={(e) => setMessage(e.target.value)}
                                                 rows={4}
                                                 placeholder="Mô tả chi tiết vấn đề hoặc thắc mắc của bạn..."
-                                                className="w-full rounded-xl border border-slate-200 p-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                                className="w-full rounded-xl border border-slate-200 p-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                                                 required
                                             />
                                         </div>
@@ -191,7 +191,7 @@ export default function ContactPage() {
                                         <button
                                             type="submit"
                                             disabled={loading}
-                                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-95 disabled:opacity-60"
+                                            className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-95 disabled:opacity-60"
                                         >
                                             <span className="material-symbols-outlined text-[16px]">send</span>
                                             {loading ? "Đang gửi..." : "Gửi tin nhắn"}

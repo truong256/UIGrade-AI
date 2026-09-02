@@ -72,7 +72,7 @@ export default function AssignmentEditDialog({
                                     title: e.target.value,
                                 }))
                             }
-                            className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         />
                     </div>
 
@@ -89,7 +89,7 @@ export default function AssignmentEditDialog({
                                     classroomId: e.target.value,
                                 }))
                             }
-                            className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         >
                             <option value="">Chọn lớp học</option>
                             {classOptions.map((item) => (
@@ -112,7 +112,7 @@ export default function AssignmentEditDialog({
                                     description: e.target.value,
                                 }))
                             }
-                            className="min-h-[130px] w-full rounded-2xl border border-slate-200 p-4 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="min-h-[130px] w-full rounded-2xl border border-slate-200 p-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         />
                     </div>
 
@@ -128,7 +128,7 @@ export default function AssignmentEditDialog({
                                     rubricText: e.target.value,
                                 }))
                             }
-                            className="min-h-[120px] w-full rounded-2xl border border-slate-200 p-4 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 font-mono text-xs"
+                            className="min-h-[120px] w-full rounded-2xl border border-slate-200 p-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 font-mono text-xs"
                         />
                     </div>
 
@@ -146,7 +146,7 @@ export default function AssignmentEditDialog({
                                         startAt: e.target.value,
                                     }))
                                 }
-                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
 
@@ -163,7 +163,7 @@ export default function AssignmentEditDialog({
                                         dueAt: e.target.value,
                                     }))
                                 }
-                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
 
@@ -180,7 +180,7 @@ export default function AssignmentEditDialog({
                                         maxScore: e.target.value,
                                     }))
                                 }
-                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
 
@@ -196,7 +196,7 @@ export default function AssignmentEditDialog({
                                         language: e.target.value,
                                     }))
                                 }
-                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
 
@@ -214,7 +214,7 @@ export default function AssignmentEditDialog({
                                     }))
                                 }
                                 disabled={!form.allowLateSubmit}
-                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-100"
+                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                             />
                         </div>
 
@@ -230,7 +230,7 @@ export default function AssignmentEditDialog({
                                         status: e.target.value as EditFormState["status"],
                                     }))
                                 }
-                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             >
                                 <option value="draft">Bản nháp</option>
                                 <option value="published">Đang mở</option>
@@ -319,7 +319,7 @@ export default function AssignmentEditDialog({
                             type="button"
                             onClick={onSave}
                             disabled={saving}
-                            className="rounded-xl bg-sky-600 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 hover:bg-sky-700 transition active:scale-95 disabled:opacity-70"
+                            className="rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 transition active:scale-95 disabled:opacity-70"
                         >
                             {saving ? "Đang lưu..." : "Lưu thay đổi"}
                         </button>
