@@ -1,10 +1,174 @@
 # UIGrade AI
 
-**Intelligent Android UI Assignment Grading Platform**
+**Intelligent Android UI Assignment Grading Platform — Monorepo**
+
+---
+
+## Thành phần dự án
+
+- **Android App**: `/` (gốc repository) — Ứng dụng Android Native viết bằng Kotlin & Jetpack Compose.
+- **Web App**: `/web/site` — Nền tảng Web quản lý lớp học, nộp bài, chấm điểm và báo cáo viết bằng Next.js 16 (App Router), React 19, TypeScript và Supabase.
+- **Tài liệu và dữ liệu nghiên cứu**: `/web/project-files` — Dữ liệu thực nghiệm, tài liệu đề tài, báo cáo khoa học và mã nguồn baseline Python hỗ trợ.
+
+---
+
+## Cấu trúc Repository (Monorepo)
+
+```
+UIGrade AI/
+│
+├── app/                         # Android application module (Jetpack Compose, Hilt, Clean Architecture)
+├── gradle/                      # Gradle wrapper & version catalogs
+├── gradlew                      # Gradle wrapper Unix script
+├── gradlew.bat                  # Gradle wrapper Windows batch script
+├── build.gradle.kts             # Root Gradle build script
+├── settings.gradle.kts          # Gradle project settings
+├── gradle.properties            # Gradle JVM & build properties
+│
+├── web/
+│   ├── site/                    # Website Next.js chính
+│   │   ├── app/                 # Next.js App Router (UI pages & API Route Handlers)
+│   │   ├── components/          # React UI Components (Ocean Blue Design System)
+│   │   ├── controllers/         # Web business controllers
+│   │   ├── lib/                 # Core utilities, Supabase client, Auth, Constants
+│   │   ├── models/              # TypeScript & Data models
+│   │   ├── public/              # Static assets & public uploads placeholder
+│   │   ├── repositories/        # Data access layer
+│   │   ├── scripts/             # Database seed & migration helpers
+│   │   ├── services/            # Core grading, Gemini AI, runner & Supabase services
+│   │   ├── supabase/            # SQL Migrations, RLS policies, Storage setup & seed data
+│   │   ├── tests/               # Vitest unit & integration tests
+│   │   ├── types/               # TypeScript type definitions
+│   │   ├── validations/         # Zod schemas for input validation
+│   │   ├── package.json         # Web dependencies & scripts
+│   │   ├── package-lock.json    # Exact dependency lockfile
+│   │   ├── next.config.ts       # Next.js configuration
+│   │   ├── tsconfig.json        # TypeScript compiler options
+│   │   ├── README.md            # Tài liệu chi tiết cho Web App
+│   │   └── .env.example         # Mẫu biến môi trường an toàn (không chứa secret)
+│   │
+│   ├── project-files/           # Tài liệu, dữ liệu và source nghiên cứu hỗ trợ
+│   │   ├── data/                # Dataset chấm điểm thực nghiệm
+│   │   ├── docs/                # Báo cáo, tài liệu hướng dẫn & kế hoạch
+│   │   ├── models/              # Model AI & baseline references
+│   │   ├── reports/             # Báo cáo đánh giá MAE/bias
+│   │   ├── source_code/
+│   │   │   └── from_paper_tu/   # Mã nguồn tham khảo từ bài báo khoa học
+│   │   ├── src/                 # Python baseline grading script
+│   │   ├── tests/               # Python baseline tests
+│   │   ├── README.md            # Tài liệu bộ nền nghiên cứu
+│   │   ├── CHANGELOG.md         # Lịch sử thay đổi tài liệu & baseline
+│   │   ├── LICENSE              # Giấy phép MIT cho mã nguồn mới
+│   │   └── NOTICE.md            # Ghi nhận bản quyền bên thứ ba
+│   │
+│   └── README.md                # Tài liệu tổng quan phân vùng Web
+│
+├── README.md                    # Tài liệu chính của Monorepo
+├── LICENSE                      # MIT License
+└── .gitignore                   # Monorepo Git ignore rules (Android, Next.js, Secrets)
+```
+
+---
+
+## Yêu cầu môi trường
+
+- **Java Development Kit (JDK)**: JDK 17 (theo cấu hình Gradle Android).
+- **Android Studio**: Android Studio Ladybug hoặc mới hơn (Android SDK 35, Build Tools, Platform Tools).
+- **Node.js**: Phiên bản `>= 20.0.0` (Node.js 20+ / 24+).
+- **Package Manager**: `npm` (hoặc `pnpm` / `yarn`).
+- **Database & Backend**: Supabase (PostgreSQL với Row Level Security, Auth, Storage) hoặc MongoDB (fallback/legacy).
+- **AI Services**: Google Gemini API key (tùy chọn cho phân tích thị giác & tạo feedback).
+
+---
+
+## Cấu hình Biến Môi Trường (Web)
+
+Trước khi chạy hoặc build Web, tạo tệp môi trường cục bộ:
+
+```bash
+cd web/site
+copy .env.example .env.local
+```
+
+Điền các thông tin cấu hình vào `web/site/.env.local` (tệp này được `.gitignore` bảo vệ tuyệt đối, không bao giờ được commit lên Git):
+- `NEXT_PUBLIC_APP_URL`: URL chạy ứng dụng (mặc định `http://localhost:3000`).
+- `NEXT_PUBLIC_SUPABASE_URL` & `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Thông tin kết nối Supabase.
+- `SUPABASE_SERVICE_ROLE_KEY`: Service role key cho tác vụ quản trị Supabase.
+- `JWT_SECRET`: Khóa bí mật ký JWT token (tối thiểu 32 ký tự).
+- `GEMINI_API_KEY`: API Key cho dịch vụ Google Gemini AI.
+
+---
+
+## Chạy & Build Dự Án
+
+### 1. Android App
+
+Thực hiện tại thư mục gốc repository (`C:\vibecoding\UIGrade AI`):
+
+```bash
+# Build Debug APK
+.\gradlew.bat assembleDebug
+
+# Cài đặt lên thiết bị / giả lập đang kết nối
+.\gradlew.bat installDebug
+```
+
+### 2. Next.js Web App
+
+Thực hiện trong thư mục `web/site`:
+
+```bash
+cd web/site
+
+# Cài đặt chính xác các gói phụ thuộc
+npm ci
+
+# Khởi chạy máy chủ phát triển (Development Server)
+npm run dev
+
+# Đóng gói phiên bản phát hành (Production Build)
+npm run build
+
+# Khởi chạy phiên bản phát hành
+npm start
+```
+
+---
+
+## Chạy Kiểm Thử (Testing & Linting)
+
+### 1. Web App (`web/site`)
+
+```bash
+cd web/site
+
+# Chạy Unit & Integration Tests (Vitest)
+npm test
+
+# Chạy kiểm tra quy chuẩn mã nguồn (ESLint 9)
+npm run lint
+
+# Kiểm tra biên dịch TypeScript
+npx tsc --noEmit
+```
+
+### 2. Android App (Root)
+
+```bash
+# Chạy Unit Tests
+.\gradlew.bat testDebugUnitTest
+
+# Chạy Android Lint kiểm tra chất lượng mã nguồn
+.\gradlew.bat lintDebug
+
+# Build bộ test APK cho Compose UI
+.\gradlew.bat assembleDebugAndroidTest
+```
 
 ---
 
 ## Product Overview
+
 
 UIGrade AI is an educational platform for grading Android UI assignments using **deterministic metrics and rules**, with AI-generated textual feedback.
 

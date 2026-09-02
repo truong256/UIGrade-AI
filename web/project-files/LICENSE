@@ -1,0 +1,30 @@
+MIT License
+
+Copyright (c) 2026 UIGrade AI team (DT06) - Nguyen Duy Truong, Nguyen Quoc Thanh,
+Pham Van Duong - Khoa Cong nghe thong tin, Truong Dai hoc Cong nghe thong tin
+va Truyen thong, Dai hoc Thai Nguyen
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+Giấy phép này áp dụng cho mã nguồn do nhóm UIGrade AI (DT06) viết mới. Phần
+mã tham khảo từ dự án bên thứ ba trong `source_code/from_*` và `models/from_*`
+có nguồn gốc và tình trạng giấy phép riêng — xem `NOTICE.md` trước khi coi
+các phần đó thuộc phạm vi giấy phép MIT này.

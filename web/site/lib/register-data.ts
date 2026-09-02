@@ -1,0 +1,30 @@
+export const registerHeroData = {
+    eyebrow: "HỆ THỐNG CHẤM ĐIỂM THÔNG MINH",
+    brand: "UIGrade AI",
+    title: "Tạo tài khoản mới",
+    description: "Đăng ký tài khoản để bắt đầu trải nghiệm chấm điểm UI Android thông minh.",
+};
+
+export const registerFormData = {
+    title: "Tạo tài khoản mới",
+    description: "Đăng ký tài khoản để bắt đầu trải nghiệm chấm điểm UI Android thông minh.",
+    fullNameLabel: "Họ và tên",
+    fullNamePlaceholder: "Nhập họ và tên của bạn",
+    emailLabel: "Email",
+    emailPlaceholder: "Nhập địa chỉ email",
+    studentCodeLabel: "Mã sinh viên / MSSV (Nếu là sinh viên)",
+    studentCodePlaceholder: "Ví dụ: SV2026001",
+    passwordLabel: "Mật khẩu",
+    passwordPlaceholder: "Tối thiểu 6 ký tự",
+    confirmPasswordLabel: "Xác nhận mật khẩu",
+    confirmPasswordPlaceholder: "Nhập lại mật khẩu",
+    termsTextStart: "Tôi đồng ý với",
+    termsLink1: "Điều khoản dịch vụ",
+    termsTextMiddle: "và",
+    termsLink2: "Chính sách bảo mật",
+    termsTextEnd: "của UIGrade AI.",
+    submitLabel: "Đăng ký tài khoản",
+    dividerLabel: "Hoặc tiếp tục với",
+    loginText: "Đã có tài khoản?",
+    loginLabel: "Đăng nhập ngay",
+};

@@ -1,0 +1,51 @@
+# Secrets / config cuc bo
+.env
+.env.*
+!.env.example
+local.properties
+*.key
+*.pem
+*.p12
+*.jks
+*.keystore
+
+# IDE / venv
+.idea/
+.vscode/
+.venv/
+venv/
+
+# Node.js / Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+*.tsbuildinfo
+next-env.d.ts
+
+# Python
+__pycache__/
+.pytest_cache/
+*.py[cod]
+
+# Android
+*.apk
+*.aab
+.gradle/
+
+# Model weights - qua nang cho git, tai theo link trong models/README.md
+*.gguf
+*.safetensors
+*.tflite
+*.onnx
+*.pt
+*.pth
+
+# Tai lieu ca nhan cua tac gia khac lot vao trong repo tham khao - khong phai
+# cua nhom DT06, khong duoc dua vao repo du thi
+source_code/from_github_android_ui_grader_AI/H01.DTC225180215.BUI_VAN_MANH.KTPMK21B.docx
+
+# Bai bao tham khao cua nguoi khac (chua ro giay phep phan phoi lai) - chi
+# doc noi bo, khong dua vao repo cong khai
+docs/papers/*.pdf

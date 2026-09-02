@@ -1,0 +1,5367 @@
+{
+  "generated_at": "2026-06-21T08:39:07.627694",
+  "dataset_size": 36,
+  "on_device": {
+    "summary": {
+      "model": "Gemma-3-270M-IT (INT4 QAT - llamadart)",
+      "total_cases": 200,
+      "init_time_ms": 0,
+      "ttft": {
+        "mean": 1090.75,
+        "std": 70.51,
+        "min": 959.0,
+        "max": 1302.0,
+        "p50": 1082.0,
+        "p95": 1199.0
+      },
+      "total_inference": {
+        "mean": 2173.36,
+        "std": 91.27,
+        "min": 1950.0,
+        "max": 2584.0,
+        "p50": 2167.0,
+        "p95": 2316.0
+      },
+      "tokens_per_sec": {
+        "mean": 0.92,
+        "std": 0.04,
+        "min": 0.77,
+        "max": 1.03,
+        "p50": 0.92,
+        "p95": 0.98
+      },
+      "output_tokens": {
+        "mean": 2.0,
+        "std": 0.0,
+        "min": 2.0,
+        "max": 2.0,
+        "p50": 2.0,
+        "p95": 2.0
+      },
+      "ram_usage_mb": {
+        "mean": 552.89,
+        "std": 75.66,
+        "min": 455.63,
+        "max": 741.07,
+        "p50": 521.05,
+        "p95": 732.39
+      },
+      "battery_dropped_pct": 2,
+      "benchmark_duration_sec": 640,
+      "battery_consumption_rate": 11.25,
+      "accuracy_pct": 33.0,
+      "correct_count": 66
+    },
+    "raw_results": [
+      {
+        "case_id": "W05",
+        "category": "weather",
+        "sample_index": 0,
+        "is_cold_run": true,
+        "ttft_ms": 1017,
+        "total_inference_ms": 2062,
+        "tokens_per_sec": 0.97,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "forest",
+          "mint",
+          "rainy_evening"
+        ],
+        "is_correct": false,
+        "prompt_chars": 321,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:22:00.350442",
+        "ram_usage_mb": 730.51
+      },
+      {
+        "case_id": "T07",
+        "category": "time",
+        "sample_index": 1,
+        "is_cold_run": true,
+        "ttft_ms": 1021,
+        "total_inference_ms": 2087,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:22:03.240833",
+        "ram_usage_mb": 708.0
+      },
+      {
+        "case_id": "E05",
+        "category": "edge",
+        "sample_index": 2,
+        "is_cold_run": true,
+        "ttft_ms": 1117,
+        "total_inference_ms": 2185,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "ocean"
+        ],
+        "is_correct": true,
+        "prompt_chars": 327,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:22:06.231353",
+        "ram_usage_mb": 732.39
+      },
+      {
+        "case_id": "C02",
+        "category": "combined",
+        "sample_index": 3,
+        "is_cold_run": true,
+        "ttft_ms": 1168,
+        "total_inference_ms": 2250,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 336,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:22:09.283870",
+        "ram_usage_mb": 735.46
+      },
+      {
+        "case_id": "T08",
+        "category": "time",
+        "sample_index": 4,
+        "is_cold_run": true,
+        "ttft_ms": 1037,
+        "total_inference_ms": 2134,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:22:12.220240",
+        "ram_usage_mb": 698.36
+      },
+      {
+        "case_id": "T04",
+        "category": "time",
+        "sample_index": 5,
+        "is_cold_run": true,
+        "ttft_ms": 1039,
+        "total_inference_ms": 2113,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 308,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:22:15.135410",
+        "ram_usage_mb": 726.23
+      },
+      {
+        "case_id": "C01",
+        "category": "combined",
+        "sample_index": 6,
+        "is_cold_run": true,
+        "ttft_ms": 1168,
+        "total_inference_ms": 2233,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "is_correct": true,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:22:18.170827",
+        "ram_usage_mb": 735.47
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 7,
+        "is_cold_run": true,
+        "ttft_ms": 1028,
+        "total_inference_ms": 2069,
+        "tokens_per_sec": 0.97,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:22:21.041995",
+        "ram_usage_mb": 716.58
+      },
+      {
+        "case_id": "E07",
+        "category": "edge",
+        "sample_index": 8,
+        "is_cold_run": true,
+        "ttft_ms": 1129,
+        "total_inference_ms": 2188,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 326,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:22:24.033014",
+        "ram_usage_mb": 741.07
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 9,
+        "is_cold_run": false,
+        "ttft_ms": 1087,
+        "total_inference_ms": 2135,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:22:26.972204",
+        "ram_usage_mb": 727.29
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "sample_index": 10,
+        "is_cold_run": true,
+        "ttft_ms": 1031,
+        "total_inference_ms": 2080,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:22:29.854538",
+        "ram_usage_mb": 733.66
+      },
+      {
+        "case_id": "E06",
+        "category": "edge",
+        "sample_index": 11,
+        "is_cold_run": true,
+        "ttft_ms": 1260,
+        "total_inference_ms": 2330,
+        "tokens_per_sec": 0.86,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 351,
+        "prompt_tokens_est": 88,
+        "timestamp": "2026-06-21T08:22:32.986596",
+        "ram_usage_mb": 734.08
+      },
+      {
+        "case_id": "H02",
+        "category": "health",
+        "sample_index": 12,
+        "is_cold_run": true,
+        "ttft_ms": 1124,
+        "total_inference_ms": 2201,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "is_correct": true,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:22:35.991563",
+        "ram_usage_mb": 737.01
+      },
+      {
+        "case_id": "W01",
+        "category": "weather",
+        "sample_index": 13,
+        "is_cold_run": true,
+        "ttft_ms": 1089,
+        "total_inference_ms": 2201,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:22:38.994822",
+        "ram_usage_mb": 718.83
+      },
+      {
+        "case_id": "T03",
+        "category": "time",
+        "sample_index": 14,
+        "is_cold_run": true,
+        "ttft_ms": 1031,
+        "total_inference_ms": 2125,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:22:41.921985",
+        "ram_usage_mb": 723.52
+      },
+      {
+        "case_id": "E01",
+        "category": "edge",
+        "sample_index": 15,
+        "is_cold_run": true,
+        "ttft_ms": 971,
+        "total_inference_ms": 2038,
+        "tokens_per_sec": 0.98,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 299,
+        "prompt_tokens_est": 75,
+        "timestamp": "2026-06-21T08:22:44.766605",
+        "ram_usage_mb": 734.42
+      },
+      {
+        "case_id": "H05",
+        "category": "health",
+        "sample_index": 16,
+        "is_cold_run": true,
+        "ttft_ms": 1117,
+        "total_inference_ms": 2159,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "ocean",
+          "mint"
+        ],
+        "is_correct": true,
+        "prompt_chars": 323,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:22:47.728469",
+        "ram_usage_mb": 733.36
+      },
+      {
+        "case_id": "E02",
+        "category": "edge",
+        "sample_index": 17,
+        "is_cold_run": true,
+        "ttft_ms": 1059,
+        "total_inference_ms": 2181,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "warm_orange",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 320,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:22:50.711136",
+        "ram_usage_mb": 716.79
+      },
+      {
+        "case_id": "C05",
+        "category": "combined",
+        "sample_index": 18,
+        "is_cold_run": true,
+        "ttft_ms": 1166,
+        "total_inference_ms": 2226,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "lavender"
+        ],
+        "is_correct": false,
+        "prompt_chars": 337,
+        "prompt_tokens_est": 85,
+        "timestamp": "2026-06-21T08:22:53.742454",
+        "ram_usage_mb": 727.16
+      },
+      {
+        "case_id": "C05",
+        "category": "combined",
+        "sample_index": 19,
+        "is_cold_run": false,
+        "ttft_ms": 1225,
+        "total_inference_ms": 2275,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 337,
+        "prompt_tokens_est": 85,
+        "timestamp": "2026-06-21T08:22:56.819831",
+        "ram_usage_mb": 728.91
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 20,
+        "is_cold_run": false,
+        "ttft_ms": 1082,
+        "total_inference_ms": 2284,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:23:04.907999",
+        "ram_usage_mb": 717.54
+      },
+      {
+        "case_id": "C02",
+        "category": "combined",
+        "sample_index": 21,
+        "is_cold_run": false,
+        "ttft_ms": 1179,
+        "total_inference_ms": 2243,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 336,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:23:07.954169",
+        "ram_usage_mb": 735.69
+      },
+      {
+        "case_id": "E01",
+        "category": "edge",
+        "sample_index": 22,
+        "is_cold_run": false,
+        "ttft_ms": 982,
+        "total_inference_ms": 2169,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 299,
+        "prompt_tokens_est": 75,
+        "timestamp": "2026-06-21T08:23:10.925052",
+        "ram_usage_mb": 710.84
+      },
+      {
+        "case_id": "E01",
+        "category": "edge",
+        "sample_index": 23,
+        "is_cold_run": false,
+        "ttft_ms": 1033,
+        "total_inference_ms": 2132,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 299,
+        "prompt_tokens_est": 75,
+        "timestamp": "2026-06-21T08:23:13.859745",
+        "ram_usage_mb": 703.0
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "sample_index": 24,
+        "is_cold_run": false,
+        "ttft_ms": 1302,
+        "total_inference_ms": 2584,
+        "tokens_per_sec": 0.77,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:23:17.245207",
+        "ram_usage_mb": 595.54
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 25,
+        "is_cold_run": false,
+        "ttft_ms": 1021,
+        "total_inference_ms": 2108,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:23:20.155896",
+        "ram_usage_mb": 604.35
+      },
+      {
+        "case_id": "T01",
+        "category": "time",
+        "sample_index": 26,
+        "is_cold_run": true,
+        "ttft_ms": 983,
+        "total_inference_ms": 2072,
+        "tokens_per_sec": 0.97,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:23:23.030714",
+        "ram_usage_mb": 595.89
+      },
+      {
+        "case_id": "E06",
+        "category": "edge",
+        "sample_index": 27,
+        "is_cold_run": false,
+        "ttft_ms": 1251,
+        "total_inference_ms": 2314,
+        "tokens_per_sec": 0.86,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 351,
+        "prompt_tokens_est": 88,
+        "timestamp": "2026-06-21T08:23:26.147341",
+        "ram_usage_mb": 601.93
+      },
+      {
+        "case_id": "C04",
+        "category": "combined",
+        "sample_index": 28,
+        "is_cold_run": true,
+        "ttft_ms": 1133,
+        "total_inference_ms": 2247,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 326,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:23:29.196862",
+        "ram_usage_mb": 586.71
+      },
+      {
+        "case_id": "H05",
+        "category": "health",
+        "sample_index": 29,
+        "is_cold_run": false,
+        "ttft_ms": 1143,
+        "total_inference_ms": 2211,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "ocean",
+          "mint"
+        ],
+        "is_correct": true,
+        "prompt_chars": 323,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:23:32.211147",
+        "ram_usage_mb": 593.74
+      },
+      {
+        "case_id": "E07",
+        "category": "edge",
+        "sample_index": 30,
+        "is_cold_run": false,
+        "ttft_ms": 1125,
+        "total_inference_ms": 2198,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 326,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:23:35.211181",
+        "ram_usage_mb": 592.25
+      },
+      {
+        "case_id": "H03",
+        "category": "health",
+        "sample_index": 31,
+        "is_cold_run": true,
+        "ttft_ms": 1077,
+        "total_inference_ms": 2122,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:23:38.136282",
+        "ram_usage_mb": 594.69
+      },
+      {
+        "case_id": "C05",
+        "category": "combined",
+        "sample_index": 32,
+        "is_cold_run": false,
+        "ttft_ms": 1176,
+        "total_inference_ms": 2216,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 337,
+        "prompt_tokens_est": 85,
+        "timestamp": "2026-06-21T08:23:41.154583",
+        "ram_usage_mb": 604.27
+      },
+      {
+        "case_id": "E06",
+        "category": "edge",
+        "sample_index": 33,
+        "is_cold_run": false,
+        "ttft_ms": 1209,
+        "total_inference_ms": 2257,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 351,
+        "prompt_tokens_est": 88,
+        "timestamp": "2026-06-21T08:23:44.213919",
+        "ram_usage_mb": 587.58
+      },
+      {
+        "case_id": "E04",
+        "category": "edge",
+        "sample_index": 34,
+        "is_cold_run": true,
+        "ttft_ms": 1070,
+        "total_inference_ms": 2151,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 318,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:23:47.168355",
+        "ram_usage_mb": 571.39
+      },
+      {
+        "case_id": "C01",
+        "category": "combined",
+        "sample_index": 35,
+        "is_cold_run": false,
+        "ttft_ms": 1173,
+        "total_inference_ms": 2121,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "is_correct": true,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:23:50.092534",
+        "ram_usage_mb": 588.86
+      },
+      {
+        "case_id": "W03",
+        "category": "weather",
+        "sample_index": 36,
+        "is_cold_run": true,
+        "ttft_ms": 1075,
+        "total_inference_ms": 2128,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:23:53.022013",
+        "ram_usage_mb": 586.78
+      },
+      {
+        "case_id": "T04",
+        "category": "time",
+        "sample_index": 37,
+        "is_cold_run": false,
+        "ttft_ms": 991,
+        "total_inference_ms": 2045,
+        "tokens_per_sec": 0.98,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 308,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:23:55.870063",
+        "ram_usage_mb": 599.33
+      },
+      {
+        "case_id": "E08",
+        "category": "edge",
+        "sample_index": 38,
+        "is_cold_run": true,
+        "ttft_ms": 1127,
+        "total_inference_ms": 2167,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:23:58.839961",
+        "ram_usage_mb": 589.62
+      },
+      {
+        "case_id": "W06",
+        "category": "weather",
+        "sample_index": 39,
+        "is_cold_run": true,
+        "ttft_ms": 1080,
+        "total_inference_ms": 2150,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:24:01.791925",
+        "ram_usage_mb": 583.66
+      },
+      {
+        "case_id": "C06",
+        "category": "combined",
+        "sample_index": 40,
+        "is_cold_run": true,
+        "ttft_ms": 1174,
+        "total_inference_ms": 2271,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:24:09.866281",
+        "ram_usage_mb": 591.23
+      },
+      {
+        "case_id": "E08",
+        "category": "edge",
+        "sample_index": 41,
+        "is_cold_run": false,
+        "ttft_ms": 1116,
+        "total_inference_ms": 2212,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:24:12.880987",
+        "ram_usage_mb": 590.65
+      },
+      {
+        "case_id": "C03",
+        "category": "combined",
+        "sample_index": 42,
+        "is_cold_run": true,
+        "ttft_ms": 1119,
+        "total_inference_ms": 2182,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 333,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:24:15.865115",
+        "ram_usage_mb": 585.92
+      },
+      {
+        "case_id": "E07",
+        "category": "edge",
+        "sample_index": 43,
+        "is_cold_run": false,
+        "ttft_ms": 1135,
+        "total_inference_ms": 2215,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 326,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:24:18.882594",
+        "ram_usage_mb": 585.14
+      },
+      {
+        "case_id": "H02",
+        "category": "health",
+        "sample_index": 44,
+        "is_cold_run": false,
+        "ttft_ms": 1128,
+        "total_inference_ms": 2347,
+        "tokens_per_sec": 0.85,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "is_correct": true,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:24:22.032158",
+        "ram_usage_mb": 598.96
+      },
+      {
+        "case_id": "E06",
+        "category": "edge",
+        "sample_index": 45,
+        "is_cold_run": false,
+        "ttft_ms": 1263,
+        "total_inference_ms": 2276,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 351,
+        "prompt_tokens_est": 88,
+        "timestamp": "2026-06-21T08:24:25.109721",
+        "ram_usage_mb": 606.6
+      },
+      {
+        "case_id": "C08",
+        "category": "combined",
+        "sample_index": 46,
+        "is_cold_run": true,
+        "ttft_ms": 1182,
+        "total_inference_ms": 2259,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:24:28.174042",
+        "ram_usage_mb": 596.44
+      },
+      {
+        "case_id": "C05",
+        "category": "combined",
+        "sample_index": 47,
+        "is_cold_run": false,
+        "ttft_ms": 1192,
+        "total_inference_ms": 2269,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 337,
+        "prompt_tokens_est": 85,
+        "timestamp": "2026-06-21T08:24:31.246262",
+        "ram_usage_mb": 597.79
+      },
+      {
+        "case_id": "C06",
+        "category": "combined",
+        "sample_index": 48,
+        "is_cold_run": false,
+        "ttft_ms": 1169,
+        "total_inference_ms": 2223,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:24:34.273175",
+        "ram_usage_mb": 597.21
+      },
+      {
+        "case_id": "T07",
+        "category": "time",
+        "sample_index": 49,
+        "is_cold_run": false,
+        "ttft_ms": 1033,
+        "total_inference_ms": 2110,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:24:37.186447",
+        "ram_usage_mb": 582.9
+      },
+      {
+        "case_id": "H05",
+        "category": "health",
+        "sample_index": 50,
+        "is_cold_run": false,
+        "ttft_ms": 1142,
+        "total_inference_ms": 2236,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "ocean",
+          "mint"
+        ],
+        "is_correct": true,
+        "prompt_chars": 323,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:24:40.224421",
+        "ram_usage_mb": 574.42
+      },
+      {
+        "case_id": "H05",
+        "category": "health",
+        "sample_index": 51,
+        "is_cold_run": false,
+        "ttft_ms": 1177,
+        "total_inference_ms": 2246,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "ocean",
+          "mint"
+        ],
+        "is_correct": true,
+        "prompt_chars": 323,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:24:43.271964",
+        "ram_usage_mb": 598.12
+      },
+      {
+        "case_id": "C06",
+        "category": "combined",
+        "sample_index": 52,
+        "is_cold_run": false,
+        "ttft_ms": 1176,
+        "total_inference_ms": 2233,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:24:46.307984",
+        "ram_usage_mb": 573.96
+      },
+      {
+        "case_id": "E06",
+        "category": "edge",
+        "sample_index": 53,
+        "is_cold_run": false,
+        "ttft_ms": 1263,
+        "total_inference_ms": 2355,
+        "tokens_per_sec": 0.85,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 351,
+        "prompt_tokens_est": 88,
+        "timestamp": "2026-06-21T08:24:49.466170",
+        "ram_usage_mb": 588.27
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "sample_index": 54,
+        "is_cold_run": false,
+        "ttft_ms": 1080,
+        "total_inference_ms": 2156,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:24:52.424571",
+        "ram_usage_mb": 595.3
+      },
+      {
+        "case_id": "C06",
+        "category": "combined",
+        "sample_index": 55,
+        "is_cold_run": false,
+        "ttft_ms": 1127,
+        "total_inference_ms": 2192,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:24:55.419629",
+        "ram_usage_mb": 581.85
+      },
+      {
+        "case_id": "T08",
+        "category": "time",
+        "sample_index": 56,
+        "is_cold_run": false,
+        "ttft_ms": 1025,
+        "total_inference_ms": 2264,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:24:58.485062",
+        "ram_usage_mb": 587.11
+      },
+      {
+        "case_id": "T05",
+        "category": "time",
+        "sample_index": 57,
+        "is_cold_run": true,
+        "ttft_ms": 1043,
+        "total_inference_ms": 2274,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:25:01.561774",
+        "ram_usage_mb": 586.38
+      },
+      {
+        "case_id": "E05",
+        "category": "edge",
+        "sample_index": 58,
+        "is_cold_run": false,
+        "ttft_ms": 1137,
+        "total_inference_ms": 2214,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "ocean"
+        ],
+        "is_correct": true,
+        "prompt_chars": 327,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:25:04.578177",
+        "ram_usage_mb": 589.5
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 59,
+        "is_cold_run": false,
+        "ttft_ms": 1067,
+        "total_inference_ms": 2150,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:25:07.529892",
+        "ram_usage_mb": 572.6
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "sample_index": 60,
+        "is_cold_run": false,
+        "ttft_ms": 1025,
+        "total_inference_ms": 2115,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:25:15.447935",
+        "ram_usage_mb": 579.95
+      },
+      {
+        "case_id": "W06",
+        "category": "weather",
+        "sample_index": 61,
+        "is_cold_run": false,
+        "ttft_ms": 1078,
+        "total_inference_ms": 2158,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest"
+        ],
+        "is_correct": true,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:25:18.409018",
+        "ram_usage_mb": 595.36
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "sample_index": 62,
+        "is_cold_run": false,
+        "ttft_ms": 1061,
+        "total_inference_ms": 2105,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:25:21.316125",
+        "ram_usage_mb": 597.73
+      },
+      {
+        "case_id": "T07",
+        "category": "time",
+        "sample_index": 63,
+        "is_cold_run": false,
+        "ttft_ms": 1012,
+        "total_inference_ms": 2093,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:25:24.211518",
+        "ram_usage_mb": 578.26
+      },
+      {
+        "case_id": "C07",
+        "category": "combined",
+        "sample_index": 64,
+        "is_cold_run": true,
+        "ttft_ms": 1117,
+        "total_inference_ms": 2182,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "is_correct": true,
+        "prompt_chars": 332,
+        "prompt_tokens_est": 83,
+        "timestamp": "2026-06-21T08:25:27.195788",
+        "ram_usage_mb": 568.28
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 65,
+        "is_cold_run": false,
+        "ttft_ms": 1080,
+        "total_inference_ms": 2178,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:25:30.174898",
+        "ram_usage_mb": 579.78
+      },
+      {
+        "case_id": "E07",
+        "category": "edge",
+        "sample_index": 66,
+        "is_cold_run": false,
+        "ttft_ms": 1133,
+        "total_inference_ms": 2213,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 326,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:25:33.190824",
+        "ram_usage_mb": 588.43
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 67,
+        "is_cold_run": false,
+        "ttft_ms": 1071,
+        "total_inference_ms": 2147,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:25:36.140293",
+        "ram_usage_mb": 595.08
+      },
+      {
+        "case_id": "H05",
+        "category": "health",
+        "sample_index": 68,
+        "is_cold_run": false,
+        "ttft_ms": 1118,
+        "total_inference_ms": 2170,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "ocean",
+          "mint"
+        ],
+        "is_correct": true,
+        "prompt_chars": 323,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:25:39.112949",
+        "ram_usage_mb": 578.41
+      },
+      {
+        "case_id": "T02",
+        "category": "time",
+        "sample_index": 69,
+        "is_cold_run": true,
+        "ttft_ms": 1027,
+        "total_inference_ms": 2082,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:25:41.997875",
+        "ram_usage_mb": 577.66
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 70,
+        "is_cold_run": false,
+        "ttft_ms": 1026,
+        "total_inference_ms": 2093,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:25:44.894079",
+        "ram_usage_mb": 599.17
+      },
+      {
+        "case_id": "H02",
+        "category": "health",
+        "sample_index": 71,
+        "is_cold_run": false,
+        "ttft_ms": 1131,
+        "total_inference_ms": 2221,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "is_correct": true,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:25:47.917116",
+        "ram_usage_mb": 580.24
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "sample_index": 72,
+        "is_cold_run": false,
+        "ttft_ms": 1076,
+        "total_inference_ms": 2160,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:25:50.880391",
+        "ram_usage_mb": 567.66
+      },
+      {
+        "case_id": "E02",
+        "category": "edge",
+        "sample_index": 73,
+        "is_cold_run": false,
+        "ttft_ms": 1036,
+        "total_inference_ms": 2126,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "warm_orange",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 320,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:25:53.808530",
+        "ram_usage_mb": 594.88
+      },
+      {
+        "case_id": "H02",
+        "category": "health",
+        "sample_index": 74,
+        "is_cold_run": false,
+        "ttft_ms": 1126,
+        "total_inference_ms": 2171,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "is_correct": true,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:25:56.781337",
+        "ram_usage_mb": 594.13
+      },
+      {
+        "case_id": "W03",
+        "category": "weather",
+        "sample_index": 75,
+        "is_cold_run": false,
+        "ttft_ms": 1065,
+        "total_inference_ms": 2100,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:25:59.684038",
+        "ram_usage_mb": 599.98
+      },
+      {
+        "case_id": "C07",
+        "category": "combined",
+        "sample_index": 76,
+        "is_cold_run": false,
+        "ttft_ms": 1201,
+        "total_inference_ms": 2282,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "is_correct": true,
+        "prompt_chars": 332,
+        "prompt_tokens_est": 83,
+        "timestamp": "2026-06-21T08:26:02.768332",
+        "ram_usage_mb": 585.14
+      },
+      {
+        "case_id": "E07",
+        "category": "edge",
+        "sample_index": 77,
+        "is_cold_run": false,
+        "ttft_ms": 1130,
+        "total_inference_ms": 2194,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 326,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:26:05.764091",
+        "ram_usage_mb": 579.47
+      },
+      {
+        "case_id": "C05",
+        "category": "combined",
+        "sample_index": 78,
+        "is_cold_run": false,
+        "ttft_ms": 1193,
+        "total_inference_ms": 2270,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 337,
+        "prompt_tokens_est": 85,
+        "timestamp": "2026-06-21T08:26:08.839423",
+        "ram_usage_mb": 583.87
+      },
+      {
+        "case_id": "C08",
+        "category": "combined",
+        "sample_index": 79,
+        "is_cold_run": false,
+        "ttft_ms": 1179,
+        "total_inference_ms": 2257,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:26:11.899049",
+        "ram_usage_mb": 566.9
+      },
+      {
+        "case_id": "C05",
+        "category": "combined",
+        "sample_index": 80,
+        "is_cold_run": false,
+        "ttft_ms": 1189,
+        "total_inference_ms": 2284,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 337,
+        "prompt_tokens_est": 85,
+        "timestamp": "2026-06-21T08:26:19.990163",
+        "ram_usage_mb": 524.25
+      },
+      {
+        "case_id": "T07",
+        "category": "time",
+        "sample_index": 81,
+        "is_cold_run": false,
+        "ttft_ms": 1035,
+        "total_inference_ms": 2137,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:26:22.929698",
+        "ram_usage_mb": 509.58
+      },
+      {
+        "case_id": "H02",
+        "category": "health",
+        "sample_index": 82,
+        "is_cold_run": false,
+        "ttft_ms": 1046,
+        "total_inference_ms": 2092,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "is_correct": true,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:26:25.824046",
+        "ram_usage_mb": 531.57
+      },
+      {
+        "case_id": "C03",
+        "category": "combined",
+        "sample_index": 83,
+        "is_cold_run": false,
+        "ttft_ms": 1105,
+        "total_inference_ms": 2167,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 333,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:26:28.793745",
+        "ram_usage_mb": 507.51
+      },
+      {
+        "case_id": "W05",
+        "category": "weather",
+        "sample_index": 84,
+        "is_cold_run": false,
+        "ttft_ms": 1064,
+        "total_inference_ms": 2290,
+        "tokens_per_sec": 0.87,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "forest",
+          "mint",
+          "rainy_evening"
+        ],
+        "is_correct": false,
+        "prompt_chars": 321,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:26:31.885680",
+        "ram_usage_mb": 513.75
+      },
+      {
+        "case_id": "W02",
+        "category": "weather",
+        "sample_index": 85,
+        "is_cold_run": true,
+        "ttft_ms": 1024,
+        "total_inference_ms": 2250,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 320,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:26:34.937983",
+        "ram_usage_mb": 521.5
+      },
+      {
+        "case_id": "T02",
+        "category": "time",
+        "sample_index": 86,
+        "is_cold_run": false,
+        "ttft_ms": 983,
+        "total_inference_ms": 2023,
+        "tokens_per_sec": 0.99,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:26:37.764277",
+        "ram_usage_mb": 531.69
+      },
+      {
+        "case_id": "W02",
+        "category": "weather",
+        "sample_index": 87,
+        "is_cold_run": false,
+        "ttft_ms": 1047,
+        "total_inference_ms": 2110,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 320,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:26:40.675942",
+        "ram_usage_mb": 516.69
+      },
+      {
+        "case_id": "T03",
+        "category": "time",
+        "sample_index": 88,
+        "is_cold_run": false,
+        "ttft_ms": 983,
+        "total_inference_ms": 2066,
+        "tokens_per_sec": 0.97,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:26:43.547894",
+        "ram_usage_mb": 521.72
+      },
+      {
+        "case_id": "W04",
+        "category": "weather",
+        "sample_index": 89,
+        "is_cold_run": true,
+        "ttft_ms": 977,
+        "total_inference_ms": 2050,
+        "tokens_per_sec": 0.98,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:26:46.400658",
+        "ram_usage_mb": 539.55
+      },
+      {
+        "case_id": "W05",
+        "category": "weather",
+        "sample_index": 90,
+        "is_cold_run": false,
+        "ttft_ms": 1043,
+        "total_inference_ms": 2119,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "forest",
+          "mint",
+          "rainy_evening"
+        ],
+        "is_correct": false,
+        "prompt_chars": 321,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:26:49.321525",
+        "ram_usage_mb": 517.59
+      },
+      {
+        "case_id": "W04",
+        "category": "weather",
+        "sample_index": 91,
+        "is_cold_run": false,
+        "ttft_ms": 994,
+        "total_inference_ms": 2054,
+        "tokens_per_sec": 0.97,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:26:52.177625",
+        "ram_usage_mb": 533.37
+      },
+      {
+        "case_id": "C07",
+        "category": "combined",
+        "sample_index": 92,
+        "is_cold_run": false,
+        "ttft_ms": 1175,
+        "total_inference_ms": 2250,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "is_correct": true,
+        "prompt_chars": 332,
+        "prompt_tokens_est": 83,
+        "timestamp": "2026-06-21T08:26:55.230399",
+        "ram_usage_mb": 515.47
+      },
+      {
+        "case_id": "E01",
+        "category": "edge",
+        "sample_index": 93,
+        "is_cold_run": false,
+        "ttft_ms": 965,
+        "total_inference_ms": 2020,
+        "tokens_per_sec": 0.99,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 299,
+        "prompt_tokens_est": 75,
+        "timestamp": "2026-06-21T08:26:58.052924",
+        "ram_usage_mb": 508.48
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "sample_index": 94,
+        "is_cold_run": false,
+        "ttft_ms": 1068,
+        "total_inference_ms": 2115,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:27:00.971034",
+        "ram_usage_mb": 513.43
+      },
+      {
+        "case_id": "W03",
+        "category": "weather",
+        "sample_index": 95,
+        "is_cold_run": false,
+        "ttft_ms": 1070,
+        "total_inference_ms": 2137,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:27:03.909800",
+        "ram_usage_mb": 516.69
+      },
+      {
+        "case_id": "E08",
+        "category": "edge",
+        "sample_index": 96,
+        "is_cold_run": false,
+        "ttft_ms": 1140,
+        "total_inference_ms": 2196,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:27:06.907919",
+        "ram_usage_mb": 520.91
+      },
+      {
+        "case_id": "W02",
+        "category": "weather",
+        "sample_index": 97,
+        "is_cold_run": false,
+        "ttft_ms": 1095,
+        "total_inference_ms": 2147,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 320,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:27:09.858242",
+        "ram_usage_mb": 524.79
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "sample_index": 98,
+        "is_cold_run": false,
+        "ttft_ms": 1038,
+        "total_inference_ms": 2101,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:27:12.761461",
+        "ram_usage_mb": 516.84
+      },
+      {
+        "case_id": "T01",
+        "category": "time",
+        "sample_index": 99,
+        "is_cold_run": false,
+        "ttft_ms": 982,
+        "total_inference_ms": 2061,
+        "tokens_per_sec": 0.97,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:27:15.624607",
+        "ram_usage_mb": 529.91
+      },
+      {
+        "case_id": "T07",
+        "category": "time",
+        "sample_index": 100,
+        "is_cold_run": false,
+        "ttft_ms": 1023,
+        "total_inference_ms": 2095,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:27:23.527813",
+        "ram_usage_mb": 528.39
+      },
+      {
+        "case_id": "T08",
+        "category": "time",
+        "sample_index": 101,
+        "is_cold_run": false,
+        "ttft_ms": 959,
+        "total_inference_ms": 2036,
+        "tokens_per_sec": 0.98,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:27:26.367207",
+        "ram_usage_mb": 532.36
+      },
+      {
+        "case_id": "E07",
+        "category": "edge",
+        "sample_index": 102,
+        "is_cold_run": false,
+        "ttft_ms": 1126,
+        "total_inference_ms": 2195,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 326,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:27:29.364798",
+        "ram_usage_mb": 520.97
+      },
+      {
+        "case_id": "T04",
+        "category": "time",
+        "sample_index": 103,
+        "is_cold_run": false,
+        "ttft_ms": 1026,
+        "total_inference_ms": 2152,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 308,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:27:32.318504",
+        "ram_usage_mb": 512.14
+      },
+      {
+        "case_id": "H06",
+        "category": "health",
+        "sample_index": 104,
+        "is_cold_run": true,
+        "ttft_ms": 1146,
+        "total_inference_ms": 2218,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 321,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:27:35.338305",
+        "ram_usage_mb": 515.9
+      },
+      {
+        "case_id": "T06",
+        "category": "time",
+        "sample_index": 105,
+        "is_cold_run": true,
+        "ttft_ms": 990,
+        "total_inference_ms": 2035,
+        "tokens_per_sec": 0.98,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "rose"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:27:38.175368",
+        "ram_usage_mb": 522.26
+      },
+      {
+        "case_id": "H05",
+        "category": "health",
+        "sample_index": 106,
+        "is_cold_run": false,
+        "ttft_ms": 1120,
+        "total_inference_ms": 2294,
+        "tokens_per_sec": 0.87,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "ocean",
+          "mint"
+        ],
+        "is_correct": true,
+        "prompt_chars": 323,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:27:41.271098",
+        "ram_usage_mb": 521.82
+      },
+      {
+        "case_id": "C06",
+        "category": "combined",
+        "sample_index": 107,
+        "is_cold_run": false,
+        "ttft_ms": 1179,
+        "total_inference_ms": 2236,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:27:44.309318",
+        "ram_usage_mb": 512.66
+      },
+      {
+        "case_id": "C02",
+        "category": "combined",
+        "sample_index": 108,
+        "is_cold_run": false,
+        "ttft_ms": 1170,
+        "total_inference_ms": 2282,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 336,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:27:47.393815",
+        "ram_usage_mb": 512.78
+      },
+      {
+        "case_id": "W04",
+        "category": "weather",
+        "sample_index": 109,
+        "is_cold_run": false,
+        "ttft_ms": 1025,
+        "total_inference_ms": 2078,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:27:50.273506",
+        "ram_usage_mb": 520.65
+      },
+      {
+        "case_id": "T06",
+        "category": "time",
+        "sample_index": 110,
+        "is_cold_run": false,
+        "ttft_ms": 1031,
+        "total_inference_ms": 2069,
+        "tokens_per_sec": 0.97,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "rose"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:27:53.144425",
+        "ram_usage_mb": 545.23
+      },
+      {
+        "case_id": "W03",
+        "category": "weather",
+        "sample_index": 111,
+        "is_cold_run": false,
+        "ttft_ms": 1096,
+        "total_inference_ms": 2201,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:27:56.147821",
+        "ram_usage_mb": 514.76
+      },
+      {
+        "case_id": "W05",
+        "category": "weather",
+        "sample_index": 112,
+        "is_cold_run": false,
+        "ttft_ms": 1075,
+        "total_inference_ms": 2330,
+        "tokens_per_sec": 0.86,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "forest",
+          "mint",
+          "rainy_evening"
+        ],
+        "is_correct": false,
+        "prompt_chars": 321,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:27:59.280910",
+        "ram_usage_mb": 514.43
+      },
+      {
+        "case_id": "H05",
+        "category": "health",
+        "sample_index": 113,
+        "is_cold_run": false,
+        "ttft_ms": 1150,
+        "total_inference_ms": 2208,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "ocean",
+          "mint"
+        ],
+        "is_correct": true,
+        "prompt_chars": 323,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:28:02.291700",
+        "ram_usage_mb": 518.91
+      },
+      {
+        "case_id": "E08",
+        "category": "edge",
+        "sample_index": 114,
+        "is_cold_run": false,
+        "ttft_ms": 1112,
+        "total_inference_ms": 2178,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:28:05.273622",
+        "ram_usage_mb": 521.56
+      },
+      {
+        "case_id": "W01",
+        "category": "weather",
+        "sample_index": 115,
+        "is_cold_run": false,
+        "ttft_ms": 1084,
+        "total_inference_ms": 2160,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:28:08.239256",
+        "ram_usage_mb": 521.05
+      },
+      {
+        "case_id": "E03",
+        "category": "edge",
+        "sample_index": 116,
+        "is_cold_run": true,
+        "ttft_ms": 1125,
+        "total_inference_ms": 2256,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "ocean",
+          "rainy_evening"
+        ],
+        "is_correct": false,
+        "prompt_chars": 321,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:28:11.298148",
+        "ram_usage_mb": 514.74
+      },
+      {
+        "case_id": "C02",
+        "category": "combined",
+        "sample_index": 117,
+        "is_cold_run": false,
+        "ttft_ms": 1199,
+        "total_inference_ms": 2302,
+        "tokens_per_sec": 0.87,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 336,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:28:14.402574",
+        "ram_usage_mb": 520.95
+      },
+      {
+        "case_id": "T07",
+        "category": "time",
+        "sample_index": 118,
+        "is_cold_run": false,
+        "ttft_ms": 1032,
+        "total_inference_ms": 2100,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:28:17.304240",
+        "ram_usage_mb": 527.92
+      },
+      {
+        "case_id": "H06",
+        "category": "health",
+        "sample_index": 119,
+        "is_cold_run": false,
+        "ttft_ms": 1131,
+        "total_inference_ms": 2401,
+        "tokens_per_sec": 0.83,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 321,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:28:20.507837",
+        "ram_usage_mb": 511.56
+      },
+      {
+        "case_id": "C07",
+        "category": "combined",
+        "sample_index": 120,
+        "is_cold_run": false,
+        "ttft_ms": 1170,
+        "total_inference_ms": 2241,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "is_correct": true,
+        "prompt_chars": 332,
+        "prompt_tokens_est": 83,
+        "timestamp": "2026-06-21T08:28:28.552762",
+        "ram_usage_mb": 526.14
+      },
+      {
+        "case_id": "W06",
+        "category": "weather",
+        "sample_index": 121,
+        "is_cold_run": false,
+        "ttft_ms": 1075,
+        "total_inference_ms": 2131,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:28:31.485720",
+        "ram_usage_mb": 520.23
+      },
+      {
+        "case_id": "E04",
+        "category": "edge",
+        "sample_index": 122,
+        "is_cold_run": false,
+        "ttft_ms": 1056,
+        "total_inference_ms": 1950,
+        "tokens_per_sec": 1.03,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 318,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:28:34.239170",
+        "ram_usage_mb": 518.61
+      },
+      {
+        "case_id": "E05",
+        "category": "edge",
+        "sample_index": 123,
+        "is_cold_run": false,
+        "ttft_ms": 1124,
+        "total_inference_ms": 2334,
+        "tokens_per_sec": 0.86,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "ocean"
+        ],
+        "is_correct": true,
+        "prompt_chars": 327,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:28:37.375416",
+        "ram_usage_mb": 503.68
+      },
+      {
+        "case_id": "C05",
+        "category": "combined",
+        "sample_index": 124,
+        "is_cold_run": false,
+        "ttft_ms": 1136,
+        "total_inference_ms": 2055,
+        "tokens_per_sec": 0.97,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "lavender"
+        ],
+        "is_correct": false,
+        "prompt_chars": 337,
+        "prompt_tokens_est": 85,
+        "timestamp": "2026-06-21T08:28:40.233637",
+        "ram_usage_mb": 516.56
+      },
+      {
+        "case_id": "C07",
+        "category": "combined",
+        "sample_index": 125,
+        "is_cold_run": false,
+        "ttft_ms": 1173,
+        "total_inference_ms": 2215,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 332,
+        "prompt_tokens_est": 83,
+        "timestamp": "2026-06-21T08:28:43.250396",
+        "ram_usage_mb": 502.82
+      },
+      {
+        "case_id": "E04",
+        "category": "edge",
+        "sample_index": 126,
+        "is_cold_run": false,
+        "ttft_ms": 1016,
+        "total_inference_ms": 2074,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 318,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:28:46.126712",
+        "ram_usage_mb": 526.2
+      },
+      {
+        "case_id": "E07",
+        "category": "edge",
+        "sample_index": 127,
+        "is_cold_run": false,
+        "ttft_ms": 1121,
+        "total_inference_ms": 2185,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 326,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:28:49.113808",
+        "ram_usage_mb": 516.8
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 128,
+        "is_cold_run": false,
+        "ttft_ms": 1079,
+        "total_inference_ms": 2139,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:28:52.056159",
+        "ram_usage_mb": 510.04
+      },
+      {
+        "case_id": "H06",
+        "category": "health",
+        "sample_index": 129,
+        "is_cold_run": false,
+        "ttft_ms": 1130,
+        "total_inference_ms": 2219,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 321,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:28:55.077665",
+        "ram_usage_mb": 519.1
+      },
+      {
+        "case_id": "W01",
+        "category": "weather",
+        "sample_index": 130,
+        "is_cold_run": false,
+        "ttft_ms": 1082,
+        "total_inference_ms": 2135,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:28:58.016640",
+        "ram_usage_mb": 522.17
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 131,
+        "is_cold_run": false,
+        "ttft_ms": 1077,
+        "total_inference_ms": 2179,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:29:00.997",
+        "ram_usage_mb": 508.19
+      },
+      {
+        "case_id": "E04",
+        "category": "edge",
+        "sample_index": 132,
+        "is_cold_run": false,
+        "ttft_ms": 1057,
+        "total_inference_ms": 2137,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 318,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:29:03.936693",
+        "ram_usage_mb": 509.95
+      },
+      {
+        "case_id": "T05",
+        "category": "time",
+        "sample_index": 133,
+        "is_cold_run": false,
+        "ttft_ms": 1030,
+        "total_inference_ms": 2078,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:29:06.816755",
+        "ram_usage_mb": 518.32
+      },
+      {
+        "case_id": "T03",
+        "category": "time",
+        "sample_index": 134,
+        "is_cold_run": false,
+        "ttft_ms": 1034,
+        "total_inference_ms": 2122,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:29:09.741016",
+        "ram_usage_mb": 509.75
+      },
+      {
+        "case_id": "E08",
+        "category": "edge",
+        "sample_index": 135,
+        "is_cold_run": false,
+        "ttft_ms": 1127,
+        "total_inference_ms": 2205,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:29:12.748677",
+        "ram_usage_mb": 508.01
+      },
+      {
+        "case_id": "T06",
+        "category": "time",
+        "sample_index": 136,
+        "is_cold_run": false,
+        "ttft_ms": 1301,
+        "total_inference_ms": 2583,
+        "tokens_per_sec": 0.77,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "rose"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:29:16.135253",
+        "ram_usage_mb": 498.78
+      },
+      {
+        "case_id": "T03",
+        "category": "time",
+        "sample_index": 137,
+        "is_cold_run": false,
+        "ttft_ms": 1082,
+        "total_inference_ms": 2180,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:29:19.118066",
+        "ram_usage_mb": 505.43
+      },
+      {
+        "case_id": "T07",
+        "category": "time",
+        "sample_index": 138,
+        "is_cold_run": false,
+        "ttft_ms": 1018,
+        "total_inference_ms": 2103,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:29:22.026996",
+        "ram_usage_mb": 493.46
+      },
+      {
+        "case_id": "T04",
+        "category": "time",
+        "sample_index": 139,
+        "is_cold_run": false,
+        "ttft_ms": 1017,
+        "total_inference_ms": 2273,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 308,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:29:25.107037",
+        "ram_usage_mb": 490.74
+      },
+      {
+        "case_id": "C01",
+        "category": "combined",
+        "sample_index": 140,
+        "is_cold_run": false,
+        "ttft_ms": 1171,
+        "total_inference_ms": 2269,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:29:33.179804",
+        "ram_usage_mb": 482.9
+      },
+      {
+        "case_id": "E04",
+        "category": "edge",
+        "sample_index": 141,
+        "is_cold_run": false,
+        "ttft_ms": 1068,
+        "total_inference_ms": 2129,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 318,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:29:36.111117",
+        "ram_usage_mb": 499.74
+      },
+      {
+        "case_id": "C02",
+        "category": "combined",
+        "sample_index": 142,
+        "is_cold_run": false,
+        "ttft_ms": 1181,
+        "total_inference_ms": 2240,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 336,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:29:39.153068",
+        "ram_usage_mb": 490.79
+      },
+      {
+        "case_id": "W05",
+        "category": "weather",
+        "sample_index": 143,
+        "is_cold_run": false,
+        "ttft_ms": 1077,
+        "total_inference_ms": 2147,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "forest",
+          "mint",
+          "rainy_evening"
+        ],
+        "is_correct": false,
+        "prompt_chars": 321,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:29:42.101886",
+        "ram_usage_mb": 484.18
+      },
+      {
+        "case_id": "H03",
+        "category": "health",
+        "sample_index": 144,
+        "is_cold_run": false,
+        "ttft_ms": 1044,
+        "total_inference_ms": 2129,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:29:45.033090",
+        "ram_usage_mb": 484.3
+      },
+      {
+        "case_id": "W01",
+        "category": "weather",
+        "sample_index": 145,
+        "is_cold_run": false,
+        "ttft_ms": 1092,
+        "total_inference_ms": 2020,
+        "tokens_per_sec": 0.99,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:29:47.854799",
+        "ram_usage_mb": 491.79
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "sample_index": 146,
+        "is_cold_run": false,
+        "ttft_ms": 1088,
+        "total_inference_ms": 2154,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:29:50.811070",
+        "ram_usage_mb": 488.41
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 147,
+        "is_cold_run": false,
+        "ttft_ms": 1031,
+        "total_inference_ms": 2105,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:29:53.718350",
+        "ram_usage_mb": 495.45
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "sample_index": 148,
+        "is_cold_run": false,
+        "ttft_ms": 1042,
+        "total_inference_ms": 2080,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:29:56.600608",
+        "ram_usage_mb": 496.87
+      },
+      {
+        "case_id": "W03",
+        "category": "weather",
+        "sample_index": 149,
+        "is_cold_run": false,
+        "ttft_ms": 1075,
+        "total_inference_ms": 2152,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:29:59.555140",
+        "ram_usage_mb": 492.07
+      },
+      {
+        "case_id": "C02",
+        "category": "combined",
+        "sample_index": 150,
+        "is_cold_run": false,
+        "ttft_ms": 1176,
+        "total_inference_ms": 2248,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 336,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:30:02.605573",
+        "ram_usage_mb": 490.64
+      },
+      {
+        "case_id": "C05",
+        "category": "combined",
+        "sample_index": 151,
+        "is_cold_run": false,
+        "ttft_ms": 1184,
+        "total_inference_ms": 2234,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 337,
+        "prompt_tokens_est": 85,
+        "timestamp": "2026-06-21T08:30:05.641841",
+        "ram_usage_mb": 495.08
+      },
+      {
+        "case_id": "T03",
+        "category": "time",
+        "sample_index": 152,
+        "is_cold_run": false,
+        "ttft_ms": 1021,
+        "total_inference_ms": 2083,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:30:08.527021",
+        "ram_usage_mb": 465.36
+      },
+      {
+        "case_id": "T07",
+        "category": "time",
+        "sample_index": 153,
+        "is_cold_run": false,
+        "ttft_ms": 1036,
+        "total_inference_ms": 2284,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:30:11.614186",
+        "ram_usage_mb": 488.38
+      },
+      {
+        "case_id": "T05",
+        "category": "time",
+        "sample_index": 154,
+        "is_cold_run": false,
+        "ttft_ms": 1017,
+        "total_inference_ms": 2092,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:30:14.508514",
+        "ram_usage_mb": 489.76
+      },
+      {
+        "case_id": "E08",
+        "category": "edge",
+        "sample_index": 155,
+        "is_cold_run": false,
+        "ttft_ms": 1131,
+        "total_inference_ms": 2233,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:30:17.543112",
+        "ram_usage_mb": 490.13
+      },
+      {
+        "case_id": "E02",
+        "category": "edge",
+        "sample_index": 156,
+        "is_cold_run": false,
+        "ttft_ms": 1086,
+        "total_inference_ms": 2149,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "warm_orange",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 320,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:30:20.494581",
+        "ram_usage_mb": 497.03
+      },
+      {
+        "case_id": "T04",
+        "category": "time",
+        "sample_index": 157,
+        "is_cold_run": false,
+        "ttft_ms": 1021,
+        "total_inference_ms": 2235,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 308,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:30:23.531775",
+        "ram_usage_mb": 498.28
+      },
+      {
+        "case_id": "C06",
+        "category": "combined",
+        "sample_index": 158,
+        "is_cold_run": false,
+        "ttft_ms": 1175,
+        "total_inference_ms": 2237,
+        "tokens_per_sec": 0.89,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:30:26.569742",
+        "ram_usage_mb": 488.02
+      },
+      {
+        "case_id": "E05",
+        "category": "edge",
+        "sample_index": 159,
+        "is_cold_run": false,
+        "ttft_ms": 1129,
+        "total_inference_ms": 2208,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "lavender",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 327,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:30:29.579056",
+        "ram_usage_mb": 502.06
+      },
+      {
+        "case_id": "C01",
+        "category": "combined",
+        "sample_index": 160,
+        "is_cold_run": false,
+        "ttft_ms": 1174,
+        "total_inference_ms": 2286,
+        "tokens_per_sec": 0.87,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "is_correct": true,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:30:37.669405",
+        "ram_usage_mb": 489.08
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 161,
+        "is_cold_run": false,
+        "ttft_ms": 1030,
+        "total_inference_ms": 2081,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:30:40.552643",
+        "ram_usage_mb": 490.87
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 162,
+        "is_cold_run": false,
+        "ttft_ms": 1124,
+        "total_inference_ms": 2198,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:30:43.552452",
+        "ram_usage_mb": 495.91
+      },
+      {
+        "case_id": "E01",
+        "category": "edge",
+        "sample_index": 163,
+        "is_cold_run": false,
+        "ttft_ms": 965,
+        "total_inference_ms": 2021,
+        "tokens_per_sec": 0.99,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 299,
+        "prompt_tokens_est": 75,
+        "timestamp": "2026-06-21T08:30:46.376413",
+        "ram_usage_mb": 479.48
+      },
+      {
+        "case_id": "W04",
+        "category": "weather",
+        "sample_index": 164,
+        "is_cold_run": false,
+        "ttft_ms": 1034,
+        "total_inference_ms": 2112,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:30:49.291395",
+        "ram_usage_mb": 468.37
+      },
+      {
+        "case_id": "W03",
+        "category": "weather",
+        "sample_index": 165,
+        "is_cold_run": false,
+        "ttft_ms": 1087,
+        "total_inference_ms": 2137,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:30:52.230855",
+        "ram_usage_mb": 496.53
+      },
+      {
+        "case_id": "C04",
+        "category": "combined",
+        "sample_index": 166,
+        "is_cold_run": false,
+        "ttft_ms": 1100,
+        "total_inference_ms": 2195,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 326,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:30:55.228628",
+        "ram_usage_mb": 493.76
+      },
+      {
+        "case_id": "C01",
+        "category": "combined",
+        "sample_index": 167,
+        "is_cold_run": false,
+        "ttft_ms": 1128,
+        "total_inference_ms": 2181,
+        "tokens_per_sec": 0.92,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:30:58.211787",
+        "ram_usage_mb": 489.23
+      },
+      {
+        "case_id": "T07",
+        "category": "time",
+        "sample_index": 168,
+        "is_cold_run": false,
+        "ttft_ms": 1032,
+        "total_inference_ms": 2132,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:31:01.145064",
+        "ram_usage_mb": 486.53
+      },
+      {
+        "case_id": "C04",
+        "category": "combined",
+        "sample_index": 169,
+        "is_cold_run": false,
+        "ttft_ms": 1113,
+        "total_inference_ms": 2329,
+        "tokens_per_sec": 0.86,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 326,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:31:04.276606",
+        "ram_usage_mb": 472.46
+      },
+      {
+        "case_id": "W01",
+        "category": "weather",
+        "sample_index": 170,
+        "is_cold_run": false,
+        "ttft_ms": 1099,
+        "total_inference_ms": 2119,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:31:07.197673",
+        "ram_usage_mb": 495.59
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "sample_index": 171,
+        "is_cold_run": false,
+        "ttft_ms": 1063,
+        "total_inference_ms": 2099,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:31:10.098620",
+        "ram_usage_mb": 455.63
+      },
+      {
+        "case_id": "W06",
+        "category": "weather",
+        "sample_index": 172,
+        "is_cold_run": false,
+        "ttft_ms": 1073,
+        "total_inference_ms": 2156,
+        "tokens_per_sec": 0.93,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:31:13.056336",
+        "ram_usage_mb": 489.82
+      },
+      {
+        "case_id": "W03",
+        "category": "weather",
+        "sample_index": 173,
+        "is_cold_run": false,
+        "ttft_ms": 1022,
+        "total_inference_ms": 2093,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:31:15.951654",
+        "ram_usage_mb": 478.91
+      },
+      {
+        "case_id": "E01",
+        "category": "edge",
+        "sample_index": 174,
+        "is_cold_run": false,
+        "ttft_ms": 970,
+        "total_inference_ms": 2042,
+        "tokens_per_sec": 0.98,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 299,
+        "prompt_tokens_est": 75,
+        "timestamp": "2026-06-21T08:31:18.795983",
+        "ram_usage_mb": 480.04
+      },
+      {
+        "case_id": "W04",
+        "category": "weather",
+        "sample_index": 175,
+        "is_cold_run": false,
+        "ttft_ms": 1024,
+        "total_inference_ms": 2065,
+        "tokens_per_sec": 0.97,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:31:21.665831",
+        "ram_usage_mb": 495.3
+      },
+      {
+        "case_id": "T03",
+        "category": "time",
+        "sample_index": 176,
+        "is_cold_run": false,
+        "ttft_ms": 973,
+        "total_inference_ms": 2043,
+        "tokens_per_sec": 0.98,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:31:24.511815",
+        "ram_usage_mb": 478.33
+      },
+      {
+        "case_id": "C08",
+        "category": "combined",
+        "sample_index": 177,
+        "is_cold_run": false,
+        "ttft_ms": 1110,
+        "total_inference_ms": 2220,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:31:27.534497",
+        "ram_usage_mb": 478.36
+      },
+      {
+        "case_id": "H05",
+        "category": "health",
+        "sample_index": 178,
+        "is_cold_run": false,
+        "ttft_ms": 1127,
+        "total_inference_ms": 2199,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "ocean",
+          "mint"
+        ],
+        "is_correct": true,
+        "prompt_chars": 323,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:31:30.535901",
+        "ram_usage_mb": 486.06
+      },
+      {
+        "case_id": "E04",
+        "category": "edge",
+        "sample_index": 179,
+        "is_cold_run": false,
+        "ttft_ms": 1072,
+        "total_inference_ms": 2137,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 318,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:31:33.475719",
+        "ram_usage_mb": 480.15
+      },
+      {
+        "case_id": "C02",
+        "category": "combined",
+        "sample_index": 180,
+        "is_cold_run": false,
+        "ttft_ms": 1181,
+        "total_inference_ms": 2279,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 336,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:31:41.557308",
+        "ram_usage_mb": 476.92
+      },
+      {
+        "case_id": "H02",
+        "category": "health",
+        "sample_index": 181,
+        "is_cold_run": false,
+        "ttft_ms": 1123,
+        "total_inference_ms": 2233,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "is_correct": true,
+        "prompt_chars": 319,
+        "prompt_tokens_est": 80,
+        "timestamp": "2026-06-21T08:31:44.593024",
+        "ram_usage_mb": 477.12
+      },
+      {
+        "case_id": "C08",
+        "category": "combined",
+        "sample_index": 182,
+        "is_cold_run": false,
+        "ttft_ms": 1197,
+        "total_inference_ms": 2261,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "warm_orange"
+        ],
+        "is_correct": true,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:31:47.656389",
+        "ram_usage_mb": 480.02
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "sample_index": 183,
+        "is_cold_run": false,
+        "ttft_ms": 1023,
+        "total_inference_ms": 2080,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 312,
+        "prompt_tokens_est": 78,
+        "timestamp": "2026-06-21T08:31:50.540560",
+        "ram_usage_mb": 486.62
+      },
+      {
+        "case_id": "T07",
+        "category": "time",
+        "sample_index": 184,
+        "is_cold_run": false,
+        "ttft_ms": 1020,
+        "total_inference_ms": 2126,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 304,
+        "prompt_tokens_est": 76,
+        "timestamp": "2026-06-21T08:31:53.472197",
+        "ram_usage_mb": 485.55
+      },
+      {
+        "case_id": "T03",
+        "category": "time",
+        "sample_index": 185,
+        "is_cold_run": false,
+        "ttft_ms": 1015,
+        "total_inference_ms": 2101,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:31:56.376094",
+        "ram_usage_mb": 468.84
+      },
+      {
+        "case_id": "E01",
+        "category": "edge",
+        "sample_index": 186,
+        "is_cold_run": false,
+        "ttft_ms": 974,
+        "total_inference_ms": 2039,
+        "tokens_per_sec": 0.98,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 299,
+        "prompt_tokens_est": 75,
+        "timestamp": "2026-06-21T08:31:59.220551",
+        "ram_usage_mb": 484.84
+      },
+      {
+        "case_id": "C08",
+        "category": "combined",
+        "sample_index": 187,
+        "is_cold_run": false,
+        "ttft_ms": 1164,
+        "total_inference_ms": 2225,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 335,
+        "prompt_tokens_est": 84,
+        "timestamp": "2026-06-21T08:32:02.247518",
+        "ram_usage_mb": 487.7
+      },
+      {
+        "case_id": "E01",
+        "category": "edge",
+        "sample_index": 188,
+        "is_cold_run": false,
+        "ttft_ms": 978,
+        "total_inference_ms": 2048,
+        "tokens_per_sec": 0.98,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 299,
+        "prompt_tokens_est": 75,
+        "timestamp": "2026-06-21T08:32:05.097484",
+        "ram_usage_mb": 492.5
+      },
+      {
+        "case_id": "T04",
+        "category": "time",
+        "sample_index": 189,
+        "is_cold_run": false,
+        "ttft_ms": 1007,
+        "total_inference_ms": 2092,
+        "tokens_per_sec": 0.96,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "forest",
+          "mint"
+        ],
+        "is_correct": false,
+        "prompt_chars": 308,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:32:07.992772",
+        "ram_usage_mb": 489.08
+      },
+      {
+        "case_id": "C05",
+        "category": "combined",
+        "sample_index": 190,
+        "is_cold_run": false,
+        "ttft_ms": 1131,
+        "total_inference_ms": 2212,
+        "tokens_per_sec": 0.9,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 337,
+        "prompt_tokens_est": 85,
+        "timestamp": "2026-06-21T08:32:11.006233",
+        "ram_usage_mb": 496.7
+      },
+      {
+        "case_id": "W03",
+        "category": "weather",
+        "sample_index": 191,
+        "is_cold_run": false,
+        "ttft_ms": 1042,
+        "total_inference_ms": 2112,
+        "tokens_per_sec": 0.95,
+        "output_tokens": 2,
+        "palette": "mint",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:32:13.921108",
+        "ram_usage_mb": 500.04
+      },
+      {
+        "case_id": "E06",
+        "category": "edge",
+        "sample_index": 192,
+        "is_cold_run": false,
+        "ttft_ms": 1196,
+        "total_inference_ms": 2282,
+        "tokens_per_sec": 0.88,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "is_correct": true,
+        "prompt_chars": 351,
+        "prompt_tokens_est": 88,
+        "timestamp": "2026-06-21T08:32:17.005935",
+        "ram_usage_mb": 486.24
+      },
+      {
+        "case_id": "E07",
+        "category": "edge",
+        "sample_index": 193,
+        "is_cold_run": false,
+        "ttft_ms": 1125,
+        "total_inference_ms": 2189,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "rainy_evening",
+          "sunset",
+          "ocean"
+        ],
+        "is_correct": false,
+        "prompt_chars": 326,
+        "prompt_tokens_est": 82,
+        "timestamp": "2026-06-21T08:32:19.997571",
+        "ram_usage_mb": 470.34
+      },
+      {
+        "case_id": "W03",
+        "category": "weather",
+        "sample_index": 194,
+        "is_cold_run": false,
+        "ttft_ms": 1084,
+        "total_inference_ms": 2316,
+        "tokens_per_sec": 0.86,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:32:23.116684",
+        "ram_usage_mb": 476.42
+      },
+      {
+        "case_id": "E03",
+        "category": "edge",
+        "sample_index": 195,
+        "is_cold_run": false,
+        "ttft_ms": 1131,
+        "total_inference_ms": 2186,
+        "tokens_per_sec": 0.91,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "dark_blue",
+          "ocean",
+          "rainy_evening"
+        ],
+        "is_correct": false,
+        "prompt_chars": 321,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:32:26.104403",
+        "ram_usage_mb": 498.27
+      },
+      {
+        "case_id": "T05",
+        "category": "time",
+        "sample_index": 196,
+        "is_cold_run": false,
+        "ttft_ms": 1019,
+        "total_inference_ms": 2049,
+        "tokens_per_sec": 0.98,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:32:28.957568",
+        "ram_usage_mb": 485.39
+      },
+      {
+        "case_id": "T01",
+        "category": "time",
+        "sample_index": 197,
+        "is_cold_run": false,
+        "ttft_ms": 1022,
+        "total_inference_ms": 2136,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "is_correct": false,
+        "prompt_chars": 306,
+        "prompt_tokens_est": 77,
+        "timestamp": "2026-06-21T08:32:31.897278",
+        "ram_usage_mb": 470.51
+      },
+      {
+        "case_id": "H03",
+        "category": "health",
+        "sample_index": 198,
+        "is_cold_run": false,
+        "ttft_ms": 1027,
+        "total_inference_ms": 2070,
+        "tokens_per_sec": 0.97,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "dark_blue"
+        ],
+        "is_correct": false,
+        "prompt_chars": 315,
+        "prompt_tokens_est": 79,
+        "timestamp": "2026-06-21T08:32:34.769497",
+        "ram_usage_mb": 485.01
+      },
+      {
+        "case_id": "W06",
+        "category": "weather",
+        "sample_index": 199,
+        "is_cold_run": false,
+        "ttft_ms": 1070,
+        "total_inference_ms": 2139,
+        "tokens_per_sec": 0.94,
+        "output_tokens": 2,
+        "palette": "lavender",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest"
+        ],
+        "is_correct": false,
+        "prompt_chars": 322,
+        "prompt_tokens_est": 81,
+        "timestamp": "2026-06-21T08:32:37.710589",
+        "ram_usage_mb": 483.35
+      }
+    ]
+  },
+  "cloud": null,
+  "consistency": null,
+  "rule_vs_llm": {
+    "total_cases": 36,
+    "agreement_rate_pct": 8.3,
+    "agree_count": 3,
+    "rule_accuracy_pct": 94.4,
+    "llm_accuracy_pct": 30.6,
+    "edge_case_count": 33,
+    "rule_wins_count": 23,
+    "llm_wins_count": 0,
+    "both_wrong_count": 2,
+    "both_correct_differ_count": 8,
+    "rule_latency_mean_ms": 0.009,
+    "llm_latency_mean_ms": 2179.2,
+    "latency_speedup_x": 232789.0,
+    "edge_cases_detail": [
+      {
+        "id": "T01",
+        "desc": "Sáng sớm, nhiệt độ mát mẻ",
+        "expected": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "rule": "mint",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "buổi sáng → mint/forest"
+      },
+      {
+        "id": "T02",
+        "desc": "Sáng, thời tiết dễ chịu",
+        "expected": [
+          "mint",
+          "forest",
+          "ocean"
+        ],
+        "rule": "mint",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "buổi sáng → mint/forest"
+      },
+      {
+        "id": "T03",
+        "desc": "Bình minh",
+        "expected": [
+          "golden_morning",
+          "mint"
+        ],
+        "rule": "golden_morning",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "bình minh → golden_morning"
+      },
+      {
+        "id": "T04",
+        "desc": "Buổi trưa",
+        "expected": [
+          "ocean",
+          "forest",
+          "mint"
+        ],
+        "rule": "ocean",
+        "llm": "mint",
+        "type": "both_correct_differ",
+        "rule_explain": "buổi chiều → ocean"
+      },
+      {
+        "id": "T05",
+        "desc": "Hoàng hôn",
+        "expected": [
+          "sunset",
+          "warm_orange"
+        ],
+        "rule": "sunset",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "buổi tối → sunset"
+      },
+      {
+        "id": "T06",
+        "desc": "Buổi tối sớm",
+        "expected": [
+          "sunset",
+          "warm_orange",
+          "rose"
+        ],
+        "rule": "sunset",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "buổi tối → sunset"
+      },
+      {
+        "id": "T07",
+        "desc": "Đêm khuya",
+        "expected": [
+          "dark_blue",
+          "lavender"
+        ],
+        "rule": "dark_blue",
+        "llm": "lavender",
+        "type": "both_correct_differ",
+        "rule_explain": "đêm khuya → dark_blue/lavender"
+      },
+      {
+        "id": "T08",
+        "desc": "Nửa đêm",
+        "expected": [
+          "dark_blue"
+        ],
+        "rule": "dark_blue",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "đêm khuya → dark_blue/lavender"
+      },
+      {
+        "id": "W01",
+        "desc": "Mưa buổi chiều",
+        "expected": [
+          "rainy_evening",
+          "ocean",
+          "dark_blue"
+        ],
+        "rule": "rainy_evening",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "thời tiết mưa → rainy_evening; buổi chiều → ocean"
+      },
+      {
+        "id": "W02",
+        "desc": "Mưa buổi sáng",
+        "expected": [
+          "rainy_evening",
+          "ocean"
+        ],
+        "rule": "rainy_evening",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "thời tiết mưa → rainy_evening; buổi sáng → mint/forest"
+      },
+      {
+        "id": "W03",
+        "desc": "Nắng nóng trưa hè",
+        "expected": [
+          "warm_orange",
+          "sunset"
+        ],
+        "rule": "warm_orange",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "nhiệt độ 36.0°C ≥34 → warm_orange; buổi chiều → ocean"
+      },
+      {
+        "id": "W04",
+        "desc": "Rất nóng buổi sáng",
+        "expected": [
+          "warm_orange"
+        ],
+        "rule": "warm_orange",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "nhiệt độ 38.0°C ≥34 → warm_orange; buổi sáng → mint/forest"
+      },
+      {
+        "id": "W05",
+        "desc": "Sáng mát, trời âm u",
+        "expected": [
+          "forest",
+          "mint",
+          "rainy_evening"
+        ],
+        "rule": "forest",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "buổi sáng → mint/forest"
+      },
+      {
+        "id": "W06",
+        "desc": "Chiều nắng nhẹ",
+        "expected": [
+          "ocean",
+          "mint",
+          "forest"
+        ],
+        "rule": "ocean",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "buổi chiều → ocean"
+      },
+      {
+        "id": "H01",
+        "desc": "Nhịp tim cao, căng thẳng",
+        "expected": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "rule": "mint",
+        "llm": "lavender",
+        "type": "both_wrong",
+        "rule_explain": "buổi sáng → mint/forest"
+      },
+      {
+        "id": "H03",
+        "desc": "Thiếu ngủ buổi sáng",
+        "expected": [
+          "ocean",
+          "mint",
+          "dark_blue"
+        ],
+        "rule": "mint",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "buổi sáng → mint/forest"
+      },
+      {
+        "id": "H04",
+        "desc": "Ngủ nhiều, sáng tươi tỉnh",
+        "expected": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "rule": "mint",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "buổi sáng → mint/forest"
+      },
+      {
+        "id": "H05",
+        "desc": "Chiều, trạng thái bình thường, thư thái",
+        "expected": [
+          "lavender",
+          "ocean",
+          "mint"
+        ],
+        "rule": "ocean",
+        "llm": "lavender",
+        "type": "both_correct_differ",
+        "rule_explain": "buổi chiều → ocean"
+      },
+      {
+        "id": "H06",
+        "desc": "Chiều tối, mệt + nhịp tim cao",
+        "expected": [
+          "warm_orange",
+          "sunset"
+        ],
+        "rule": "sunset",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "buổi tối → sunset"
+      },
+      {
+        "id": "C01",
+        "desc": "Sáng đẹp, khỏe mạnh, bình thường",
+        "expected": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "rule": "mint",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "buổi sáng → mint/forest"
+      },
+      {
+        "id": "C02",
+        "desc": "Chiều tối, trời âm, ngủ thiếu nhẹ",
+        "expected": [
+          "sunset",
+          "warm_orange",
+          "lavender"
+        ],
+        "rule": "sunset",
+        "llm": "lavender",
+        "type": "both_correct_differ",
+        "rule_explain": "buổi tối → sunset"
+      },
+      {
+        "id": "C04",
+        "desc": "Trưa nắng gắt, nhịp tim cao",
+        "expected": [
+          "warm_orange",
+          "sunset"
+        ],
+        "rule": "warm_orange",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "nhiệt độ 35.0°C ≥34 → warm_orange; buổi sáng → mint/forest"
+      },
+      {
+        "id": "C05",
+        "desc": "Chiều mưa, mát, thư giãn",
+        "expected": [
+          "rainy_evening",
+          "ocean",
+          "lavender"
+        ],
+        "rule": "rainy_evening",
+        "llm": "lavender",
+        "type": "both_correct_differ",
+        "rule_explain": "thời tiết mưa → rainy_evening; buổi chiều → ocean"
+      },
+      {
+        "id": "C06",
+        "desc": "Sáng sương mù, lạnh, thiếu ngủ",
+        "expected": [
+          "rainy_evening",
+          "forest",
+          "mint"
+        ],
+        "rule": "forest",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "buổi sáng → mint/forest"
+      },
+      {
+        "id": "C08",
+        "desc": "Sáng sớm, thể thao",
+        "expected": [
+          "golden_morning",
+          "mint",
+          "warm_orange"
+        ],
+        "rule": "golden_morning",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "bình minh → golden_morning"
+      },
+      {
+        "id": "E01",
+        "desc": "Context tối thiểu - chỉ có giờ",
+        "expected": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "rule": "ocean",
+        "llm": "lavender",
+        "type": "both_correct_differ",
+        "rule_explain": "buổi chiều → ocean"
+      },
+      {
+        "id": "E02",
+        "desc": "Mâu thuẫn: nóng 40°C nhưng mưa",
+        "expected": [
+          "rainy_evening",
+          "warm_orange",
+          "ocean"
+        ],
+        "rule": "rainy_evening",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "thời tiết mưa → rainy_evening; nhiệt độ 40.0°C ≥34 → warm_orange; buổi sáng → mint/forest"
+      },
+      {
+        "id": "E03",
+        "desc": "Sáng sớm nhưng rất mệt, thiếu ngủ",
+        "expected": [
+          "dark_blue",
+          "ocean",
+          "rainy_evening"
+        ],
+        "rule": "golden_morning",
+        "llm": "lavender",
+        "type": "both_wrong",
+        "rule_explain": "bình minh → golden_morning"
+      },
+      {
+        "id": "E04",
+        "desc": "Đêm nhưng nhiệt độ cao",
+        "expected": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "rule": "warm_orange",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "nhiệt độ 34.0°C ≥34 → warm_orange; đêm khuya → dark_blue/lavender"
+      },
+      {
+        "id": "E05",
+        "desc": "Yêu thích màu tím, chiều, thư giãn",
+        "expected": [
+          "lavender",
+          "ocean"
+        ],
+        "rule": "ocean",
+        "llm": "lavender",
+        "type": "both_correct_differ",
+        "rule_explain": "buổi chiều → ocean"
+      },
+      {
+        "id": "E06",
+        "desc": "Chiều, profile đầy đủ, người trẻ yêu travel",
+        "expected": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "rule": "ocean",
+        "llm": "mint",
+        "type": "both_correct_differ",
+        "rule_explain": "buổi chiều → ocean"
+      },
+      {
+        "id": "E07",
+        "desc": "Chiều mưa - rainy vs sunset conflict",
+        "expected": [
+          "rainy_evening",
+          "sunset",
+          "ocean"
+        ],
+        "rule": "rainy_evening",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "thời tiết mưa → rainy_evening; buổi tối → sunset"
+      },
+      {
+        "id": "E08",
+        "desc": "Đêm khuya, nóng, mất ngủ, stress",
+        "expected": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "rule": "dark_blue",
+        "llm": "lavender",
+        "type": "rule_wins",
+        "rule_explain": "đêm khuya → dark_blue/lavender"
+      }
+    ],
+    "raw": [
+      {
+        "case_id": "T01",
+        "category": "time",
+        "description": "Sáng sớm, nhiệt độ mát mẻ",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "rule_palette": "mint",
+        "rule_correct": true,
+        "rule_latency_ms": 0.008,
+        "rule_explanation": "buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2085,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "T02",
+        "category": "time",
+        "description": "Sáng, thời tiết dễ chịu",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "ocean"
+        ],
+        "rule_palette": "mint",
+        "rule_correct": true,
+        "rule_latency_ms": 0.01,
+        "rule_explanation": "buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2067,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "T03",
+        "category": "time",
+        "description": "Bình minh",
+        "expected_palettes": [
+          "golden_morning",
+          "mint"
+        ],
+        "rule_palette": "golden_morning",
+        "rule_correct": true,
+        "rule_latency_ms": 0.009,
+        "rule_explanation": "bình minh → golden_morning",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2048,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "T04",
+        "category": "time",
+        "description": "Buổi trưa",
+        "expected_palettes": [
+          "ocean",
+          "forest",
+          "mint"
+        ],
+        "rule_palette": "ocean",
+        "rule_correct": true,
+        "rule_latency_ms": 0.008,
+        "rule_explanation": "buổi chiều → ocean",
+        "llm_palette": "mint",
+        "llm_correct": true,
+        "llm_latency_ms": 2113,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "both_correct_differ",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "T05",
+        "category": "time",
+        "description": "Hoàng hôn",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange"
+        ],
+        "rule_palette": "sunset",
+        "rule_correct": true,
+        "rule_latency_ms": 0.006,
+        "rule_explanation": "buổi tối → sunset",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2118,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "T06",
+        "category": "time",
+        "description": "Buổi tối sớm",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "rose"
+        ],
+        "rule_palette": "sunset",
+        "rule_correct": true,
+        "rule_latency_ms": 0.009,
+        "rule_explanation": "buổi tối → sunset",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2069,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "T07",
+        "category": "time",
+        "description": "Đêm khuya",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "rule_palette": "dark_blue",
+        "rule_correct": true,
+        "rule_latency_ms": 0.01,
+        "rule_explanation": "đêm khuya → dark_blue/lavender",
+        "llm_palette": "lavender",
+        "llm_correct": true,
+        "llm_latency_ms": 2254,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "both_correct_differ",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "T08",
+        "category": "time",
+        "description": "Nửa đêm",
+        "expected_palettes": [
+          "dark_blue"
+        ],
+        "rule_palette": "dark_blue",
+        "rule_correct": true,
+        "rule_latency_ms": 0.009,
+        "rule_explanation": "đêm khuya → dark_blue/lavender",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2003,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "W01",
+        "category": "weather",
+        "description": "Mưa buổi chiều",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "dark_blue"
+        ],
+        "rule_palette": "rainy_evening",
+        "rule_correct": true,
+        "rule_latency_ms": 0.009,
+        "rule_explanation": "thời tiết mưa → rainy_evening; buổi chiều → ocean",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2181,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "W02",
+        "category": "weather",
+        "description": "Mưa buổi sáng",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean"
+        ],
+        "rule_palette": "rainy_evening",
+        "rule_correct": true,
+        "rule_latency_ms": 0.008,
+        "rule_explanation": "thời tiết mưa → rainy_evening; buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2168,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "W03",
+        "category": "weather",
+        "description": "Nắng nóng trưa hè",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "rule_palette": "warm_orange",
+        "rule_correct": true,
+        "rule_latency_ms": 0.013,
+        "rule_explanation": "nhiệt độ 36.0°C ≥34 → warm_orange; buổi chiều → ocean",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2326,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "W04",
+        "category": "weather",
+        "description": "Rất nóng buổi sáng",
+        "expected_palettes": [
+          "warm_orange"
+        ],
+        "rule_palette": "warm_orange",
+        "rule_correct": true,
+        "rule_latency_ms": 0.008,
+        "rule_explanation": "nhiệt độ 38.0°C ≥34 → warm_orange; buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2104,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "W05",
+        "category": "weather",
+        "description": "Sáng mát, trời âm u",
+        "expected_palettes": [
+          "forest",
+          "mint",
+          "rainy_evening"
+        ],
+        "rule_palette": "forest",
+        "rule_correct": true,
+        "rule_latency_ms": 0.013,
+        "rule_explanation": "buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2127,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "W06",
+        "category": "weather",
+        "description": "Chiều nắng nhẹ",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest"
+        ],
+        "rule_palette": "ocean",
+        "rule_correct": true,
+        "rule_latency_ms": 0.011,
+        "rule_explanation": "buổi chiều → ocean",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2115,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "H01",
+        "category": "health",
+        "description": "Nhịp tim cao, căng thẳng",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset",
+          "ocean"
+        ],
+        "rule_palette": "mint",
+        "rule_correct": false,
+        "rule_latency_ms": 0.008,
+        "rule_explanation": "buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2145,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "both_wrong",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "H02",
+        "category": "health",
+        "description": "Thư giãn tối, ngủ đủ giấc",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "rule_palette": "lavender",
+        "rule_correct": true,
+        "rule_latency_ms": 0.01,
+        "rule_explanation": "hr=55.0bpm + sleep=8.0h + giờ=20h → lavender; đêm khuya → dark_blue/lavender",
+        "llm_palette": "lavender",
+        "llm_correct": true,
+        "llm_latency_ms": 2201,
+        "llm_output_tokens": 2,
+        "agree": true,
+        "edge_type": "normal",
+        "is_edge_case": false
+      },
+      {
+        "case_id": "H03",
+        "category": "health",
+        "description": "Thiếu ngủ buổi sáng",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "dark_blue"
+        ],
+        "rule_palette": "mint",
+        "rule_correct": true,
+        "rule_latency_ms": 0.006,
+        "rule_explanation": "buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2182,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "H04",
+        "category": "health",
+        "description": "Ngủ nhiều, sáng tươi tỉnh",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "forest"
+        ],
+        "rule_palette": "mint",
+        "rule_correct": true,
+        "rule_latency_ms": 0.007,
+        "rule_explanation": "buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2145,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "H05",
+        "category": "health",
+        "description": "Chiều, trạng thái bình thường, thư thái",
+        "expected_palettes": [
+          "lavender",
+          "ocean",
+          "mint"
+        ],
+        "rule_palette": "ocean",
+        "rule_correct": true,
+        "rule_latency_ms": 0.011,
+        "rule_explanation": "buổi chiều → ocean",
+        "llm_palette": "lavender",
+        "llm_correct": true,
+        "llm_latency_ms": 2233,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "both_correct_differ",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "H06",
+        "category": "health",
+        "description": "Chiều tối, mệt + nhịp tim cao",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "rule_palette": "sunset",
+        "rule_correct": true,
+        "rule_latency_ms": 0.006,
+        "rule_explanation": "buổi tối → sunset",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2367,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "C01",
+        "category": "combined",
+        "description": "Sáng đẹp, khỏe mạnh, bình thường",
+        "expected_palettes": [
+          "mint",
+          "forest",
+          "golden_morning"
+        ],
+        "rule_palette": "mint",
+        "rule_correct": true,
+        "rule_latency_ms": 0.012,
+        "rule_explanation": "buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2250,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "C02",
+        "category": "combined",
+        "description": "Chiều tối, trời âm, ngủ thiếu nhẹ",
+        "expected_palettes": [
+          "sunset",
+          "warm_orange",
+          "lavender"
+        ],
+        "rule_palette": "sunset",
+        "rule_correct": true,
+        "rule_latency_ms": 0.011,
+        "rule_explanation": "buổi tối → sunset",
+        "llm_palette": "lavender",
+        "llm_correct": true,
+        "llm_latency_ms": 2366,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "both_correct_differ",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "C03",
+        "category": "combined",
+        "description": "Đêm khuya, thư giãn, ngủ đủ",
+        "expected_palettes": [
+          "dark_blue",
+          "lavender"
+        ],
+        "rule_palette": "lavender",
+        "rule_correct": true,
+        "rule_latency_ms": 0.013,
+        "rule_explanation": "hr=58.0bpm + sleep=8.0h + giờ=23h → lavender; đêm khuya → dark_blue/lavender",
+        "llm_palette": "lavender",
+        "llm_correct": true,
+        "llm_latency_ms": 2245,
+        "llm_output_tokens": 2,
+        "agree": true,
+        "edge_type": "normal",
+        "is_edge_case": false
+      },
+      {
+        "case_id": "C04",
+        "category": "combined",
+        "description": "Trưa nắng gắt, nhịp tim cao",
+        "expected_palettes": [
+          "warm_orange",
+          "sunset"
+        ],
+        "rule_palette": "warm_orange",
+        "rule_correct": true,
+        "rule_latency_ms": 0.012,
+        "rule_explanation": "nhiệt độ 35.0°C ≥34 → warm_orange; buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2181,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "C05",
+        "category": "combined",
+        "description": "Chiều mưa, mát, thư giãn",
+        "expected_palettes": [
+          "rainy_evening",
+          "ocean",
+          "lavender"
+        ],
+        "rule_palette": "rainy_evening",
+        "rule_correct": true,
+        "rule_latency_ms": 0.008,
+        "rule_explanation": "thời tiết mưa → rainy_evening; buổi chiều → ocean",
+        "llm_palette": "lavender",
+        "llm_correct": true,
+        "llm_latency_ms": 2266,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "both_correct_differ",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "C06",
+        "category": "combined",
+        "description": "Sáng sương mù, lạnh, thiếu ngủ",
+        "expected_palettes": [
+          "rainy_evening",
+          "forest",
+          "mint"
+        ],
+        "rule_palette": "forest",
+        "rule_correct": true,
+        "rule_latency_ms": 0.014,
+        "rule_explanation": "buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2275,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "C07",
+        "category": "combined",
+        "description": "Tối, yoga, thư giãn",
+        "expected_palettes": [
+          "lavender",
+          "dark_blue"
+        ],
+        "rule_palette": "lavender",
+        "rule_correct": true,
+        "rule_latency_ms": 0.008,
+        "rule_explanation": "hr=58.0bpm + sleep=8.0h + giờ=21h → lavender; đêm khuya → dark_blue/lavender",
+        "llm_palette": "lavender",
+        "llm_correct": true,
+        "llm_latency_ms": 2281,
+        "llm_output_tokens": 2,
+        "agree": true,
+        "edge_type": "normal",
+        "is_edge_case": false
+      },
+      {
+        "case_id": "C08",
+        "category": "combined",
+        "description": "Sáng sớm, thể thao",
+        "expected_palettes": [
+          "golden_morning",
+          "mint",
+          "warm_orange"
+        ],
+        "rule_palette": "golden_morning",
+        "rule_correct": true,
+        "rule_latency_ms": 0.007,
+        "rule_explanation": "bình minh → golden_morning",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2208,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "E01",
+        "category": "edge",
+        "description": "Context tối thiểu - chỉ có giờ",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "rule_palette": "ocean",
+        "rule_correct": true,
+        "rule_latency_ms": 0.009,
+        "rule_explanation": "buổi chiều → ocean",
+        "llm_palette": "lavender",
+        "llm_correct": true,
+        "llm_latency_ms": 2036,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "both_correct_differ",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "E02",
+        "category": "edge",
+        "description": "Mâu thuẫn: nóng 40°C nhưng mưa",
+        "expected_palettes": [
+          "rainy_evening",
+          "warm_orange",
+          "ocean"
+        ],
+        "rule_palette": "rainy_evening",
+        "rule_correct": true,
+        "rule_latency_ms": 0.009,
+        "rule_explanation": "thời tiết mưa → rainy_evening; nhiệt độ 40.0°C ≥34 → warm_orange; buổi sáng → mint/forest",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2184,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "E03",
+        "category": "edge",
+        "description": "Sáng sớm nhưng rất mệt, thiếu ngủ",
+        "expected_palettes": [
+          "dark_blue",
+          "ocean",
+          "rainy_evening"
+        ],
+        "rule_palette": "golden_morning",
+        "rule_correct": false,
+        "rule_latency_ms": 0.009,
+        "rule_explanation": "bình minh → golden_morning",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2191,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "both_wrong",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "E04",
+        "category": "edge",
+        "description": "Đêm nhưng nhiệt độ cao",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "rule_palette": "warm_orange",
+        "rule_correct": true,
+        "rule_latency_ms": 0.01,
+        "rule_explanation": "nhiệt độ 34.0°C ≥34 → warm_orange; đêm khuya → dark_blue/lavender",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2111,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "E05",
+        "category": "edge",
+        "description": "Yêu thích màu tím, chiều, thư giãn",
+        "expected_palettes": [
+          "lavender",
+          "ocean"
+        ],
+        "rule_palette": "ocean",
+        "rule_correct": true,
+        "rule_latency_ms": 0.008,
+        "rule_explanation": "buổi chiều → ocean",
+        "llm_palette": "lavender",
+        "llm_correct": true,
+        "llm_latency_ms": 2205,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "both_correct_differ",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "E06",
+        "category": "edge",
+        "description": "Chiều, profile đầy đủ, người trẻ yêu travel",
+        "expected_palettes": [
+          "ocean",
+          "mint",
+          "forest",
+          "lavender"
+        ],
+        "rule_palette": "ocean",
+        "rule_correct": true,
+        "rule_latency_ms": 0.01,
+        "rule_explanation": "buổi chiều → ocean",
+        "llm_palette": "mint",
+        "llm_correct": true,
+        "llm_latency_ms": 2211,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "both_correct_differ",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "E07",
+        "category": "edge",
+        "description": "Chiều mưa - rainy vs sunset conflict",
+        "expected_palettes": [
+          "rainy_evening",
+          "sunset",
+          "ocean"
+        ],
+        "rule_palette": "rainy_evening",
+        "rule_correct": true,
+        "rule_latency_ms": 0.008,
+        "rule_explanation": "thời tiết mưa → rainy_evening; buổi tối → sunset",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2198,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      },
+      {
+        "case_id": "E08",
+        "category": "edge",
+        "description": "Đêm khuya, nóng, mất ngủ, stress",
+        "expected_palettes": [
+          "dark_blue",
+          "warm_orange"
+        ],
+        "rule_palette": "dark_blue",
+        "rule_correct": true,
+        "rule_latency_ms": 0.01,
+        "rule_explanation": "đêm khuya → dark_blue/lavender",
+        "llm_palette": "lavender",
+        "llm_correct": false,
+        "llm_latency_ms": 2191,
+        "llm_output_tokens": 2,
+        "agree": false,
+        "edge_type": "rule_wins",
+        "is_edge_case": true
+      }
+    ]
+  }
+}

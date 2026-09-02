@@ -1,23 +1,74 @@
+# ==================================================
+# Android
+# ==================================================
 *.iml
-.gradle
+.gradle/
 /local.properties
+local.properties
+.idea/
+**/.idea/
 /.idea/caches
 /.idea/libraries
 /.idea/modules.xml
 /.idea/workspace.xml
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
-.DS_Store
-/build
-*/build
-.cxx
-captures/
-.externalNativeBuild
+/build/
+**/build/
 .cxx/
+captures/
+.externalNativeBuild/
 *.apk
 *.aab
 *.ap_
 output.json
-.kotlin
 .kotlin/
 
+# ==================================================
+# Web / Node.js / Next.js
+# ==================================================
+node_modules/
+**/node_modules/
+web/site/node_modules/
+web/site/.next/
+web/site/out/
+web/site/dist/
+web/site/coverage/
+web/site/tsconfig.tsbuildinfo
+
+# ==================================================
+# Web environment and secrets
+# ==================================================
+web/site/.env*
+!web/site/.env.example
+web/project-files/.env.local
+.env
+.env.local
+*.env.local
+
+# ==================================================
+# Runtime uploads
+# ==================================================
+web/site/public/uploads/*
+!web/site/public/uploads/.gitkeep
+
+# ==================================================
+# IDE and temporary files
+# ==================================================
+web/site/.idea/
+web/project-files/.idea/
+*.tmp
+*.temp
+*.log
+
+# ==================================================
+# Old duplicate Web source
+# ==================================================
+web/project-files/source_code/from_github_android_ui_grader_AI/
+
+# ==================================================
+# Operating system
+# ==================================================
+.DS_Store
+Thumbs.db
+desktop.ini

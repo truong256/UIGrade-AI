@@ -1,0 +1,30 @@
+{
+  "n": 8,
+  "mae": 0.875,
+  "mean_bias": 0.125,
+  "within_1_point_rate": 0.75,
+  "by_assignment": {
+    "login_screen": {
+      "n": 3,
+      "mae": 0.833,
+      "mean_bias": 0.5,
+      "within_1_point_rate": 0.667
+    },
+    "product_list": {
+      "n": 3,
+      "mae": 1.167,
+      "mean_bias": 0.167,
+      "within_1_point_rate": 0.667
+    },
+    "profile_screen": {
+      "n": 2,
+      "mae": 0.5,
+      "mean_bias": -0.5,
+      "within_1_point_rate": 1.0
+    }
+  },
+  "review_cases": [
+    "G03",
+    "G06"
+  ]
+}

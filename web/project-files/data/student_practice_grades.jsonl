@@ -1,0 +1,8 @@
+{"case_id":"G01","assignment":"login_screen","device":"360x800","teacher_score":9.0,"auto_score":8.5,"rubric_total":10,"layout_similarity":0.92,"contrast_pass":true,"data_source":"synthetic"}
+{"case_id":"G02","assignment":"login_screen","device":"360x800","teacher_score":7.0,"auto_score":7.5,"rubric_total":10,"layout_similarity":0.78,"contrast_pass":false,"data_source":"synthetic"}
+{"case_id":"G03","assignment":"login_screen","device":"412x915","teacher_score":5.0,"auto_score":6.5,"rubric_total":10,"layout_similarity":0.66,"contrast_pass":false,"data_source":"synthetic"}
+{"case_id":"G04","assignment":"profile_screen","device":"360x800","teacher_score":8.0,"auto_score":8.0,"rubric_total":10,"layout_similarity":0.86,"contrast_pass":true,"data_source":"synthetic"}
+{"case_id":"G05","assignment":"profile_screen","device":"412x915","teacher_score":6.0,"auto_score":5.0,"rubric_total":10,"layout_similarity":0.61,"contrast_pass":true,"data_source":"synthetic"}
+{"case_id":"G06","assignment":"product_list","device":"360x800","teacher_score":4.0,"auto_score":6.0,"rubric_total":10,"layout_similarity":0.58,"contrast_pass":false,"data_source":"synthetic"}
+{"case_id":"G07","assignment":"product_list","device":"412x915","teacher_score":8.5,"auto_score":8.0,"rubric_total":10,"layout_similarity":0.88,"contrast_pass":true,"data_source":"synthetic"}
+{"case_id":"G08","assignment":"product_list","device":"412x915","teacher_score":10.0,"auto_score":9.0,"rubric_total":10,"layout_similarity":0.96,"contrast_pass":true,"data_source":"synthetic"}

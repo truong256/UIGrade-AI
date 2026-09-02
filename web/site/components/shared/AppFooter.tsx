@@ -1,0 +1,33 @@
+import Link from "next/link";
+import { navItems } from "@/lib/navigation";
+
+export function AppFooter() {
+    return (
+        <footer className="mt-12 border-t border-sky-100 bg-white/80 backdrop-blur-xs">
+            <div className="mx-auto flex max-w-7xl flex-col gap-4 px-4 py-8 text-sm text-slate-500 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+                <div>
+                    <div className="flex items-center gap-2">
+                        <span className="flex h-6 w-6 items-center justify-center rounded-lg bg-sky-600 text-white font-bold text-xs">
+                            UI
+                        </span>
+                        <p className="font-bold text-sky-950">UIGrade AI</p>
+                    </div>
+                    <p className="mt-1 text-xs text-slate-500">
+                        Hệ thống chấm điểm và phân tích giao diện ứng dụng Android tự động theo Rubric.
+                    </p>
+                </div>
+
+                <nav className="flex flex-wrap gap-4 text-xs">
+                    {navItems.slice(0, 6).map((item) => (
+                        <Link key={item.href} href={item.href} className="text-slate-600 hover:text-sky-600 transition">
+                            {item.label}
+                        </Link>
+                    ))}
+                    <Link href="/ui/account" className="text-slate-600 hover:text-sky-600 transition">
+                        Tài khoản
+                    </Link>
+                </nav>
+            </div>
+        </footer>
+    );
+}
