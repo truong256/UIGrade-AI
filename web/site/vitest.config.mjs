@@ -9,6 +9,9 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: ["tests/**/*.test.ts", "tests/**/*.test.tsx"],
+    env: {
+      JWT_SECRET: "test-jwt-secret-for-vitest-only-32chars",
+    },
   },
   resolve: {
     alias: {

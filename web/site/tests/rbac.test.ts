@@ -31,10 +31,14 @@ import {
     assertCanChangeRole,
     assertCanCreateUserWithRole,
     assertOwnsClass,
+    assertCanGradeSubmission,
     assertCanAccessSubmission,
+    resolveHttpStatus,
     AuthorizationError,
     type AuthenticatedActor,
 } from "@/lib/authorization";
+import { getCurrentUserFromRequest } from "@/lib/current-user";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -478,4 +482,166 @@ describe("Header spoofing defense", () => {
     it("SECURITY: JSON injection attempts normalize to student", () => {
         expect(normalizeRole("{\"role\":\"admin\"}")).toBe(ROLES.STUDENT);
     });
+
+    it("SECURITY: getCurrentUserFromRequest ignores x-user-id and x-user-role headers completely", () => {
+        const fakeHeaderRequest = new Request("http://localhost:3000/api/settings/users", {
+            headers: {
+                "x-user-id": "fake-admin-id",
+                "x-user-role": "admin",
+                "x-user-email": "hacker@evil.com",
+            },
+        });
+
+        // Must return null because there is no valid signed cookie
+        const user = getCurrentUserFromRequest(fakeHeaderRequest);
+        expect(user).toBeNull();
+
+        // And passing null to requireAdmin must throw 401
+        expect(() => requireAdmin(user)).toThrowError(AuthorizationError);
+        try {
+            requireAdmin(user);
+        } catch (e) {
+            expect((e as AuthorizationError).statusCode).toBe(401);
+        }
+    });
+
+    it("SECURITY: unauthenticated request without cookies returns null", () => {
+        const noAuthRequest = new Request("http://localhost:3000/api/settings/users");
+        const user = getCurrentUserFromRequest(noAuthRequest);
+        expect(user).toBeNull();
+    });
+
+    it("SECURITY: request with malformed cookie returns null", () => {
+        const malformedRequest = new Request("http://localhost:3000/api/settings/users", {
+            headers: {
+                cookie: "token=invalid.malformed.jwt.token",
+            },
+        });
+        const user = getCurrentUserFromRequest(malformedRequest);
+        expect(user).toBeNull();
+    });
 });
+
+// ---------------------------------------------------------------------------
+// 13. Grading IDOR / BOLA authorization
+// ---------------------------------------------------------------------------
+
+describe("assertCanGradeSubmission()", () => {
+    it("lecturer can grade submissions in their own class", () => {
+        expect(() => assertCanGradeSubmission(lecturerActor, "lec-001")).not.toThrow();
+    });
+
+    it("SECURITY: lecturer CANNOT grade submissions in another lecturer's class → 403", () => {
+        expect(() => assertCanGradeSubmission(lecturerActor, "other-lec-888")).toThrowError(AuthorizationError);
+        try {
+            assertCanGradeSubmission(lecturerActor, "other-lec-888");
+        } catch (e) {
+            expect((e as AuthorizationError).statusCode).toBe(403);
+        }
+    });
+
+    it("admin can grade submissions in any class", () => {
+        expect(() => assertCanGradeSubmission(adminActor, "other-lec-888")).not.toThrow();
+    });
+
+    it("SECURITY: student CANNOT grade submissions → 403", () => {
+        expect(() => assertCanGradeSubmission(studentActor, "stu-001")).toThrowError(AuthorizationError);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 14. resolveHttpStatus() mapping
+// ---------------------------------------------------------------------------
+
+describe("resolveHttpStatus()", () => {
+    it("resolves 401 for unauthenticated AuthorizationError", () => {
+        const err = new AuthorizationError("Bạn chưa đăng nhập", 401);
+        expect(resolveHttpStatus(err)).toBe(401);
+    });
+
+    it("resolves 403 for forbidden AuthorizationError", () => {
+        const err = new AuthorizationError("Bạn không có quyền", 403);
+        expect(resolveHttpStatus(err)).toBe(403);
+    });
+
+    it("resolves 401 for generic Error mentioning chưa đăng nhập", () => {
+        const err = new Error("bạn chưa đăng nhập");
+        expect(resolveHttpStatus(err)).toBe(401);
+    });
+
+    it("resolves 403 for generic Error mentioning không có quyền", () => {
+        const err = new Error("bạn không có quyền truy cập");
+        expect(resolveHttpStatus(err)).toBe(403);
+    });
+
+    it("resolves 404 for generic Error mentioning không tìm thấy", () => {
+        const err = new Error("không tìm thấy người dùng");
+        expect(resolveHttpStatus(err)).toBe(404);
+    });
+
+    it("resolves 409 for conflict errors mentioning đã tồn tại", () => {
+        const err = new Error("email đã tồn tại");
+        expect(resolveHttpStatus(err)).toBe(409);
+    });
+
+    it("defaults to 400 for unknown errors", () => {
+        const err = new Error("tham số không hợp lệ");
+        expect(resolveHttpStatus(err)).toBe(400);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 15. Client-side Role Spoofing (JSON body / parameter injection)
+// ---------------------------------------------------------------------------
+
+describe("Client-side Role Spoofing Immunity", () => {
+    it("SECURITY: student attempting to set role=admin in body is blocked", () => {
+        expect(() => assertCanCreateUserWithRole(studentActor, "admin")).toThrowError(AuthorizationError);
+    });
+
+    it("SECURITY: lecturer attempting to promote themselves to admin is blocked", () => {
+        expect(() => assertCanChangeRole(lecturerActor, lecturerTarget, "admin", 2)).toThrowError(AuthorizationError);
+    });
+
+    it("SECURITY: lecturer attempting to create admin account is blocked", () => {
+        expect(() => assertCanCreateUserWithRole(lecturerActor, "admin")).toThrowError(AuthorizationError);
+    });
+
+    it("SECURITY: student attempting to modify another student's account is blocked", () => {
+        expect(canManageUser(studentActor, studentTarget)).toBe(false);
+    });
+
+    it("SECURITY: lecturer attempting to update admin fields is blocked", () => {
+        expect(canManageUser(lecturerActor, adminTarget)).toBe(false);
+        expect(() => assertCanDeactivateUser(lecturerActor, adminTarget, 2)).toThrowError(AuthorizationError);
+        expect(() => assertCanDeleteUser(lecturerActor, adminTarget, 2)).toThrowError(AuthorizationError);
+        expect(() => assertCanChangeRole(lecturerActor, adminTarget, "lecturer", 2)).toThrowError(AuthorizationError);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 16. Supabase Admin Client Fail-Secure Behavior
+// ---------------------------------------------------------------------------
+
+describe("createSupabaseAdminClient Fail-Secure", () => {
+    it("SECURITY: throws clear error if SUPABASE configuration is missing/placeholder", () => {
+        // Since test environment doesn't have real SUPABASE_SERVICE_ROLE_KEY / URL configured,
+        // it must throw a clear error instead of silently downgrading to anon key
+        expect(() => createSupabaseAdminClient()).toThrow(/\[Supabase Admin\]/);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 17. Server Config Access Matrix
+// ---------------------------------------------------------------------------
+
+describe("Server Config RBAC Matrix", () => {
+    it("allows only admin to access server config", () => {
+        expect(() => requireAdmin(adminActor)).not.toThrow();
+        expect(() => requireAdmin(lecturerActor)).toThrowError(AuthorizationError);
+        expect(() => requireAdmin(studentActor)).toThrowError(AuthorizationError);
+        expect(() => requireAdmin(null)).toThrowError(AuthorizationError);
+    });
+});
+
+

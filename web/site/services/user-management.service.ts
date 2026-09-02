@@ -29,7 +29,7 @@
  *  Demote last active admin      NO     NO        NO
  */
 
-import User, { IUser, UserRole } from "@/models/User.model";
+import User, { IUser } from "@/models/User.model";
 import bcrypt from "bcryptjs";
 import mongoose from "mongoose";
 import {
@@ -62,7 +62,7 @@ type ListUsersParams = {
  * Payload for creating a new user.
  * Uses strict `role` field (canonical). "roles" alias is not accepted.
  */
-type CreateUserPayload = {
+export type CreateUserPayload = {
     name?: string;
     email?: string;
     password?: string;
