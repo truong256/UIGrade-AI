@@ -444,6 +444,11 @@ export default function AssignmentListPage() {
                 onKeywordChange={setKeyword}
                 onStatusFilterChange={setStatusFilter}
                 onClassFilterChange={setClassFilter}
+                onResetFilters={() => {
+                    setKeyword("");
+                    setStatusFilter("all");
+                    setClassFilter("all");
+                }}
             />
 
             <AssignmentTable
@@ -459,6 +464,11 @@ export default function AssignmentListPage() {
                 onOpenDetail={openDetail}
                 onOpenEdit={openEdit}
                 onDelete={handleDelete}
+                onResetFilters={() => {
+                    setKeyword("");
+                    setStatusFilter("all");
+                    setClassFilter("all");
+                }}
             />
 
             <AssignmentDetailDialog

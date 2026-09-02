@@ -297,26 +297,23 @@ export function ServerConfigClient() {
 
     if (loading) {
         return (
-            <div className="flex min-h-screen overflow-hidden">
-                <main className="flex-1 space-y-6">
-                    <div className="h-24 animate-pulse rounded-2xl bg-white shadow-xs" />
-                    <div className="h-60 animate-pulse rounded-2xl bg-white shadow-xs" />
-                    <div className="grid gap-6 md:grid-cols-2">
-                        <div className="h-72 animate-pulse rounded-2xl bg-white shadow-xs" />
-                        <div className="h-72 animate-pulse rounded-2xl bg-white shadow-xs" />
-                    </div>
-                </main>
+            <div className="space-y-6">
+                <div className="h-24 animate-pulse rounded-2xl bg-white shadow-xs" />
+                <div className="h-60 animate-pulse rounded-2xl bg-white shadow-xs" />
+                <div className="grid gap-6 md:grid-cols-2">
+                    <div className="h-72 animate-pulse rounded-2xl bg-white shadow-xs" />
+                    <div className="h-72 animate-pulse rounded-2xl bg-white shadow-xs" />
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="flex min-h-screen overflow-hidden">
-            <main className="flex-1 space-y-6">
-                <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#172033]">{pageInfo.title}</h1>
-                    <p className="mt-1 text-sm text-[#4A5568]">{pageInfo.description}</p>
-                </div>
+        <div className="space-y-6">
+            <div className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#172033]">{pageInfo.title}</h1>
+                <p className="mt-1 text-sm text-[#4A5568]">{pageInfo.description}</p>
+            </div>
 
                 <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
                     <div className="flex items-center gap-2.5 border-b border-slate-100 p-5">
@@ -816,7 +813,6 @@ export function ServerConfigClient() {
                         {saving ? "Đang lưu..." : "Lưu thay đổi"}
                     </button>
                 </div>
-            </main>
 
             {(message || error) && (
                 <div

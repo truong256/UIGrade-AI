@@ -18,6 +18,7 @@ type AssignmentTableProps = {
     onOpenDetail: (id: string) => void | Promise<void>;
     onOpenEdit: (item: AssignmentItem) => void | Promise<void>;
     onDelete: (id: string) => void | Promise<void>;
+    onResetFilters?: () => void;
 };
 
 export default function AssignmentTable({
@@ -33,15 +34,16 @@ export default function AssignmentTable({
     onOpenDetail,
     onOpenEdit,
     onDelete,
+    onResetFilters,
 }: AssignmentTableProps) {
     return (
         <section className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
-            <div className="max-h-[580px] overflow-auto">
+            <div className="overflow-x-auto">
                 <table className="w-full min-w-[1120px] text-left">
-                    <thead className="sticky top-0 z-10 bg-slate-50/90 backdrop-blur-xs border-b border-slate-200/80 text-xs font-semibold text-slate-600">
+                    <thead className="bg-slate-50/90 border-b border-slate-200/80 text-xs font-semibold uppercase tracking-wider text-slate-600">
                         <tr>
                             <th className="px-5 py-3.5">Bài tập</th>
-                            <th className="px-5 py-3.5">Lớp</th>
+                            <th className="px-5 py-3.5">Lớp học</th>
                             <th className="px-5 py-3.5">Ngày giao</th>
                             <th className="px-5 py-3.5">Hạn nộp</th>
                             <th className="px-5 py-3.5">Điểm tối đa</th>
@@ -69,7 +71,7 @@ export default function AssignmentTable({
                             items.map((item) => (
                                 <tr
                                     key={item._id}
-                                    className="transition hover:bg-slate-50/60"
+                                    className="min-h-[56px] transition hover:bg-slate-50/60"
                                 >
                                     <td
                                         className="cursor-pointer px-5 py-3.5"
@@ -94,10 +96,10 @@ export default function AssignmentTable({
                                                 <p className="font-semibold text-[#172033]">
                                                     {item.classroom.name}
                                                 </p>
-                                                <p className="font-mono text-blue-700 text-[11px]">{item.classroom.code}</p>
+                                                <p className="font-mono text-blue-700 text-[11px] font-medium">{item.classroom.code}</p>
                                             </div>
                                         ) : (
-                                            "--"
+                                            <span className="text-slate-400">--</span>
                                         )}
                                     </td>
 
@@ -260,9 +262,29 @@ export default function AssignmentTable({
                             <tr>
                                 <td
                                     colSpan={tableColSpan}
-                                    className="px-5 py-10 text-center text-xs text-slate-500"
+                                    className="px-5 py-12 text-center"
                                 >
-                                    Chưa có bài tập nào khớp bộ lọc hiện tại.
+                                    <div className="mx-auto flex max-w-sm flex-col items-center justify-center text-center">
+                                        <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-100 text-slate-400 mb-3">
+                                            <span className="material-symbols-outlined text-[26px]">inbox</span>
+                                        </div>
+                                        <h3 className="text-sm font-bold text-[#172033]">
+                                            Chưa có bài tập
+                                        </h3>
+                                        <p className="mt-1 text-xs text-[#4A5568] max-w-xs">
+                                            Không có bài tập nào phù hợp với bộ lọc hiện tại.
+                                        </p>
+                                        {onResetFilters && (
+                                            <button
+                                                type="button"
+                                                onClick={onResetFilters}
+                                                className="mt-3.5 inline-flex h-9 items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3.5 text-xs font-semibold text-slate-700 shadow-2xs hover:bg-slate-50 hover:border-slate-300 transition"
+                                            >
+                                                <span className="material-symbols-outlined text-[16px]">filter_alt_off</span>
+                                                <span>Xóa bộ lọc</span>
+                                            </button>
+                                        )}
+                                    </div>
                                 </td>
                             </tr>
                         )}

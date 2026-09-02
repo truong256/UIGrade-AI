@@ -108,7 +108,7 @@ export function AppHeader({ children }: { children: ReactNode }) {
     }, [searchQuery, visibleNavItems]);
 
     return (
-        <div className="min-h-screen bg-[#F6F9FF] text-[#172033]">
+        <div className="min-h-dvh bg-[#F6F9FF] text-[#172033]">
             <AppSidebar
                 collapsed={!sidebarExpanded}
                 mobileOpen={mobileSidebarOpen}
@@ -118,8 +118,8 @@ export function AppHeader({ children }: { children: ReactNode }) {
                 currentUserRole={userRole}
             />
 
-            <div className="min-h-screen transition-all duration-300 lg:pl-[88px]">
-                <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur-md transition-all duration-300">
+            <div className="flex min-h-dvh flex-col transition-all duration-300 lg:pl-[88px]">
+                <header className="sticky top-0 z-30 shrink-0 border-b border-slate-200/80 bg-white/95 backdrop-blur-md transition-all duration-300">
                     <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
                         <div className="flex items-center gap-3">
                             {/* Mobile Hamburger Button */}
@@ -301,11 +301,11 @@ export function AppHeader({ children }: { children: ReactNode }) {
                     </div>
                 )}
 
-                <main className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
+                <main className="mx-auto w-full max-w-7xl flex-1 px-4 py-6 sm:px-6 lg:px-8">
                     {children}
                 </main>
 
-                <AppFooter />
+                <AppFooter userRole={userRole} />
             </div>
         </div>
     );

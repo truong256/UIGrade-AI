@@ -36,12 +36,12 @@ export default async function ServerConfigSectionLayout({
     }
 
     return (
-        <div className="flex min-h-screen gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
             <SettingsSidebar
                 groups={sidebarGroups}
                 versionInfo={versionInfo}
             />
-            <main className="min-w-0 flex-1">{children}</main>
+            <div className="min-w-0 flex-1">{children}</div>
         </div>
     );
 }

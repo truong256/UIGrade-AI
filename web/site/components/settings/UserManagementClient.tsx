@@ -397,9 +397,8 @@ export function UserManagementClient() {
         };
     }, []);
     return (
-        <div className="flex min-h-screen gap-6 overflow-hidden">
-            <main className="min-w-0 flex-1 space-y-6">
-                <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
+        <div className="space-y-6">
+            <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#172033]">Quản lý người dùng</h1>
@@ -688,7 +687,6 @@ export function UserManagementClient() {
                         </div>
                     </div>
                 </section>
-            </main>
 
             {showCreateModal ? (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4">
