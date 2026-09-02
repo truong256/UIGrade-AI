@@ -8,7 +8,7 @@ INSERT INTO public.system_configs (key, value, description)
 VALUES 
     ('app_name', '"UIGrade AI"'::jsonb, 'Tên hệ thống hiển thị trên giao diện'),
     ('system_status', '"active"'::jsonb, 'Trạng thái hoạt động hệ thống'),
-    ('gemini_model', '"gemini-2.5-flash"'::jsonb, 'Mô hình AI Gemini dùng cho phân tích UI'),
+    ('gemini_model', '"gemini-3.7-flash"'::jsonb, 'Mô hình AI Gemini dùng cho phân tích UI'),
     ('max_upload_size_mb', '50'::jsonb, 'Dung lượng tải lên tối đa (MB)'),
     ('email_notifications_enabled', 'true'::jsonb, 'Bật thông báo email tự động'),
     ('auto_grading_enabled', 'true'::jsonb, 'Bật chế độ AI gợi ý điểm tự động')

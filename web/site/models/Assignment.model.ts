@@ -225,7 +225,7 @@ const AiConfigSchema = new Schema(
         },
         model: {
             type: String,
-            default: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+            default: process.env.GEMINI_MODEL || "gemini-3.7-flash",
             trim: true,
         },
         temperature: {
