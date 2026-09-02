@@ -8,14 +8,9 @@ import { AppSidebar } from "@/components/shared/AppSidebar";
 import { AppFooter } from "@/components/shared/AppFooter";
 import { getNavItemsForRole, isActivePath } from "@/lib/navigation";
 
-type CurrentUser = {
-    id?: string;
-    _id?: string;
-    name?: string;
-    full_name?: string;
-    email?: string;
-    role?: "admin" | "teacher" | "lecturer" | "student" | "User";
-};
+import { fetchCurrentUserClient, type AuthUser } from "@/lib/auth-client";
+
+type CurrentUser = AuthUser;
 
 type NotificationItem = {
     id: string;
@@ -42,13 +37,8 @@ export function AppHeader({ children }: { children: ReactNode }) {
 
     useEffect(() => {
         const loadMe = async () => {
-            try {
-                const res = await fetch("/api/auth/me", { cache: "no-store" });
-                if (!res.ok) return;
-
-                const json = await res.json();
-                setCurrentUser(json.user || null);
-            } catch {}
+            const user = await fetchCurrentUserClient();
+            setCurrentUser(user);
         };
 
         const loadNotifications = async () => {

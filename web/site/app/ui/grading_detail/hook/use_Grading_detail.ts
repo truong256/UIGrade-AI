@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { AnyObj, AssignmentDetail, AssignmentOption, GradingTab, SidebarStudent } from "../type/grading_detail.type";
 import { normalizeAssignment, normalizeSubmissions, requestJson } from "../type/grading_detail.api";
-import { asObj, buildSidebar, toId, toNum, toText } from "../type/grading_detail.unit";
+import { asObj, buildSidebar, toId, toText } from "../type/grading_detail.unit";
 
 export function useGradingDetail() {
     const router = useRouter();
@@ -243,6 +243,7 @@ export function useGradingDetail() {
         };
 
         void run();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [assignmentId, submissionIdParam, studentIdParam]);
 
     async function handleGrade(mode: "grade" | "regrade") {

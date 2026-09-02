@@ -359,7 +359,7 @@ export default function LearningReportPage() {
         return () => {
             cancelled = true;
         };
-    }, [data?.generatedAt, classroomId, assignmentId, aiRefreshKey, loading, error]);
+    }, [data, classroomId, assignmentId, aiRefreshKey, loading, error]);
 
     const classroomOptions = useMemo(() => data?.filters.classrooms || [], [data]);
     const assignmentOptions = useMemo(() => data?.filters.assignments || [], [data]);

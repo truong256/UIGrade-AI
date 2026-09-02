@@ -2345,9 +2345,6 @@ export async function runAndroidProjectRuntime(input: {
                 100
             ) / 100
                 : null;
-
-        const firstVisualComparison = visualResults[0] ?? null;
-
         const firstVisualResult = visualResults[0] ?? null;
 
         const visualComparison =

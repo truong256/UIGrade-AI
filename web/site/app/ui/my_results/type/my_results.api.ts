@@ -1,3 +1,4 @@
+import { fetchCurrentUserClient } from "@/lib/auth-client";
 import type { CurrentUser, ResultItem } from "./my_results.type";
 import { normalizeResult, pickLatestByAssignment } from "./my_results.utils";
 
@@ -6,14 +7,11 @@ async function readJson(response: Response) {
 }
 
 export async function fetchCurrentUser(): Promise<CurrentUser | null> {
-    const response = await fetch("/api/auth/me", { cache: "no-store" });
-    const json = await readJson(response);
-
-    if (!response.ok) {
-        throw new Error(json.message || "Bạn chưa đăng nhập");
+    const user = await fetchCurrentUserClient();
+    if (!user) {
+        throw new Error("Bạn chưa đăng nhập");
     }
-
-    return (json.user || null) as CurrentUser | null;
+    return user as CurrentUser;
 }
 
 export async function fetchMyResults(): Promise<ResultItem[]> {

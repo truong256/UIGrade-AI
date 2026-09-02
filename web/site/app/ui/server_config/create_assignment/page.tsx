@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { fetchCurrentUserClient } from "@/lib/auth-client";
 import UiScenarioEditor from "@/components/grading_detail/UiScenarioEditor";
 import {
     DEFAULT_ANDROID_UI_RUNNER_CONFIG,
@@ -393,17 +394,14 @@ export default function CreateAssignmentPage() {
                 setLoading(true);
                 setError("");
 
-                const [userRes, classesRes] = await Promise.all([
-                    fetch("/api/auth/me", { cache: "no-store" }),
+                const [currentUserData, classesRes] = await Promise.all([
+                    fetchCurrentUserClient(),
                     fetch("/api/classes", { cache: "no-store" }),
                 ]);
 
-                const userJson: ApiResult<CurrentUser> = await userRes.json();
-                const classesJson: ApiResult<Classroom[]> = await classesRes.json();
+                setCurrentUser(currentUserData as CurrentUser | null);
 
-                if (userRes.ok) {
-                    setCurrentUser((userJson.user as CurrentUser) || null);
-                }
+                const classesJson: ApiResult<Classroom[]> = await classesRes.json();
 
                 if (!classesRes.ok) {
                     throw new Error(classesJson.message || "Không tải được danh sách lớp học");

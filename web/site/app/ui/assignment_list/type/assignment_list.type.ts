@@ -1,5 +1,3 @@
-import {ClassroomUserRef} from "@/app/ui/my_classes/type/classroom.type";
-
 export type ClassroomOption = {
     _id: string;
     name: string;
@@ -8,8 +6,11 @@ export type ClassroomOption = {
 
 export type CurrentUser = {
     _id?: string;
+    id?: string;
     name?: string;
-    role?: "User" | "admin" | "teacher";
+    full_name?: string;
+    email?: string;
+    role?: "User" | "admin" | "teacher" | "lecturer" | "student";
 };
 
 export type AttachmentItem = {
