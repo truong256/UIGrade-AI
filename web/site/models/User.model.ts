@@ -1,6 +1,13 @@
 import mongoose, { Document, Model, Schema } from "mongoose";
 
-export type UserRole = "teacher" | "admin" | "User";
+/**
+ * Canonical roles: "admin" | "lecturer" | "student"
+ * Legacy aliases kept for backward compatibility:
+ *   "teacher" → normalizes to "lecturer"
+ *   "User"    → normalizes to "student"
+ * Use normalizeRole() from lib/authorization.ts when reading role values.
+ */
+export type UserRole = "admin" | "lecturer" | "student" | "teacher" | "User";
 
 export interface IUserNotificationSettings {
     emailAssignments: boolean;
@@ -71,8 +78,10 @@ const UserSchema = new Schema<IUser>(
         },
         role: {
             type: String,
-            enum: ["admin", "teacher", "User"],
-            default: "User",
+            // Canonical values: admin, lecturer, student
+            // Legacy aliases accepted: teacher (→ lecturer), User (→ student)
+            enum: ["admin", "lecturer", "student", "teacher", "User"],
+            default: "student",
         },
         isActive: {
             type: Boolean,

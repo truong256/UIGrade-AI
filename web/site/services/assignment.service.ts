@@ -274,7 +274,7 @@ function ensureCanManage(currentUser: CurrentUserPayload) {
         throw new Error("Bạn chưa đăng nhập");
     }
 
-    if (currentUser.role !== "teacher" && currentUser.role !== "admin") {
+    if (currentUser.role !== "lecturer" && currentUser.role !== "admin") {
         throw new Error("Bạn không có quyền thực hiện thao tác này");
     }
 }
@@ -320,7 +320,7 @@ export const assignmentService = {
             return docs.map(mapAssignmentResponse);
         }
 
-        if (currentUser.role === "teacher") {
+        if (currentUser.role === "lecturer") {
             const docs = await assignmentRepository.findByTeacherId(currentUser.userId);
             return docs.map(mapAssignmentResponse);
         }
@@ -350,7 +350,7 @@ export const assignmentService = {
 
         const mapped = mapAssignmentResponse(doc);
 
-        if (currentUser.role === "admin" || currentUser.role === "teacher") {
+        if (currentUser.role === "admin" || currentUser.role === "lecturer") {
             return mapped;
         }
 
@@ -389,7 +389,7 @@ export const assignmentService = {
             return docs.map(mapAssignmentResponse);
         }
 
-        if (currentUser.role === "teacher") {
+        if (currentUser.role === "lecturer") {
             const docs = await assignmentRepository.findByTeacherId(currentUser.userId);
 
             return docs

@@ -6,7 +6,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { AppSidebar } from "@/components/shared/AppSidebar";
 import { AppFooter } from "@/components/shared/AppFooter";
-import { navItems, isActivePath } from "@/lib/navigation";
+import { getNavItemsForRole, isActivePath } from "@/lib/navigation";
 
 type CurrentUser = {
     id?: string;
@@ -87,17 +87,7 @@ export function AppHeader({ children }: { children: ReactNode }) {
     const userRole = (currentUser?.role || "student") as "admin" | "teacher" | "lecturer" | "student" | "User";
 
     const visibleNavItems = useMemo(() => {
-        return navItems.filter((item) => {
-            if (
-                item.href === "/ui/create_assignment" ||
-                item.href === "/ui/server_config" ||
-                item.href === "/ui/grading_detail"
-            ) {
-                return userRole === "teacher" || userRole === "lecturer" || userRole === "admin";
-            }
-
-            return true;
-        });
+        return getNavItemsForRole(userRole);
     }, [userRole]);
 
     const displayName = currentUser?.full_name || currentUser?.name || currentUser?.email?.split("@")[0] || "Người dùng";

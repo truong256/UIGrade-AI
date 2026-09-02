@@ -29,7 +29,7 @@ export async function GET(request: Request) {
             filter.classroomId = classroomId;
         }
 
-        if (currentUser.role === "User") {
+        if (currentUser.role === "student") {
             filter.studentId = currentUser.userId;
         } else if (studentIdParam) {
             filter.studentId = studentIdParam;
