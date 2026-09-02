@@ -146,6 +146,10 @@ DECLARE
 BEGIN
     -- Check if target was an active admin
     IF (OLD.role = 'admin' AND (OLD.status IS NULL OR OLD.status = 'active')) THEN
+        -- Acquire transaction-scoped advisory lock to serialize concurrent admin mutations across all connections
+        -- Lock is automatically released at COMMIT / ROLLBACK
+        PERFORM pg_advisory_xact_lock(hashtext('admin_last_invariant_lock'));
+
         -- Case 1: Deletion of an active admin
         IF TG_OP = 'DELETE' THEN
             SELECT COUNT(*) INTO active_admin_count

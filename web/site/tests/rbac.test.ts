@@ -1082,3 +1082,204 @@ describe("Role Transition & studentCode Validation Invariants", () => {
         expect(finalRole).not.toBe(ROLES.STUDENT);
     });
 });
+
+// ---------------------------------------------------------------------------
+// 27. Cross-Instance Distributed Concurrency Simulation (Independent Mutexes)
+// ---------------------------------------------------------------------------
+
+describe("Cross-Instance Distributed Concurrency (Independent Mutexes)", () => {
+    // Simulated shared database state (MongoDB storage)
+    interface MockDbState {
+        users: Record<string, { role: string; isActive: boolean } | null>;
+        lock: { owner: string; isLocked: boolean; expiresAt: number } | null;
+    }
+
+    const createSharedDb = (): MockDbState => ({
+        users: {
+            "admin-A": { role: "admin", isActive: true },
+            "admin-B": { role: "admin", isActive: true },
+        },
+        lock: null,
+    });
+
+    const countActiveAdminsInDb = (db: MockDbState) =>
+        Object.values(db.users).filter((u) => u !== null && u.role === "admin" && u.isActive).length;
+
+    // Simulated cross-instance app worker
+    class MockAppInstance {
+        public readonly localMutex = new AsyncMutex(); // Separate memory mutex per instance
+        public readonly instanceId: string;
+        private db: MockDbState;
+
+        constructor(instanceId: string, db: MockDbState) {
+            this.instanceId = instanceId;
+            this.db = db;
+        }
+
+        // Shared database atomic CAS lock
+        private async acquireSharedDbLock(timeoutMs = 3000): Promise<string> {
+            const owner = `${this.instanceId}_${Date.now()}_${Math.random()}`;
+            const startTime = Date.now();
+
+            while (true) {
+                const now = Date.now();
+                // Atomic CAS condition: lock is free or expired
+                if (!this.db.lock || !this.db.lock.isLocked || this.db.lock.expiresAt < now) {
+                    this.db.lock = { owner, isLocked: true, expiresAt: now + 5000 };
+                    return owner;
+                }
+                if (Date.now() - startTime > timeoutMs) {
+                    throw new Error("Timeout acquiring shared DB lock");
+                }
+                await new Promise((r) => setTimeout(r, 10));
+            }
+        }
+
+        private async releaseSharedDbLock(owner: string): Promise<void> {
+            if (this.db.lock && this.db.lock.owner === owner) {
+                this.db.lock.isLocked = false;
+            }
+        }
+
+        public async executePrivilegedMutation<T>(mutation: () => Promise<T>): Promise<T> {
+            // Layer 1: local process mutex
+            return this.localMutex.runExclusive(async () => {
+                // Layer 2: shared database lock (cross-instance)
+                const owner = await this.acquireSharedDbLock();
+                try {
+                    return await mutation();
+                } finally {
+                    await this.releaseSharedDbLock(owner);
+                }
+            });
+        }
+
+        public async lockUser(targetId: string, actor: AuthenticatedActor) {
+            return this.executePrivilegedMutation(async () => {
+                const currentCount = countActiveAdminsInDb(this.db);
+                const target = this.db.users[targetId];
+                if (!target) throw new Error("Not found");
+                assertCanDeactivateUser(actor, { _id: targetId, ...target }, currentCount);
+                target.isActive = false;
+                return { locked: targetId };
+            });
+        }
+
+        public async deleteUser(targetId: string, actor: AuthenticatedActor) {
+            return this.executePrivilegedMutation(async () => {
+                const currentCount = countActiveAdminsInDb(this.db);
+                const target = this.db.users[targetId];
+                if (!target) throw new Error("Not found");
+                assertCanDeleteUser(actor, { _id: targetId, ...target }, currentCount);
+                this.db.users[targetId] = null;
+                return { deleted: targetId };
+            });
+        }
+
+        public async demoteUser(targetId: string, newRole: string, actor: AuthenticatedActor) {
+            return this.executePrivilegedMutation(async () => {
+                const currentCount = countActiveAdminsInDb(this.db);
+                const target = this.db.users[targetId];
+                if (!target) throw new Error("Not found");
+                assertCanChangeRole(actor, { _id: targetId, ...target }, newRole, currentCount);
+                target.role = newRole;
+                return { demoted: targetId, newRole };
+            });
+        }
+    }
+
+    it("DISTRIBUTED: Instance A locks Admin A and Instance B locks Admin B concurrently -> only 1 succeeds", async () => {
+        const sharedDb = createSharedDb();
+        const instanceA = new MockAppInstance("server-instance-A", sharedDb);
+        const instanceB = new MockAppInstance("server-instance-B", sharedDb);
+        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
+
+        const results = await Promise.allSettled([
+            instanceA.lockUser("admin-A", actor),
+            instanceB.lockUser("admin-B", actor),
+        ]);
+
+        const successful = results.filter((r) => r.status === "fulfilled");
+        const rejected = results.filter((r) => r.status === "rejected");
+
+        expect(successful.length).toBe(1);
+        expect(rejected.length).toBe(1);
+        expect(countActiveAdminsInDb(sharedDb)).toBe(1);
+    });
+
+    it("DISTRIBUTED: Instance A deletes Admin A and Instance B deletes Admin B concurrently -> only 1 succeeds", async () => {
+        const sharedDb = createSharedDb();
+        const instanceA = new MockAppInstance("server-instance-A", sharedDb);
+        const instanceB = new MockAppInstance("server-instance-B", sharedDb);
+        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
+
+        const results = await Promise.allSettled([
+            instanceA.deleteUser("admin-A", actor),
+            instanceB.deleteUser("admin-B", actor),
+        ]);
+
+        const successful = results.filter((r) => r.status === "fulfilled");
+        const rejected = results.filter((r) => r.status === "rejected");
+
+        expect(successful.length).toBe(1);
+        expect(rejected.length).toBe(1);
+        expect(countActiveAdminsInDb(sharedDb)).toBe(1);
+    });
+
+    it("DISTRIBUTED: Instance A locks Admin A and Instance B deletes Admin B concurrently -> only 1 succeeds", async () => {
+        const sharedDb = createSharedDb();
+        const instanceA = new MockAppInstance("server-instance-A", sharedDb);
+        const instanceB = new MockAppInstance("server-instance-B", sharedDb);
+        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
+
+        const results = await Promise.allSettled([
+            instanceA.lockUser("admin-A", actor),
+            instanceB.deleteUser("admin-B", actor),
+        ]);
+
+        const successful = results.filter((r) => r.status === "fulfilled");
+        const rejected = results.filter((r) => r.status === "rejected");
+
+        expect(successful.length).toBe(1);
+        expect(rejected.length).toBe(1);
+        expect(countActiveAdminsInDb(sharedDb)).toBe(1);
+    });
+
+    it("DISTRIBUTED: Instance A demotes Admin A and Instance B demotes Admin B concurrently -> only 1 succeeds", async () => {
+        const sharedDb = createSharedDb();
+        const instanceA = new MockAppInstance("server-instance-A", sharedDb);
+        const instanceB = new MockAppInstance("server-instance-B", sharedDb);
+        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
+
+        const results = await Promise.allSettled([
+            instanceA.demoteUser("admin-A", "student", actor),
+            instanceB.demoteUser("admin-B", "student", actor),
+        ]);
+
+        const successful = results.filter((r) => r.status === "fulfilled");
+        const rejected = results.filter((r) => r.status === "rejected");
+
+        expect(successful.length).toBe(1);
+        expect(rejected.length).toBe(1);
+        expect(countActiveAdminsInDb(sharedDb)).toBe(1);
+    });
+
+    it("DISTRIBUTED: Instance A deletes Admin A and Instance B demotes Admin B concurrently -> only 1 succeeds", async () => {
+        const sharedDb = createSharedDb();
+        const instanceA = new MockAppInstance("server-instance-A", sharedDb);
+        const instanceB = new MockAppInstance("server-instance-B", sharedDb);
+        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
+
+        const results = await Promise.allSettled([
+            instanceA.deleteUser("admin-A", actor),
+            instanceB.demoteUser("admin-B", "student", actor),
+        ]);
+
+        const successful = results.filter((r) => r.status === "fulfilled");
+        const rejected = results.filter((r) => r.status === "rejected");
+
+        expect(successful.length).toBe(1);
+        expect(rejected.length).toBe(1);
+        expect(countActiveAdminsInDb(sharedDb)).toBe(1);
+    });
+});

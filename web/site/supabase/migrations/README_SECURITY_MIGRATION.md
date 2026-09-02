@@ -18,7 +18,7 @@ Migration này khắc phục triệt để các lỗ hổng phân quyền cấp 
    - Sinh viên xem bạn cùng lớp (chung lớp học).
 3. **Bảo vệ bảng `system_configs`**: Chỉ `admin` mới được đọc cấu hình hệ thống (trước đây mọi user đăng nhập đều đọc được).
 4. **Chặn tự leo quyền (Privilege Escalation)**: Chính sách `UPDATE` trên `profiles` và Trigger `trg_prevent_self_role_escalation` kiểm tra nghiêm ngặt không cho phép người dùng tự thay đổi trường `role` của chính mình.
-5. **Bảo vệ Last-Admin ở cấp Database Engine (Triggers)**: Trigger `trg_protect_last_admin` ngăn chặn bất kỳ Admin nào xóa, hạ quyền, hoặc khóa Admin cuối cùng kể cả khi thực hiện query trực tiếp qua Supabase REST/PostgREST.
+5. **Bảo vệ Last-Admin ở cấp Database Engine với Advisory Lock**: Trigger `trg_protect_last_admin` sử dụng `pg_advisory_xact_lock(hashtext('admin_last_invariant_lock'))` để tuần tự hóa các transaction đồng thời, ngăn chặn bất kỳ Admin nào xóa, hạ quyền, hoặc khóa Admin cuối cùng kể cả khi gọi trực tiếp qua Supabase REST/PostgREST.
 
 ---
 
@@ -29,7 +29,7 @@ Migration này khắc phục triệt để các lỗ hổng phân quyền cấp 
 | `public.profiles` | `SELECT` | `Profiles viewable by self, classmates, or admin` | Chỉ xem bản thân, bạn cùng lớp, hoặc admin xem tất cả |
 | `public.profiles` | `UPDATE` | `Users can update their own profile (not role)` | User không sửa được `role` |
 | `public.profiles` | `ALL` | `Admins can update any profile` | Admin quản lý profiles |
-| `public.profiles` | `UPDATE/DELETE` | Trigger: `trg_protect_last_admin` | Ngăn xóa/hạ quyền/khóa Admin cuối cùng |
+| `public.profiles` | `UPDATE/DELETE` | Trigger: `trg_protect_last_admin` | Sử dụng `pg_advisory_xact_lock` ngăn xóa/hạ quyền/khóa Admin cuối cùng |
 | `public.profiles` | `UPDATE` | Trigger: `trg_prevent_self_role_escalation` | Chặn non-admin sửa trường `role` |
 | `public.system_configs` | `SELECT` | `Only admins can read system configs` | Chỉ Admin đọc cấu hình |
 
