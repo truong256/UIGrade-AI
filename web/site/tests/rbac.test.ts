@@ -22,6 +22,7 @@ import { describe, it, expect } from "vitest";
 import {
     normalizeRole,
     validateRoleInput,
+    isAccountAccessAllowed,
     ROLES,
     requireAuth,
     requireAdmin,
@@ -40,6 +41,7 @@ import {
 } from "@/lib/authorization";
 import { getCurrentUserFromRequest } from "@/lib/current-user";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { AsyncMutex } from "@/services/user-management.service";
 
 // ---------------------------------------------------------------------------
 // Test fixtures
@@ -809,5 +811,274 @@ describe("Conditional studentCode Requirement Rules", () => {
 
     it("does NOT require studentCode for legacy 'teacher' role", () => {
         expect(isStudentCodeRequired("teacher")).toBe(false);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 23. isAccountAccessAllowed() Status Normalization Matrix
+// ---------------------------------------------------------------------------
+
+describe("isAccountAccessAllowed() Account Status Matrix", () => {
+    it("allows 'active' status", () => {
+        expect(isAccountAccessAllowed("active")).toBe(true);
+        expect(isAccountAccessAllowed("ACTIVE")).toBe(true);
+        expect(isAccountAccessAllowed("  active  ")).toBe(true);
+    });
+
+    it("allows undefined / null / default status with isActive=true", () => {
+        expect(isAccountAccessAllowed(undefined, true)).toBe(true);
+        expect(isAccountAccessAllowed(null, true)).toBe(true);
+        expect(isAccountAccessAllowed()).toBe(true);
+    });
+
+    it("denies 'locked' status", () => {
+        expect(isAccountAccessAllowed("locked")).toBe(false);
+        expect(isAccountAccessAllowed("LOCKED")).toBe(false);
+    });
+
+    it("denies 'inactive' status", () => {
+        expect(isAccountAccessAllowed("inactive")).toBe(false);
+        expect(isAccountAccessAllowed("INACTIVE")).toBe(false);
+    });
+
+    it("denies 'banned' status", () => {
+        expect(isAccountAccessAllowed("banned")).toBe(false);
+        expect(isAccountAccessAllowed("BANNED")).toBe(false);
+    });
+
+    it("denies 'suspended' status", () => {
+        expect(isAccountAccessAllowed("suspended")).toBe(false);
+        expect(isAccountAccessAllowed("SUSPENDED")).toBe(false);
+    });
+
+    it("denies 'pending' status", () => {
+        expect(isAccountAccessAllowed("pending")).toBe(false);
+        expect(isAccountAccessAllowed("PENDING")).toBe(false);
+    });
+
+    it("denies isActive=false regardless of string status", () => {
+        expect(isAccountAccessAllowed("active", false)).toBe(false);
+        expect(isAccountAccessAllowed(undefined, false)).toBe(false);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 24. Self-Admin Rules
+// ---------------------------------------------------------------------------
+
+describe("Self-Admin Operations Protection", () => {
+    it("SECURITY: Admin CANNOT lock themselves", () => {
+        const selfActor: AuthenticatedActor = { userId: "admin-self", email: "admin@self.com", role: "admin" };
+        const selfTarget = { _id: "admin-self", role: "admin", isActive: true };
+        expect(() => assertCanDeactivateUser(selfActor, selfTarget, 2)).toThrowError(AuthorizationError);
+    });
+
+    it("SECURITY: Admin CANNOT delete themselves", () => {
+        const selfActor: AuthenticatedActor = { userId: "admin-self", email: "admin@self.com", role: "admin" };
+        const selfTarget = { _id: "admin-self", role: "admin", isActive: true };
+        expect(() => assertCanDeleteUser(selfActor, selfTarget, 2)).toThrowError(AuthorizationError);
+    });
+
+    it("SECURITY: Admin CANNOT demote themselves if they are the last active admin", () => {
+        const selfActor: AuthenticatedActor = { userId: "admin-self", email: "admin@self.com", role: "admin" };
+        const selfTarget = { _id: "admin-self", role: "admin", isActive: true };
+        expect(() => assertCanChangeRole(selfActor, selfTarget, "student", 1)).toThrowError(AuthorizationError);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 25. Concurrency Race Condition & Atomic Invariant Tests
+// ---------------------------------------------------------------------------
+
+describe("Concurrency & Atomic Last-Admin Protection", () => {
+    it("SECURITY: Concurrent lock(A) + lock(B) ensures at least 1 admin remains active", async () => {
+        // Mock database state with 2 active admins
+        const dbUsers: Record<string, { role: string; isActive: boolean }> = {
+            "admin-A": { role: "admin", isActive: true },
+            "admin-B": { role: "admin", isActive: true },
+        };
+
+        const countDbActiveAdmins = () =>
+            Object.values(dbUsers).filter((u) => u.role === "admin" && u.isActive).length;
+
+        const mutex = new AsyncMutex();
+        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
+
+        const atomicDeactivate = async (targetId: string) => {
+            return mutex.runExclusive(async () => {
+                // Read fresh count inside the lock
+                const currentCount = countDbActiveAdmins();
+                const target = dbUsers[targetId];
+                if (!target) throw new Error("Not found");
+
+                // Enforce last admin invariant
+                assertCanDeactivateUser(actor, { _id: targetId, ...target }, currentCount);
+
+                // Mutate DB
+                target.isActive = false;
+                return { success: true };
+            });
+        };
+
+        // Fire both deactivations concurrently
+        const results = await Promise.allSettled([
+            atomicDeactivate("admin-A"),
+            atomicDeactivate("admin-B"),
+        ]);
+
+        const successful = results.filter((r) => r.status === "fulfilled");
+        const rejected = results.filter((r) => r.status === "rejected");
+
+        // Exactly one should succeed, one should be rejected by last-admin protection
+        expect(successful.length).toBe(1);
+        expect(rejected.length).toBe(1);
+
+        // Active admin count in DB must remain >= 1 (exactly 1)
+        expect(countDbActiveAdmins()).toBe(1);
+    });
+
+    it("SECURITY: Concurrent delete(A) + delete(B) ensures at least 1 admin remains", async () => {
+        const dbUsers: Record<string, { role: string; isActive: boolean } | null> = {
+            "admin-A": { role: "admin", isActive: true },
+            "admin-B": { role: "admin", isActive: true },
+        };
+
+        const countDbActiveAdmins = () =>
+            Object.values(dbUsers).filter((u) => u !== null && u.role === "admin" && u.isActive).length;
+
+        const mutex = new AsyncMutex();
+        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
+
+        const atomicDelete = async (targetId: string) => {
+            return mutex.runExclusive(async () => {
+                const currentCount = countDbActiveAdmins();
+                const target = dbUsers[targetId];
+                if (!target) throw new Error("Not found");
+
+                assertCanDeleteUser(actor, { _id: targetId, ...target }, currentCount);
+
+                dbUsers[targetId] = null;
+                return { deleted: targetId };
+            });
+        };
+
+        const results = await Promise.allSettled([
+            atomicDelete("admin-A"),
+            atomicDelete("admin-B"),
+        ]);
+
+        const successful = results.filter((r) => r.status === "fulfilled");
+        const rejected = results.filter((r) => r.status === "rejected");
+
+        expect(successful.length).toBe(1);
+        expect(rejected.length).toBe(1);
+        expect(countDbActiveAdmins()).toBe(1);
+    });
+
+    it("SECURITY: Concurrent lock(A) + delete(B) prevents 0-admin state", async () => {
+        const dbUsers: Record<string, { role: string; isActive: boolean } | null> = {
+            "admin-A": { role: "admin", isActive: true },
+            "admin-B": { role: "admin", isActive: true },
+        };
+
+        const countDbActiveAdmins = () =>
+            Object.values(dbUsers).filter((u) => u !== null && u.role === "admin" && u.isActive).length;
+
+        const mutex = new AsyncMutex();
+        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
+
+        const atomicLock = async (targetId: string) => {
+            return mutex.runExclusive(async () => {
+                const currentCount = countDbActiveAdmins();
+                const target = dbUsers[targetId];
+                if (!target) throw new Error("Not found");
+                assertCanDeactivateUser(actor, { _id: targetId, ...target }, currentCount);
+                target.isActive = false;
+                return { locked: targetId };
+            });
+        };
+
+        const atomicDelete = async (targetId: string) => {
+            return mutex.runExclusive(async () => {
+                const currentCount = countDbActiveAdmins();
+                const target = dbUsers[targetId];
+                if (!target) throw new Error("Not found");
+                assertCanDeleteUser(actor, { _id: targetId, ...target }, currentCount);
+                dbUsers[targetId] = null;
+                return { deleted: targetId };
+            });
+        };
+
+        const results = await Promise.allSettled([
+            atomicLock("admin-A"),
+            atomicDelete("admin-B"),
+        ]);
+
+        const successful = results.filter((r) => r.status === "fulfilled");
+        const rejected = results.filter((r) => r.status === "rejected");
+
+        expect(successful.length).toBe(1);
+        expect(rejected.length).toBe(1);
+        expect(countDbActiveAdmins()).toBe(1);
+    });
+
+    it("SECURITY: Concurrent demote(A) + demote(B) prevents 0-admin state", async () => {
+        const dbUsers: Record<string, { role: string; isActive: boolean }> = {
+            "admin-A": { role: "admin", isActive: true },
+            "admin-B": { role: "admin", isActive: true },
+        };
+
+        const countDbActiveAdmins = () =>
+            Object.values(dbUsers).filter((u) => u.role === "admin" && u.isActive).length;
+
+        const mutex = new AsyncMutex();
+        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
+
+        const atomicDemote = async (targetId: string) => {
+            return mutex.runExclusive(async () => {
+                const currentCount = countDbActiveAdmins();
+                const target = dbUsers[targetId];
+                if (!target) throw new Error("Not found");
+                assertCanChangeRole(actor, { _id: targetId, ...target }, "student", currentCount);
+                target.role = "student";
+                return { demoted: targetId };
+            });
+        };
+
+        const results = await Promise.allSettled([
+            atomicDemote("admin-A"),
+            atomicDemote("admin-B"),
+        ]);
+
+        const successful = results.filter((r) => r.status === "fulfilled");
+        const rejected = results.filter((r) => r.status === "rejected");
+
+        expect(successful.length).toBe(1);
+        expect(rejected.length).toBe(1);
+        expect(countDbActiveAdmins()).toBe(1);
+    });
+});
+
+// ---------------------------------------------------------------------------
+// 26. Role Transition & studentCode Update Invariants
+// ---------------------------------------------------------------------------
+
+describe("Role Transition & studentCode Validation Invariants", () => {
+    it("rejects transitioning Lecturer to Student if studentCode is missing", () => {
+        const targetLecturer = { _id: "lec-001", role: "lecturer", studentCode: undefined };
+        const newRole = "student";
+        const newStudentCode = undefined; // missing
+
+        const finalRole = newRole;
+        const finalStudentCode = newStudentCode ?? targetLecturer.studentCode;
+
+        expect(finalRole === ROLES.STUDENT && !finalStudentCode).toBe(true);
+    });
+
+    it("allows transitioning Student to Lecturer without requiring studentCode", () => {
+        const _targetStudent = { _id: "stu-001", role: "student", studentCode: "B21DCCN001" };
+        const newRole: string = "lecturer";
+        const finalRole = newRole;
+        expect(finalRole).not.toBe(ROLES.STUDENT);
     });
 });

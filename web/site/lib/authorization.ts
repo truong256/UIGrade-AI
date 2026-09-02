@@ -67,6 +67,22 @@ export function normalizeRole(raw: RawRole): CanonicalRole {
     return ROLES.STUDENT; // safe default — never escalate
 }
 
+/**
+ * Check whether an account status allows access.
+ * Permitted: 'active', true, or undefined.
+ * Denied: 'locked', 'inactive', 'banned', 'suspended', 'pending', false.
+ */
+export function isAccountAccessAllowed(status?: unknown, isActive?: boolean): boolean {
+    if (isActive === false) return false;
+    if (typeof status === "string") {
+        const normalized = status.trim().toLowerCase();
+        if (["locked", "inactive", "banned", "suspended", "pending"].includes(normalized)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 // ---------------------------------------------------------------------------
 // Actor type (server-verified identity only)
 // ---------------------------------------------------------------------------

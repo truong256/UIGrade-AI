@@ -1,0 +1,52 @@
+name: Web CI
+
+on:
+  push:
+    branches:
+      - main
+      - 'codex/**'
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-ci.yml'
+  pull_request:
+    branches:
+      - main
+    paths:
+      - 'web/**'
+      - '.github/workflows/web-ci.yml'
+
+jobs:
+  web-quality-gates:
+    name: Web Quality Gates (Lint, Typecheck, Test, Build)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web/site
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: web/site/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Run TypeScript typecheck
+        run: npx tsc --noEmit
+
+      - name: Run Unit & RBAC tests
+        run: npm test
+
+      - name: Run Next.js production build
+        run: npm run build
+        env:
+          JWT_SECRET: "ci-test-jwt-secret-at-least-32-chars-long"

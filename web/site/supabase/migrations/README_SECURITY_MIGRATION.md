@@ -1,4 +1,4 @@
-# Hướng Dẫn Áp Dụng Migration RLS Security: `20260902000001_fix_rls_security.sql`
+# Hướng Dẫn Áp Dụng Migration RLS Security & Database Triggers: `20260902000001_fix_rls_security.sql`
 
 > [!WARNING]
 > **KHÔNG tự động chạy migration này trực tiếp trên môi trường Production mà không có quy trình review & backup.**
@@ -8,7 +8,7 @@
 
 ## 1. Mục Đích & Nội Dung Migration
 
-Migration này khắc phục các lỗ hổng phân quyền cấp cơ sở dữ liệu (Row Level Security - RLS) trên Supabase:
+Migration này khắc phục triệt để các lỗ hổng phân quyền cấp cơ sở dữ liệu (Row Level Security - RLS) và ngăn chặn bypass nghiệp vụ qua API PostgREST trực tiếp trên Supabase:
 
 1. **Bảo mật hàm `SECURITY DEFINER`**: Bổ sung `SET search_path = public, pg_temp;` cho `is_admin()`, `is_lecturer()`, `is_lecturer_or_admin()` nhằm ngăn chặn tấn công chiếm quyền qua thao tác `search_path`.
 2. **Siết chặt quyền đọc bảng `profiles`**: Thay vì cho phép mọi người dùng đã đăng nhập đọc toàn bộ profile của hệ thống, chính sách mới chỉ cho phép:
@@ -17,17 +17,21 @@ Migration này khắc phục các lỗ hổng phân quyền cấp cơ sở dữ 
    - Giảng viên xem sinh viên trong các lớp mình phụ trách.
    - Sinh viên xem bạn cùng lớp (chung lớp học).
 3. **Bảo vệ bảng `system_configs`**: Chỉ `admin` mới được đọc cấu hình hệ thống (trước đây mọi user đăng nhập đều đọc được).
-4. **Chặn tự leo quyền (Privilege Escalation)**: Chính sách `UPDATE` trên `profiles` kiểm tra nghiêm ngặt không cho phép người dùng tự thay đổi trường `role` của chính mình.
+4. **Chặn tự leo quyền (Privilege Escalation)**: Chính sách `UPDATE` trên `profiles` và Trigger `trg_prevent_self_role_escalation` kiểm tra nghiêm ngặt không cho phép người dùng tự thay đổi trường `role` của chính mình.
+5. **Bảo vệ Last-Admin ở cấp Database Engine (Triggers)**: Trigger `trg_protect_last_admin` ngăn chặn bất kỳ Admin nào xóa, hạ quyền, hoặc khóa Admin cuối cùng kể cả khi thực hiện query trực tiếp qua Supabase REST/PostgREST.
 
 ---
 
-## 2. Bảng & Policies Bị Ảnh Hưởng
+## 2. Bảng, Policies & Triggers Bị Ảnh Hưởng
 
-| Bảng | Thao tác | Policy cũ | Policy mới |
+| Bảng | Thao tác | Policy / Trigger | Mô tả |
 |---|---|---|---|
-| `public.profiles` | `SELECT` | `Profiles are viewable by authenticated users` (public toàn bộ) | `Profiles viewable by self, classmates, or admin` (cô lập) |
-| `public.profiles` | `UPDATE` | `Users can update their own profile (except role)` | `Users can update their own profile (not role)` |
-| `public.system_configs` | `SELECT` | `System configs viewable by authenticated users` | `Only admins can read system configs` |
+| `public.profiles` | `SELECT` | `Profiles viewable by self, classmates, or admin` | Chỉ xem bản thân, bạn cùng lớp, hoặc admin xem tất cả |
+| `public.profiles` | `UPDATE` | `Users can update their own profile (not role)` | User không sửa được `role` |
+| `public.profiles` | `ALL` | `Admins can update any profile` | Admin quản lý profiles |
+| `public.profiles` | `UPDATE/DELETE` | Trigger: `trg_protect_last_admin` | Ngăn xóa/hạ quyền/khóa Admin cuối cùng |
+| `public.profiles` | `UPDATE` | Trigger: `trg_prevent_self_role_escalation` | Chặn non-admin sửa trường `role` |
+| `public.system_configs` | `SELECT` | `Only admins can read system configs` | Chỉ Admin đọc cấu hình |
 
 ---
 
@@ -56,7 +60,7 @@ Sau khi chạy migration trên staging/production, thực hiện các câu truy 
 ```sql
 SELECT proname, prosecdef, proconfig
 FROM pg_proc
-WHERE proname IN ('is_admin', 'is_lecturer', 'is_lecturer_or_admin');
+WHERE proname IN ('is_admin', 'is_lecturer', 'is_lecturer_or_admin', 'enforce_last_admin_protection', 'prevent_self_role_escalation');
 -- Kỳ vọng: prosecdef = true, proconfig chứa {search_path=public, pg_temp}
 ```
 
@@ -68,12 +72,12 @@ WHERE tablename = 'profiles';
 -- Kỳ vọng: Thấy policy "Profiles viewable by self, classmates, or admin"
 ```
 
-### 4.3. Kiểm tra RLS policies trên bảng system_configs
+### 4.3. Kiểm tra Triggers bảo vệ Last Admin
 ```sql
-SELECT policyname, cmd, qual
-FROM pg_policies
-WHERE tablename = 'system_configs';
--- Kỳ vọng: Thấy policy "Only admins can read system configs"
+SELECT tgname, tgrelid::regclass, tgenabled
+FROM pg_trigger
+WHERE tgname IN ('trg_protect_last_admin', 'trg_prevent_self_role_escalation');
+-- Kỳ vọng: Cả 2 trigger đều tồn tại và tgenabled = 'O' (Origin/Enabled)
 ```
 
 ---
@@ -84,6 +88,12 @@ Nếu có sự cố không tương thích với frontend cũ trên staging, có 
 
 ```sql
 -- ROLLBACK SCRIPT:
+DROP TRIGGER IF EXISTS trg_protect_last_admin ON public.profiles;
+DROP FUNCTION IF EXISTS public.enforce_last_admin_protection();
+
+DROP TRIGGER IF EXISTS trg_prevent_self_role_escalation ON public.profiles;
+DROP FUNCTION IF EXISTS public.prevent_self_role_escalation();
+
 DROP POLICY IF EXISTS "Profiles viewable by self, classmates, or admin" ON public.profiles;
 CREATE POLICY "Profiles are viewable by authenticated users"
 ON public.profiles FOR SELECT TO authenticated USING (true);

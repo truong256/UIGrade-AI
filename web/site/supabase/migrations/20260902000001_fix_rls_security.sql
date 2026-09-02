@@ -1,12 +1,14 @@
 -- ====================================================================
 -- Migration: 20260902000001_fix_rls_security.sql
--- Description: Harden RLS policies to enforce RBAC properly
+-- Description: Harden RLS policies & add database triggers to enforce RBAC & Last-Admin Invariant
 --
 -- CHANGES:
 --  1. Update role helper functions with explicit search_path (SECURITY DEFINER hardening)
 --  2. Profiles SELECT: Restrict to own profile + classmates (not all users)
 --  3. System configs SELECT: Restrict to admin only (was authenticated)
---  4. Profiles UPDATE: Prevent self-role escalation
+--  4. Profiles UPDATE: Prevent self-role escalation via RLS policies
+--  5. Database Trigger: Enforce Last-Admin Protection on PostgreSQL engine level (prevents direct REST/PostgREST bypass)
+--  6. Database Trigger: Prevent non-admin self-role escalation on PostgreSQL engine level
 --
 -- IMPORTANT: DO NOT apply automatically to production without review.
 -- Refer to README_SECURITY_MIGRATION.md for safety & verification steps.
@@ -105,7 +107,7 @@ TO authenticated
 USING (public.is_admin());
 
 -- ============================================================
--- 4. PROFILES: Ensure users cannot escalate their own role
+-- 4. PROFILES: RLS Policies for UPDATE
 -- ============================================================
 
 DROP POLICY IF EXISTS "Users can update their own profile (except role)" ON public.profiles;
@@ -123,9 +125,88 @@ WITH CHECK (
     AND role = (SELECT role FROM public.profiles WHERE id = auth.uid())
 );
 
--- Admins have full update access
+-- Admins have update access (guarded at database level by triggers below)
 CREATE POLICY "Admins can update any profile"
 ON public.profiles FOR ALL
 TO authenticated
 USING (public.is_admin())
 WITH CHECK (public.is_admin());
+
+-- ============================================================
+-- 5. DATABASE TRIGGER: Enforce Last-Admin Protection (Atomic & Engine-Level)
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.enforce_last_admin_protection()
+RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+DECLARE
+    active_admin_count INT;
+BEGIN
+    -- Check if target was an active admin
+    IF (OLD.role = 'admin' AND (OLD.status IS NULL OR OLD.status = 'active')) THEN
+        -- Case 1: Deletion of an active admin
+        IF TG_OP = 'DELETE' THEN
+            SELECT COUNT(*) INTO active_admin_count
+            FROM public.profiles
+            WHERE role = 'admin' AND (status IS NULL OR status = 'active');
+
+            IF active_admin_count <= 1 THEN
+                RAISE EXCEPTION 'Cannot delete the last active admin account';
+            END IF;
+            RETURN OLD;
+        END IF;
+
+        -- Case 2: Update of an active admin (demotion or locking)
+        IF TG_OP = 'UPDATE' THEN
+            IF (NEW.role <> 'admin' OR (NEW.status IS NOT NULL AND NEW.status <> 'active')) THEN
+                SELECT COUNT(*) INTO active_admin_count
+                FROM public.profiles
+                WHERE role = 'admin' AND (status IS NULL OR status = 'active');
+
+                IF active_admin_count <= 1 THEN
+                    RAISE EXCEPTION 'Cannot demote or lock the last active admin account';
+                END IF;
+            END IF;
+            RETURN NEW;
+        END IF;
+    END IF;
+
+    IF TG_OP = 'DELETE' THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_protect_last_admin ON public.profiles;
+CREATE TRIGGER trg_protect_last_admin
+BEFORE UPDATE OR DELETE ON public.profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.enforce_last_admin_protection();
+
+-- ============================================================
+-- 6. DATABASE TRIGGER: Prevent Self-Role Escalation (Engine-Level)
+-- ============================================================
+
+CREATE OR REPLACE FUNCTION public.prevent_self_role_escalation()
+RETURNS TRIGGER
+LANGUAGE plpgsql SECURITY DEFINER
+SET search_path = public, pg_temp
+AS $$
+BEGIN
+    -- If role is changing and user is not an admin, block it
+    IF (OLD.role <> NEW.role AND NOT public.is_admin()) THEN
+        RAISE EXCEPTION 'Non-admin users cannot modify roles';
+    END IF;
+    RETURN NEW;
+END;
+$$;
+
+DROP TRIGGER IF EXISTS trg_prevent_self_role_escalation ON public.profiles;
+CREATE TRIGGER trg_prevent_self_role_escalation
+BEFORE UPDATE ON public.profiles
+FOR EACH ROW
+EXECUTE FUNCTION public.prevent_self_role_escalation();

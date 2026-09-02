@@ -27,7 +27,7 @@
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { normalizeRole, type CanonicalRole, AuthorizationError } from "@/lib/authorization";
+import { normalizeRole, isAccountAccessAllowed, type CanonicalRole, AuthorizationError } from "@/lib/authorization";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User.model";
 
@@ -87,7 +87,7 @@ async function resolveAuthoritativeActorFromToken(token?: string | null): Promis
             return null;
         }
 
-        if (user.isActive === false) {
+        if (!isAccountAccessAllowed(undefined, user.isActive)) {
             // Account is locked/suspended -> access revoked immediately
             return null;
         }
@@ -137,8 +137,8 @@ export async function getCurrentUserFromCookie(): Promise<CurrentUserPayload | n
 
             if (!profile) return null; // Fail secure if profile does not exist
 
-            if (profile.status === "locked" || profile.status === "inactive") {
-                return null; // Locked in Supabase -> revoked
+            if (!isAccountAccessAllowed(profile.status)) {
+                return null; // Locked/inactive/banned in Supabase -> revoked
             }
 
             return {

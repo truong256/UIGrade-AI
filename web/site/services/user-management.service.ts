@@ -151,6 +151,31 @@ async function countActiveAdmins(): Promise<number> {
 }
 
 /**
+ * In-process asynchronous mutex for serializing privileged mutations.
+ * Prevents TOCTOU race conditions when locking, deleting, or demoting admins.
+ */
+export class AsyncMutex {
+    private mutex = Promise.resolve();
+
+    async runExclusive<T>(callback: () => Promise<T>): Promise<T> {
+        let release: () => void;
+        const waitPromise = new Promise<void>((resolve) => {
+            release = resolve;
+        });
+        const currentLock = this.mutex;
+        this.mutex = currentLock.then(() => waitPromise);
+        await currentLock;
+        try {
+            return await callback();
+        } finally {
+            release!();
+        }
+    }
+}
+
+export const privilegedMutationMutex = new AsyncMutex();
+
+/**
  * Validate that the incoming payload does not have unknown fields.
  * This prevents typo fields (e.g. "rolee") from being silently ignored.
  */
@@ -306,7 +331,8 @@ export const userManagementService = {
     /**
      * Update a user's profile, role, or status.
      * Requires actor to be an admin.
-     * Target user is loaded from DB — role from request body is NEVER used for authorization.
+     * Target user is loaded from DB inside privilegedMutationMutex — role from request body is NEVER used for authorization.
+     * Atomic lock guarantees race-safe Last-Admin invariant under concurrent mutations.
      */
     async updateUser(id: string, payload: Record<string, unknown>, actor: AuthenticatedActor) {
         requireAdmin(actor);
@@ -318,92 +344,95 @@ export const userManagementService = {
         // Reject unknown fields to prevent silent data corruption
         rejectUnknownFields(payload, [...KNOWN_UPDATE_FIELDS]);
 
-        // Load the target user from DB — do NOT trust payload for role info
-        const targetUser = await User.findById(id).lean();
-        if (!targetUser) {
-            throw new Error("Không tìm thấy người dùng");
-        }
+        return privilegedMutationMutex.runExclusive(async () => {
+            // Load the target user from DB INSIDE atomic mutex — do NOT trust payload for role info
+            const targetUser = await User.findById(id).lean();
+            if (!targetUser) {
+                throw new Error("Không tìm thấy người dùng");
+            }
 
-        const nextIsActive = typeof payload.isActive === "boolean" ? payload.isActive : undefined;
+            const nextIsActive = typeof payload.isActive === "boolean" ? payload.isActive : undefined;
 
-        // Authorization checks based on DB-loaded target
-        if (nextIsActive === false) {
-            const activeAdminCount = await countActiveAdmins();
-            assertCanDeactivateUser(actor, targetUser as any, activeAdminCount);
-        }
+            // Authorization checks based on DB-loaded target
+            if (nextIsActive === false) {
+                const activeAdminCount = await countActiveAdmins();
+                assertCanDeactivateUser(actor, targetUser as any, activeAdminCount);
+            }
 
-        let dbRole: string | undefined;
-        if (payload.role !== undefined) {
-            const canonicalRole = validateRoleInput(payload.role);
-            const activeAdminCount = await countActiveAdmins();
-            assertCanChangeRole(actor, targetUser as any, canonicalRole, activeAdminCount);
-            dbRole = canonicalRole;
-        }
+            let dbRole: string | undefined;
+            if (payload.role !== undefined) {
+                const canonicalRole = validateRoleInput(payload.role);
+                const activeAdminCount = await countActiveAdmins();
+                assertCanChangeRole(actor, targetUser as any, canonicalRole, activeAdminCount);
+                dbRole = canonicalRole;
+            }
 
-        // Field-level extraction & validation
-        const name = payload.name !== undefined ? normalizeText(payload.name) : undefined;
-        const email = payload.email !== undefined ? normalizeEmail(payload.email) : undefined;
-        const studentCode = payload.studentCode !== undefined
-            ? normalizeText(payload.studentCode).toUpperCase()
-            : undefined;
-        const department = payload.department !== undefined ? normalizeText(payload.department) : undefined;
-        const cohort = payload.cohort !== undefined ? String(payload.cohort) : undefined;
-        const password = payload.password !== undefined ? normalizeText(payload.password) : undefined;
+            // Field-level extraction & validation
+            const name = payload.name !== undefined ? normalizeText(payload.name) : undefined;
+            const email = payload.email !== undefined ? normalizeEmail(payload.email) : undefined;
+            const studentCode = payload.studentCode !== undefined
+                ? normalizeText(payload.studentCode).toUpperCase()
+                : undefined;
+            const department = payload.department !== undefined ? normalizeText(payload.department) : undefined;
+            const cohort = payload.cohort !== undefined ? String(payload.cohort) : undefined;
+            const password = payload.password !== undefined ? normalizeText(payload.password) : undefined;
 
-        if (name !== undefined && !name) throw new Error("Tên không được để trống");
+            if (name !== undefined && !name) throw new Error("Tên không được để trống");
 
-        if (email !== undefined) {
-            if (!email || !isValidEmail(email)) throw new Error("Email không hợp lệ");
-            const existed = await User.findOne({ email, _id: { $ne: id } }).lean();
-            if (existed) throw new Error("Email đã tồn tại");
-        }
+            if (email !== undefined) {
+                if (!email || !isValidEmail(email)) throw new Error("Email không hợp lệ");
+                const existed = await User.findOne({ email, _id: { $ne: id } }).lean();
+                if (existed) throw new Error("Email đã tồn tại");
+            }
 
-        if (studentCode !== undefined && studentCode) {
-            if (studentCode.length < 3) throw new Error("Mã sinh viên không hợp lệ");
-            const existed = await User.findOne({ studentCode, _id: { $ne: id } }).lean();
-            if (existed) throw new Error("Mã sinh viên đã tồn tại");
-        }
+            if (studentCode !== undefined && studentCode) {
+                if (studentCode.length < 3) throw new Error("Mã sinh viên không hợp lệ");
+                const existed = await User.findOne({ studentCode, _id: { $ne: id } }).lean();
+                if (existed) throw new Error("Mã sinh viên đã tồn tại");
+            }
 
-        const finalRole = dbRole ?? normalizeRole((targetUser as any).role);
-        const finalStudentCode =
-            studentCode !== undefined ? (studentCode || undefined) : (targetUser as any).studentCode;
+            const finalRole = dbRole ?? normalizeRole((targetUser as any).role);
+            const finalStudentCode =
+                studentCode !== undefined ? (studentCode || undefined) : (targetUser as any).studentCode;
 
-        if (finalRole === ROLES.STUDENT && !finalStudentCode) {
-            throw new Error("Mã sinh viên là bắt buộc với tài khoản sinh viên");
-        }
+            if (finalRole === ROLES.STUDENT && !finalStudentCode) {
+                throw new Error("Mã sinh viên là bắt buộc với tài khoản sinh viên");
+            }
 
-        // Build update object
-        const updateData: Record<string, unknown> = {};
-        if (name !== undefined) updateData.name = name;
-        if (email !== undefined) updateData.email = email;
-        if (dbRole !== undefined) updateData.role = dbRole;
-        if (studentCode !== undefined) updateData.studentCode = studentCode || undefined;
-        if (department !== undefined) updateData.department = department;
-        if (cohort !== undefined) updateData.cohort = cohort;
-        if (typeof nextIsActive === "boolean") updateData.isActive = nextIsActive;
+            // Build update object
+            const updateData: Record<string, unknown> = {};
+            if (name !== undefined) updateData.name = name;
+            if (email !== undefined) updateData.email = email;
+            if (dbRole !== undefined) updateData.role = dbRole;
+            if (studentCode !== undefined) updateData.studentCode = studentCode || undefined;
+            if (department !== undefined) updateData.department = department;
+            if (cohort !== undefined) updateData.cohort = cohort;
+            if (typeof nextIsActive === "boolean") updateData.isActive = nextIsActive;
 
-        if (password !== undefined && password) {
-            if (password.length < 6) throw new Error("Mật khẩu phải có ít nhất 6 ký tự");
-            updateData.password = await bcrypt.hash(password, 12);
-        }
+            if (password !== undefined && password) {
+                if (password.length < 6) throw new Error("Mật khẩu phải có ít nhất 6 ký tự");
+                updateData.password = await bcrypt.hash(password, 12);
+            }
 
-        const updated = await User.findByIdAndUpdate(
-            id,
-            { $set: updateData },
-            { new: true, runValidators: true }
-        )
-            .select("name email studentCode role department cohort isVerified isActive lastLoginAt createdAt updatedAt")
-            .lean();
+            const updated = await User.findByIdAndUpdate(
+                id,
+                { $set: updateData },
+                { new: true, runValidators: true }
+            )
+                .select("name email studentCode role department cohort isVerified isActive lastLoginAt createdAt updatedAt")
+                .lean();
 
-        if (!updated) throw new Error("Không tìm thấy người dùng");
+            if (!updated) throw new Error("Không tìm thấy người dùng");
 
-        return toPublicUser(updated as any);
+            return toPublicUser(updated as any);
+        });
     },
 
     /**
      * Delete a user permanently.
      * Requires actor to be an admin.
-     * Target user is loaded from DB before authorization check.
+     * Target user is loaded and validated inside privilegedMutationMutex.
+     * Atomic lock guarantees race-safe Last-Admin invariant under concurrent mutations.
      */
     async deleteUser(id: string, actor: AuthenticatedActor) {
         requireAdmin(actor);
@@ -412,17 +441,19 @@ export const userManagementService = {
             throw new Error("ID người dùng không hợp lệ");
         }
 
-        // Load target from DB — never trust client-provided role
-        const targetUser = await User.findById(id).lean();
-        if (!targetUser) {
-            throw new Error("Không tìm thấy người dùng để xóa");
-        }
+        return privilegedMutationMutex.runExclusive(async () => {
+            // Load target from DB inside atomic mutex — never trust client-provided role
+            const targetUser = await User.findById(id).lean();
+            if (!targetUser) {
+                throw new Error("Không tìm thấy người dùng để xóa");
+            }
 
-        const activeAdminCount = await countActiveAdmins();
-        assertCanDeleteUser(actor, targetUser as any, activeAdminCount);
+            const activeAdminCount = await countActiveAdmins();
+            assertCanDeleteUser(actor, targetUser as any, activeAdminCount);
 
-        await User.findByIdAndDelete(id);
+            await User.findByIdAndDelete(id);
 
-        return { deleted: id };
+            return { deleted: id };
+        });
     },
 };
