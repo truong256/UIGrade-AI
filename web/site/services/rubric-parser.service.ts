@@ -14,10 +14,6 @@ type ParseRubricInput = {
     language?: string;
 };
 
-function isObject(value: unknown): value is Record<string, unknown> {
-    return typeof value === "object" && value !== null;
-}
-
 function slugifyCriterionCode(value: string) {
     return value
         .toLowerCase()
@@ -274,7 +270,7 @@ JSON phải có dạng:
         `.trim();
 
         const response = await ai.models.generateContent({
-            model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
+            model: process.env.GEMINI_MODEL || "gemini-3.7-flash",
             contents: [
                 {
                     role: "user",

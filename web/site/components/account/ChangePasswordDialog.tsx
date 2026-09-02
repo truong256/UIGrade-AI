@@ -59,10 +59,10 @@ function ChangePasswordDialogForm({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-md rounded-3xl border border-sky-100 bg-white p-6 shadow-2xl">
-                <div className="flex items-center justify-between border-b border-sky-100 pb-4">
+            <div className="w-full max-w-md rounded-3xl border border-blue-100 bg-white p-6 shadow-2xl">
+                <div className="flex items-center justify-between border-b border-blue-100 pb-4">
                     <div className="flex items-center gap-2">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-200">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
                             <span className="material-symbols-outlined text-[20px]">lock_reset</span>
                         </div>
                         <div>
@@ -87,7 +87,7 @@ function ChangePasswordDialogForm({
                             type="password"
                             value={form.currentPassword}
                             onChange={(e) => setForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
-                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             placeholder="••••••••"
                         />
                     </div>
@@ -98,7 +98,7 @@ function ChangePasswordDialogForm({
                             type="password"
                             value={form.newPassword}
                             onChange={(e) => setForm((prev) => ({ ...prev, newPassword: e.target.value }))}
-                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             placeholder="Tối thiểu 6 ký tự"
                         />
                     </div>
@@ -109,7 +109,7 @@ function ChangePasswordDialogForm({
                             type="password"
                             value={form.confirmPassword}
                             onChange={(e) => setForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
-                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             placeholder="Nhập lại mật khẩu mới"
                         />
                     </div>
@@ -128,7 +128,7 @@ function ChangePasswordDialogForm({
                         <button
                             type="submit"
                             disabled={loading}
-                            className="rounded-xl bg-sky-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+                            className="rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             {loading ? "Đang cập nhật..." : "Xác nhận đổi mật khẩu"}
                         </button>

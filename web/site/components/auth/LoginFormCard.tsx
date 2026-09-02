@@ -89,11 +89,11 @@ export function LoginFormCard({ data }: Props) {
 
     return (
         <div className="w-full max-w-[440px] mx-auto">
-            <div className="rounded-3xl border border-sky-100 bg-white p-7 sm:p-8 shadow-xl shadow-sky-950/5">
+            <div className="rounded-2xl border border-slate-200/80 bg-white p-7 sm:p-8 shadow-xs">
                 <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                     {/* Email Field */}
                     <div>
-                        <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
                             {data?.emailLabel || "Email"} <span className="text-rose-500">*</span>
                         </label>
 
@@ -109,10 +109,10 @@ export function LoginFormCard({ data }: Props) {
                                 if (email) validateEmail(email);
                             }}
                             disabled={loading}
-                            className={`h-11 w-full rounded-xl border px-3.5 text-xs outline-none transition focus:ring-2 disabled:bg-slate-50 ${
+                            className={`h-11 w-full rounded-xl border px-3.5 text-sm outline-none transition focus:ring-2 disabled:bg-slate-50 ${
                                 emailError
                                     ? "border-rose-300 bg-rose-50/30 text-slate-900 focus:border-rose-500 focus:ring-rose-100"
-                                    : "border-slate-200 bg-white text-slate-900 focus:border-sky-500 focus:ring-sky-100"
+                                    : "border-slate-200 bg-white text-slate-900 focus:border-blue-500 focus:ring-blue-100"
                             }`}
                             required
                         />
@@ -127,13 +127,13 @@ export function LoginFormCard({ data }: Props) {
                     {/* Password Field */}
                     <div>
                         <div className="flex items-center justify-between mb-1.5">
-                            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+                            <label className="block text-xs font-semibold text-slate-700">
                                 {data?.passwordLabel || "Mật khẩu"} <span className="text-rose-500">*</span>
                             </label>
 
                             <Link
                                 href="/forgot-password"
-                                className="text-xs font-semibold text-sky-600 hover:text-sky-800 transition"
+                                className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition"
                             >
                                 {data?.forgotPasswordLabel || "Quên mật khẩu?"}
                             </Link>
@@ -146,7 +146,7 @@ export function LoginFormCard({ data }: Props) {
                                 value={password}
                                 onChange={(e) => setPassword(e.target.value)}
                                 disabled={loading}
-                                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-10 text-xs text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-50"
+                                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
                                 required
                             />
 
@@ -154,7 +154,7 @@ export function LoginFormCard({ data }: Props) {
                                 type="button"
                                 onClick={() => setShowPassword((prev) => !prev)}
                                 aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-sky-200 transition"
+                                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
                             >
                                 <span className="material-symbols-outlined text-[18px]">
                                     {showPassword ? "visibility_off" : "visibility"}
@@ -165,8 +165,8 @@ export function LoginFormCard({ data }: Props) {
 
                     {/* Error Box */}
                     {error && (
-                        <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-600 font-medium flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[16px] shrink-0">error</span>
+                        <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 font-medium flex items-center gap-2">
+                            <span className="material-symbols-outlined text-[16px] text-rose-600 shrink-0">error</span>
                             <span>{error}</span>
                         </div>
                     )}
@@ -175,7 +175,7 @@ export function LoginFormCard({ data }: Props) {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full rounded-xl bg-sky-600 py-3 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-sky-300 disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center gap-2"
+                        className="w-full h-11 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <>
@@ -204,13 +204,13 @@ export function LoginFormCard({ data }: Props) {
                 {/* Google Sign-In */}
                 <SocialLoginButtons disabled={loading} onError={(msg) => setError(msg)} />
 
-                {/* Signup Link - Placed DIRECTLY below Google */}
+                {/* Signup Link */}
                 <div className="mt-5 pt-4 border-t border-slate-100 text-center">
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-[#4A5568]">
                         {data?.signupText || "Chưa có tài khoản?"}{" "}
                         <Link
                             href="/register"
-                            className="font-bold text-sky-600 hover:text-sky-700 transition"
+                            className="font-semibold text-blue-600 hover:text-blue-700 transition"
                         >
                             {data?.signupLabel || "Đăng ký ngay"}
                         </Link>

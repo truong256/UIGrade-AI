@@ -24,7 +24,7 @@ export function PaginationBar({ data }: Props) {
                         type="button"
                         className={`flex h-8 w-8 items-center justify-center rounded-xl text-xs ${
                             data.currentPage === page
-                                ? "bg-sky-600 font-bold text-white shadow-xs"
+                                ? "bg-blue-600 font-bold text-white shadow-xs"
                                 : "text-slate-600 hover:bg-slate-100 font-medium"
                         }`}
                     >

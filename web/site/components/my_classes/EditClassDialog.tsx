@@ -87,10 +87,10 @@ function EditClassDialogForm({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-xl rounded-3xl border border-sky-100 bg-white p-6 shadow-2xl transition-all">
-                <div className="flex items-center justify-between border-b border-sky-100 pb-4">
+            <div className="w-full max-w-xl rounded-3xl border border-blue-100 bg-white p-6 shadow-2xl transition-all">
+                <div className="flex items-center justify-between border-b border-blue-100 pb-4">
                     <div className="flex items-center gap-2">
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-sky-50 text-sky-600 border border-sky-200">
+                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
                             <span className="material-symbols-outlined text-[20px]">edit_note</span>
                         </div>
                         <div>
@@ -128,7 +128,7 @@ function EditClassDialogForm({
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             placeholder="Ví dụ: Lập trình Android Nâng cao"
-                            className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         />
                     </div>
 
@@ -142,7 +142,7 @@ function EditClassDialogForm({
                                 value={code}
                                 onChange={(e) => setCode(e.target.value)}
                                 placeholder="Ví dụ: ANDROID_01"
-                                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-mono font-bold uppercase outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-mono font-bold uppercase outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
 
@@ -153,7 +153,7 @@ function EditClassDialogForm({
                             <select
                                 value={status}
                                 onChange={(e) => setStatus(e.target.value as ClassroomStatus)}
-                                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             >
                                 <option value="active">Đang hoạt động</option>
                                 <option value="archived">Đã lưu trữ</option>
@@ -169,7 +169,7 @@ function EditClassDialogForm({
                             <select
                                 value={semester}
                                 onChange={(e) => setSemester(e.target.value as ClassroomSemester)}
-                                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             >
                                 <option value="HK1">Học kỳ 1</option>
                                 <option value="HK2">Học kỳ 2</option>
@@ -186,7 +186,7 @@ function EditClassDialogForm({
                                 value={academicYear}
                                 onChange={(e) => setAcademicYear(e.target.value)}
                                 placeholder="2025-2026"
-                                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                                className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
                     </div>
@@ -200,7 +200,7 @@ function EditClassDialogForm({
                             onChange={(e) => setDescription(e.target.value)}
                             rows={3}
                             placeholder="Mô tả nội dung môn học, yêu cầu..."
-                            className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="w-full rounded-xl border border-slate-200 bg-white p-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         />
                     </div>
 
@@ -216,7 +216,7 @@ function EditClassDialogForm({
                         <button
                             type="submit"
                             disabled={loading}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             {loading ? (
                                 <>

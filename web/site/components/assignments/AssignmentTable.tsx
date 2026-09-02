@@ -16,10 +16,10 @@ type Props = {
 
 export function AssignmentTable({ rows }: Props) {
     return (
-        <section className="overflow-hidden rounded-2xl border border-sky-100 bg-white shadow-xs">
+        <section className="overflow-hidden rounded-2xl border border-blue-100 bg-white shadow-xs">
             <div className="overflow-x-auto">
                 <table className="w-full min-w-[900px] text-left">
-                    <thead className="bg-sky-50/50 border-b border-sky-100">
+                    <thead className="bg-blue-50/50 border-b border-blue-100">
                     <tr className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                         <th className="px-4 py-3">Tên bài tập</th>
                         <th className="px-4 py-3">Lớp học</th>
@@ -32,14 +32,14 @@ export function AssignmentTable({ rows }: Props) {
 
                     <tbody className="divide-y divide-slate-100">
                     {rows.map((row) => (
-                        <tr key={row.id} className="transition hover:bg-sky-50/30">
+                        <tr key={row.id} className="transition hover:bg-blue-50/30">
                             <td className="px-4 py-3">
                                 <div className="flex items-center gap-3">
                                     <div
                                         className={`flex h-8 w-8 items-center justify-center rounded-xl ${
                                             row.status === "Đã đóng"
                                                 ? "bg-slate-100 text-slate-400"
-                                                : "bg-sky-100 text-sky-700"
+                                                : "bg-blue-100 text-blue-700"
                                         }`}
                                     >
                                         <span className="material-symbols-outlined text-[18px]">
@@ -67,7 +67,7 @@ export function AssignmentTable({ rows }: Props) {
                             </td>
 
                             <td className="px-4 py-3 text-right">
-                                <button type="button" className="rounded-lg p-1.5 text-slate-400 transition hover:bg-sky-50 hover:text-sky-600">
+                                <button type="button" className="rounded-lg p-1.5 text-slate-400 transition hover:bg-blue-50 hover:text-blue-600">
                                     <span className="material-symbols-outlined text-[18px]">more_vert</span>
                                 </button>
                             </td>

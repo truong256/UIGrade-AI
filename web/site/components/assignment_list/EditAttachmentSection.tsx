@@ -18,11 +18,11 @@ export default function EditAttachmentSection({
     onRemoveNew: (index: number) => void;
 }) {
     return (
-        <div className="rounded-2xl border border-sky-100 p-4">
+        <div className="rounded-2xl border border-blue-100 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
                 <p className="text-xs font-semibold text-slate-900">{title}</p>
 
-                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-sky-50 px-3 py-1.5 text-xs font-bold text-sky-700 hover:bg-sky-100 transition shadow-xs">
+                <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-xl bg-blue-50 px-3 py-1.5 text-xs font-bold text-blue-700 hover:bg-blue-100 transition shadow-xs">
                     <span className="material-symbols-outlined text-[16px]">
                         upload_file
                     </span>
@@ -41,7 +41,7 @@ export default function EditAttachmentSection({
             </div>
 
             {!existingFiles.length && !newFiles.length ? (
-                <div className="rounded-xl border-2 border-dashed border-sky-100 bg-sky-50/30 px-4 py-6 text-center text-xs text-slate-400">
+                <div className="rounded-xl border-2 border-dashed border-blue-100 bg-blue-50/30 px-4 py-6 text-center text-xs text-slate-400">
                     Chưa có file đính kèm nào.
                 </div>
             ) : (
@@ -74,11 +74,11 @@ export default function EditAttachmentSection({
                     {newFiles.map((file, index) => (
                         <div
                             key={`${file.name}-${file.size}-${index}`}
-                            className="flex items-center justify-between rounded-xl border border-sky-100 bg-sky-50 px-4 py-2.5"
+                            className="flex items-center justify-between rounded-xl border border-blue-100 bg-blue-50 px-4 py-2.5"
                         >
                             <div>
                                 <p className="text-xs font-medium text-slate-800">{file.name}</p>
-                                <p className="text-[10px] text-sky-600 font-semibold">File mới chọn</p>
+                                <p className="text-[10px] text-blue-600 font-semibold">File mới chọn</p>
                             </div>
 
                             <button

@@ -7,20 +7,20 @@ type Props = {
 
 export function AiFeedbackPanel({ detail }: Props) {
     return (
-        <section className="rounded-3xl border border-sky-100 bg-white p-5 xl:col-span-2 shadow-sm">
-            <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
-                <span className="material-symbols-outlined text-sky-600 text-[20px]">smart_toy</span>
+        <section className="rounded-2xl border border-slate-200/80 bg-white p-5 xl:col-span-2 shadow-xs">
+            <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                <span className="material-symbols-outlined text-blue-600 text-[20px]">smart_toy</span>
                 Nhận xét phân tích từ AI
             </h3>
 
             {!detail?.autoGrade ? (
-                <div className="mt-4 rounded-2xl border border-dashed border-sky-100 bg-sky-50/30 px-4 py-8 text-center text-xs text-slate-400">
-                    Bài tập này chưa được chấm bằng AI. Nhấn nút &ldquo;Chấm AI&rdquo; phía trên để tiến hành chấm.
+                <div className="mt-4 rounded-xl border border-dashed border-blue-200 bg-blue-50/30 px-4 py-8 text-center text-xs text-slate-400">
+                    Bài tập này chưa được chấm bằng AI. Nhấn nút &ldquo;Chấm AI tự động&rdquo; phía trên để tiến hành chấm.
                 </div>
             ) : (
                 <div className="mt-4 space-y-3.5">
                     {toText(detail?.autoGrade?.aiFeedback?.summary) && (
-                        <div className="rounded-2xl border border-sky-200 bg-sky-50/50 p-4 text-xs leading-relaxed text-slate-700">
+                        <div className="rounded-xl border border-blue-200/80 bg-blue-50/50 p-4 text-xs leading-relaxed text-[#172033]">
                             {toText(detail?.autoGrade?.aiFeedback?.summary)}
                         </div>
                     )}
@@ -40,8 +40,8 @@ export function AiFeedbackPanel({ detail }: Props) {
                             icon="lightbulb"
                             emptyText="Chưa có gợi ý."
                             items={detail?.autoGrade?.aiFeedback?.nextSteps || []}
-                            className="border-sky-200 bg-sky-50/60 text-sky-950"
-                            titleClassName="text-sky-800"
+                            className="border-blue-200 bg-blue-50/60 text-blue-950"
+                            titleClassName="text-blue-800"
                         />
                     </div>
                 </div>
@@ -61,7 +61,7 @@ type FeedbackListProps = {
 
 function FeedbackList({ title, icon, emptyText, items, className, titleClassName }: FeedbackListProps) {
     return (
-        <div className={`rounded-2xl border p-3.5 ${className}`}>
+        <div className={`rounded-xl border p-3.5 ${className}`}>
             <p className={`text-[11px] font-bold uppercase tracking-wider flex items-center gap-1.5 ${titleClassName}`}>
                 <span className="material-symbols-outlined text-[16px]">{icon}</span>
                 {title}

@@ -7,6 +7,7 @@ import { ClassesGrid } from "@/components/my_classes/ClassesGrid";
 import { AddClassCard } from "@/components/my_classes/AddClassCard";
 import { Classroom } from "@/app/ui/my_classes/type/classroom.type";
 import { JoinClassDialog } from "@/components/my_classes/JoinClassDialog";
+import { fetchCurrentUserClient, type AuthUser } from "@/lib/auth-client";
 type CreateClassPayload = {
     name: string;
     code: string;
@@ -24,13 +25,7 @@ type UpdateClassPayload = {
     status: "active" | "archived";
 };
 
-type CurrentUser = {
-    _id: string;
-    name: string;
-    email: string;
-    studentCode?: string;
-    role: "admin" | "teacher" | "User";
-};
+type CurrentUser = AuthUser;
 export default function MyClassesPage() {
     const [classes, setClasses] = useState<Classroom[]>([]);
     const [loading, setLoading] = useState(true);
@@ -43,25 +38,13 @@ export default function MyClassesPage() {
     const [loadingUser, setLoadingUser] = useState(true);
 
     const canManageClassUI =
-        currentUser?.role === "teacher" || currentUser?.role === "admin";
+        currentUser?.role === "teacher" || currentUser?.role === "lecturer" || currentUser?.role === "admin";
 
     const fetchCurrentUser = async () => {
         try {
             setLoadingUser(true);
-
-            const res = await fetch("/api/auth/me", {
-                method: "GET",
-                cache: "no-store",
-            });
-
-            const result = await res.json();
-
-            if (!res.ok) {
-                setCurrentUser(null);
-                return;
-            }
-
-            setCurrentUser(result.user || null);
+            const user = await fetchCurrentUserClient();
+            setCurrentUser(user);
         } catch {
             setCurrentUser(null);
         } finally {

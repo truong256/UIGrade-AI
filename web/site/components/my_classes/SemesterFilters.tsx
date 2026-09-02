@@ -28,7 +28,7 @@ export const SemesterFilters: FC<SemesterFiltersProps> = ({
 
     return (
         <div className="flex flex-wrap items-center gap-2">
-            <div className="hidden sm:flex rounded-2xl border border-sky-100 bg-white p-1 shadow-xs">
+            <div className="hidden sm:flex rounded-xl border border-slate-200/80 bg-white p-1 shadow-xs">
                 {availableSemesters.map((sem) => {
                     const isSelected = currentSemester === sem;
                     return (
@@ -36,10 +36,10 @@ export const SemesterFilters: FC<SemesterFiltersProps> = ({
                             key={sem}
                             type="button"
                             onClick={() => handleSelect(sem)}
-                            className={`rounded-xl px-4 py-2 text-xs font-semibold transition-all duration-200 ${
+                            className={`rounded-lg px-3.5 py-1.5 text-xs font-semibold transition-all duration-150 ${
                                 isSelected
-                                    ? "bg-sky-600 text-white shadow-xs"
-                                    : "text-slate-600 hover:text-sky-900 hover:bg-sky-50"
+                                    ? "bg-blue-600 text-white shadow-xs font-bold"
+                                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-100"
                             }`}
                         >
                             {sem}
@@ -53,7 +53,7 @@ export const SemesterFilters: FC<SemesterFiltersProps> = ({
                 <button
                     type="button"
                     onClick={() => setDropdownOpen(!dropdownOpen)}
-                    className="flex items-center justify-between gap-2 rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white shadow-xs"
+                    className="flex h-10 items-center justify-between gap-2 rounded-xl bg-blue-600 px-4 text-xs font-bold text-white shadow-xs"
                 >
                     <span>Học kỳ: {currentSemester}</span>
                     <span className="material-symbols-outlined text-[18px]">
@@ -62,7 +62,7 @@ export const SemesterFilters: FC<SemesterFiltersProps> = ({
                 </button>
 
                 {dropdownOpen && (
-                    <div className="absolute left-0 mt-1 w-40 rounded-xl border border-sky-100 bg-white p-1 shadow-lg z-20">
+                    <div className="absolute left-0 mt-1.5 w-40 rounded-xl border border-slate-200 bg-white p-1 shadow-xl z-20 animate-in fade-in zoom-in-95 duration-100">
                         {availableSemesters.map((sem) => (
                             <button
                                 key={sem}
@@ -72,7 +72,7 @@ export const SemesterFilters: FC<SemesterFiltersProps> = ({
                                     setDropdownOpen(false);
                                 }}
                                 className={`w-full text-left rounded-lg px-3 py-2 text-xs font-medium ${
-                                    currentSemester === sem ? "bg-sky-50 text-sky-700 font-bold" : "text-slate-600 hover:bg-slate-50"
+                                    currentSemester === sem ? "bg-blue-50 text-blue-700 font-bold" : "text-slate-600 hover:bg-slate-50"
                                 }`}
                             >
                                 {sem}

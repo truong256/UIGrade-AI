@@ -72,12 +72,12 @@ export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
     };
 
     return (
-        <div className="rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
-            <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <span className="material-symbols-outlined text-sky-600 text-[22px]">add_circle</span>
+        <div className="rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-xs">
+            <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
+                <span className="material-symbols-outlined text-blue-600 text-[22px]">add_circle</span>
                 Tạo Lớp học mới
             </h3>
-            <p className="text-xs text-slate-500 mt-0.5">Điền thông tin lớp để bắt đầu giao bài tập cho sinh viên.</p>
+            <p className="text-xs text-[#4A5568] mt-0.5">Điền thông tin lớp để bắt đầu giao bài tập cho sinh viên.</p>
 
             <form onSubmit={handleSubmit} className="mt-4 space-y-3.5">
                 <div>
@@ -87,7 +87,7 @@ export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="VD: Lập trình Android Nâng cao - L01"
-                        className="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                        className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     />
                 </div>
 
@@ -98,7 +98,7 @@ export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
                         value={code}
                         onChange={(e) => setCode(e.target.value.toUpperCase())}
                         placeholder="VD: ANDR2026-L01"
-                        className="h-11 w-full rounded-xl border border-slate-200 px-4 uppercase text-sm font-semibold tracking-wider text-sky-950 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                        className="h-10 w-full rounded-xl border border-slate-200 px-3.5 uppercase text-sm font-semibold tracking-wider text-[#172033] outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     />
                 </div>
 
@@ -108,7 +108,7 @@ export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
                         placeholder="Mô tả tóm tắt về môn học, yêu cầu nộp bài và tiêu chí đánh giá..."
-                        className="min-h-[90px] w-full rounded-xl border border-slate-200 px-4 py-2.5 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                        className="min-h-[80px] w-full rounded-xl border border-slate-200 px-3.5 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     />
                 </div>
 
@@ -118,7 +118,7 @@ export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
                         <select
                             value={semester}
                             onChange={(e) => setSemester(e.target.value as ClassroomSemester)}
-                            className="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 bg-white"
+                            className="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 bg-white"
                         >
                             <option value="HK1">Học kỳ 1</option>
                             <option value="HK2">Học kỳ 2</option>
@@ -133,14 +133,14 @@ export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
                             value={academicYear}
                             onChange={(e) => setAcademicYear(e.target.value)}
                             placeholder="2025-2026"
-                            className="h-11 w-full rounded-xl border border-slate-200 px-4 text-sm outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         />
                     </div>
                 </div>
 
                 {error ? (
-                    <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-2.5 text-xs font-medium text-red-600 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-[16px]">error</span>
+                    <div className="rounded-xl bg-red-50 border border-red-200/60 px-3.5 py-2 text-xs font-medium text-red-700 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-[16px] text-red-600">error</span>
                         {error}
                     </div>
                 ) : null}
@@ -148,7 +148,7 @@ export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
                 <button
                     type="submit"
                     disabled={loading}
-                    className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-sky-600 px-6 text-sm font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+                    className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-5 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 active:scale-98 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     <span className="material-symbols-outlined text-[18px]">add</span>
                     {loading ? "Đang tạo..." : "Tạo lớp ngay"}

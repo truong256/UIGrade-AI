@@ -116,9 +116,9 @@ export default function AssignmentDetailDialog({
                         </p>
                     </div>
 
-                    <div className="rounded-2xl border border-sky-200 bg-sky-50/50 p-4">
-                        <p className="mb-2 font-semibold text-sky-800 text-xs flex items-center gap-1.5">
-                            <span className="material-symbols-outlined text-[18px] text-sky-600">rubric</span>
+                    <div className="rounded-2xl border border-blue-200 bg-blue-50/50 p-4">
+                        <p className="mb-2 font-semibold text-blue-800 text-xs flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[18px] text-blue-600">rubric</span>
                             Rubric / Thang điểm đánh giá
                         </p>
                         <p className="whitespace-pre-wrap text-xs leading-5 text-slate-700">
@@ -126,7 +126,7 @@ export default function AssignmentDetailDialog({
                         </p>
                     </div>
 
-                    <div className="rounded-2xl border border-sky-100 p-4">
+                    <div className="rounded-2xl border border-blue-100 p-4">
                         <p className="mb-3 font-semibold text-slate-900 text-xs">
                             Rubric cấu trúc chi tiết
                         </p>
@@ -146,7 +146,7 @@ export default function AssignmentDetailDialog({
                                             </p>
                                         </div>
 
-                                        <span className="rounded-lg bg-white border border-slate-200 px-2.5 py-0.5 text-xs font-bold text-sky-700">
+                                        <span className="rounded-lg bg-white border border-slate-200 px-2.5 py-0.5 text-xs font-bold text-blue-700">
                                             {criterion.maxPoints}đ
                                         </span>
                                     </div>
@@ -159,7 +159,7 @@ export default function AssignmentDetailDialog({
                         )}
                     </div>
 
-                    <div className="rounded-2xl border border-sky-100 p-4">
+                    <div className="rounded-2xl border border-blue-100 p-4">
                         <p className="mb-3 font-semibold text-slate-900 text-xs">
                             File đính kèm
                         </p>
@@ -171,7 +171,7 @@ export default function AssignmentDetailDialog({
                                         href={file.url}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="block rounded-xl bg-sky-50/50 border border-sky-100 px-3.5 py-2 text-xs text-sky-700 hover:underline"
+                                        className="block rounded-xl bg-blue-50/50 border border-blue-100 px-3.5 py-2 text-xs text-blue-700 hover:underline"
                                     >
                                         {file.originalName}
                                         <span className="ml-2 text-[10px] uppercase text-slate-400">
@@ -188,7 +188,7 @@ export default function AssignmentDetailDialog({
                     </div>
 
                     {item.teacher ? (
-                        <div className="rounded-2xl border border-sky-100 p-4">
+                        <div className="rounded-2xl border border-blue-100 p-4">
                             <p className="mb-1 font-semibold text-slate-900 text-xs">
                                 Giảng viên phụ trách
                             </p>
@@ -199,17 +199,17 @@ export default function AssignmentDetailDialog({
                     ) : null}
 
                     {item.latestSubmission ? (
-                        <div className="rounded-2xl border border-sky-200 bg-sky-50/60 p-4">
-                            <p className="font-semibold text-sky-900 text-xs">
+                        <div className="rounded-2xl border border-blue-200 bg-blue-50/60 p-4">
+                            <p className="font-semibold text-blue-900 text-xs">
                                 Bài nộp gần nhất
                             </p>
-                            <p className="mt-1 text-xs text-sky-700">
+                            <p className="mt-1 text-xs text-blue-700">
                                 Lần nộp #{item.latestSubmission.attemptNo} -{" "}
                                 {item.latestSubmission.status}
                             </p>
-                            <p className="mt-0.5 text-xs text-sky-700">
+                            <p className="mt-0.5 text-xs text-blue-700">
                                 Điểm cuối cùng:{" "}
-                                <span className="font-bold text-sky-950">{item.latestSubmission.finalScore ?? "Chưa chấm"}</span>
+                                <span className="font-bold text-blue-950">{item.latestSubmission.finalScore ?? "Chưa chấm"}</span>
                             </p>
                         </div>
                     ) : null}
@@ -219,7 +219,7 @@ export default function AssignmentDetailDialog({
                             <>
                                 <Link
                                     href="/ui/submit_assignment"
-                                    className="rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 hover:bg-sky-700 transition"
+                                    className="rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 transition"
                                 >
                                     Đi tới nộp bài
                                 </Link>

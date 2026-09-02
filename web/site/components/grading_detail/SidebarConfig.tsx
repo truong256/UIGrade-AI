@@ -114,7 +114,7 @@ export function SidebarConfig({ assignment, rubric: _rubric }: Props) {
                         setDialogTab("scenario");
                         setOpenConfigDialog(true);
                     }}
-                    className="mt-4 w-full rounded-xl bg-sky-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 hover:bg-sky-700 transition active:scale-95"
+                    className="mt-4 w-full rounded-xl bg-blue-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 transition active:scale-95"
                 >
                     Mở cấu hình kiểm thử UI
                 </button>
@@ -161,7 +161,7 @@ export function SidebarConfig({ assignment, rubric: _rubric }: Props) {
                                     onClick={() => setDialogTab("scenario")}
                                     className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
                                         dialogTab === "scenario"
-                                            ? "bg-sky-600 text-white shadow-xs"
+                                            ? "bg-blue-600 text-white shadow-xs"
                                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                     }`}
                                 >
@@ -173,7 +173,7 @@ export function SidebarConfig({ assignment, rubric: _rubric }: Props) {
                                     onClick={() => setDialogTab("baseline")}
                                     className={`rounded-xl px-3.5 py-1.5 text-xs font-bold transition ${
                                         dialogTab === "baseline"
-                                            ? "bg-sky-600 text-white shadow-xs"
+                                            ? "bg-blue-600 text-white shadow-xs"
                                             : "bg-slate-100 text-slate-600 hover:bg-slate-200"
                                     }`}
                                 >
@@ -185,12 +185,12 @@ export function SidebarConfig({ assignment, rubric: _rubric }: Props) {
                         <div className="h-[calc(74vh-125px)] overflow-y-auto p-4">
                             {dialogTab === "scenario" ? (
                                 <div className="space-y-4">
-                                    <div className="flex flex-col gap-3 rounded-2xl border border-sky-200 bg-sky-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+                                    <div className="flex flex-col gap-3 rounded-2xl border border-blue-200 bg-blue-50/50 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
                                         <div>
-                                            <p className="text-xs font-bold text-sky-900">
+                                            <p className="text-xs font-bold text-blue-900">
                                                 Lưu cấu hình kiểm thử
                                             </p>
-                                            <p className="mt-0.5 text-xs text-sky-700">
+                                            <p className="mt-0.5 text-xs text-blue-700">
                                                 Sau khi chỉnh testTag hoặc màn hình so sánh, bấm lưu để áp dụng cho bài chấm.
                                             </p>
                                         </div>
@@ -199,7 +199,7 @@ export function SidebarConfig({ assignment, rubric: _rubric }: Props) {
                                             type="button"
                                             onClick={handleSaveRunnerConfig}
                                             disabled={saving}
-                                            className="rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-sky-700 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                                            className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                                         >
                                             {saving ? "Đang lưu..." : "Lưu cấu hình"}
                                         </button>

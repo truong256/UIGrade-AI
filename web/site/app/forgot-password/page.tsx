@@ -59,13 +59,13 @@ export default function ForgotPasswordPage() {
     };
 
     return (
-        <div className="flex min-h-screen flex-col bg-sky-50/40 text-slate-900">
+        <div className="flex min-h-screen flex-col bg-blue-50/40 text-slate-900">
             <LoginTopBar data={topBarData} />
 
             <main className="flex flex-1 items-center justify-center px-4 py-8 sm:px-6">
                 <div className="w-full max-w-[440px] space-y-5">
                     <div className="text-center">
-                        <div className="inline-block rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-sky-700 mb-2.5">
+                        <div className="inline-block rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-700 mb-2.5">
                             KHÔI PHỤC TÀI KHOẢN
                         </div>
                         <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
@@ -76,7 +76,7 @@ export default function ForgotPasswordPage() {
                         </p>
                     </div>
 
-                    <div className="rounded-3xl border border-sky-100 bg-white p-7 sm:p-8 shadow-xl shadow-sky-950/5">
+                    <div className="rounded-3xl border border-blue-100 bg-white p-7 sm:p-8 shadow-xl shadow-blue-950/5">
                         {success ? (
                             <div className="text-center space-y-4 py-2">
                                 <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-emerald-50 text-emerald-600 border border-emerald-200">
@@ -93,7 +93,7 @@ export default function ForgotPasswordPage() {
                                 <div className="pt-2">
                                     <Link
                                         href="/login"
-                                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-95"
+                                        className="inline-flex items-center justify-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-95"
                                     >
                                         <span className="material-symbols-outlined text-[16px]">arrow_back</span>
                                         Quay lại Đăng nhập
@@ -118,7 +118,7 @@ export default function ForgotPasswordPage() {
                                         className={`h-11 w-full rounded-xl border px-3.5 text-xs outline-none transition focus:ring-2 disabled:bg-slate-50 ${
                                             emailError
                                                 ? "border-rose-300 bg-rose-50/30 text-slate-900 focus:border-rose-500 focus:ring-rose-100"
-                                                : "border-slate-200 bg-white text-slate-900 focus:border-sky-500 focus:ring-sky-100"
+                                                : "border-slate-200 bg-white text-slate-900 focus:border-blue-500 focus:ring-blue-100"
                                         }`}
                                         required
                                     />
@@ -139,7 +139,7 @@ export default function ForgotPasswordPage() {
                                 <button
                                     type="submit"
                                     disabled={loading}
-                                    className="w-full rounded-xl bg-sky-600 py-3 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-sky-300 disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center gap-2"
+                                    className="w-full rounded-xl bg-blue-600 py-3 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center gap-2"
                                 >
                                     {loading ? (
                                         <>
@@ -154,7 +154,7 @@ export default function ForgotPasswordPage() {
                                 <div className="pt-2 text-center">
                                     <Link
                                         href="/login"
-                                        className="text-xs font-semibold text-sky-600 hover:text-sky-800 transition inline-flex items-center gap-1"
+                                        className="text-xs font-semibold text-blue-600 hover:text-blue-800 transition inline-flex items-center gap-1"
                                     >
                                         <span className="material-symbols-outlined text-[14px]">arrow_back</span>
                                         Quay lại trang Đăng nhập

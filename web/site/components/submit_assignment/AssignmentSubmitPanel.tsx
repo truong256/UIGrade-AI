@@ -22,24 +22,24 @@ type Props = {
 };
 
 export function AssignmentSubmitPanel({
-                                          assignments,
-                                          selectedId,
-                                          selectedAssignment,
-                                          loading,
-                                          files,
-                                          repositoryUrl,
-                                          note,
-                                          submitting,
-                                          canSubmit,
-                                          onSelectAssignment,
-                                          onFilesChange,
-                                          onRemoveFile,
-                                          onRepositoryUrlChange,
-                                          onNoteChange,
-                                          onSubmit,
-                                      }: Props) {
+    assignments,
+    selectedId,
+    selectedAssignment,
+    loading,
+    files,
+    repositoryUrl,
+    note,
+    submitting,
+    canSubmit,
+    onSelectAssignment,
+    onFilesChange,
+    onRemoveFile,
+    onRepositoryUrlChange,
+    onNoteChange,
+    onSubmit,
+}: Props) {
     return (
-        <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
+        <section className="rounded-2xl border border-slate-200/80 bg-white p-6 shadow-xs">
             <AssignmentSelector
                 assignments={assignments}
                 selectedId={selectedId}
@@ -49,11 +49,11 @@ export function AssignmentSubmitPanel({
             />
 
             {loading ? (
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8 text-center text-slate-500">
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-8 text-center text-xs text-slate-500">
                     Đang tải dữ liệu bài tập...
                 </div>
             ) : selectedAssignment ? (
-                <div className="space-y-6">
+                <div className="space-y-6 mt-4">
                     <AssignmentDetails assignment={selectedAssignment} />
                     <SubmissionForm
                         assignment={selectedAssignment}
@@ -70,7 +70,7 @@ export function AssignmentSubmitPanel({
                     />
                 </div>
             ) : (
-                <div className="rounded-2xl border border-slate-100 bg-slate-50 p-8 text-center text-slate-500">
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-8 text-center text-xs text-slate-500 mt-4">
                     Chưa có bài tập nào bạn có thể nộp ở thời điểm hiện tại.
                 </div>
             )}

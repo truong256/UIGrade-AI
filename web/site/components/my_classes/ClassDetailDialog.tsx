@@ -403,7 +403,7 @@ export function ClassDetailDialog({
                                     <button
                                         type="button"
                                         onClick={() => setOpenAddStudent(true)}
-                                        className="rounded-xl bg-sky-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-sky-700 transition"
+                                        className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
                                     >
                                         + Thêm sinh viên
                                     </button>
@@ -437,7 +437,7 @@ export function ClassDetailDialog({
                                                                 <div className="text-sm text-slate-500">
                                                                     {member.userId?.email || "Chưa có email"}
                                                                 </div>
-                                                                <div className="mt-1 text-xs text-sky-700 font-medium">
+                                                                <div className="mt-1 text-xs text-blue-700 font-medium">
                                                                     Mã SV:{" "}
                                                                     {member.userId?.studentCode || "Chưa có"}
                                                                 </div>
@@ -448,7 +448,7 @@ export function ClassDetailDialog({
                                                                             : "Học sinh"}
                                                                     </span>
                                                                     {member.isOwner ? (
-                                                                        <span className="rounded-full bg-sky-100 border border-sky-200 px-3 py-1 text-sky-800 font-semibold">
+                                                                        <span className="rounded-full bg-blue-100 border border-blue-200 px-3 py-1 text-blue-800 font-semibold">
                                                                             Chủ lớp
                                                                         </span>
                                                                     ) : null}
@@ -548,7 +548,7 @@ export function ClassDetailDialog({
                                                                 <div className="text-sm text-slate-500">
                                                                     {member.userId?.email || "Chưa có email"}
                                                                 </div>
-                                                                <div className="mt-1 text-xs text-sky-700 font-medium">
+                                                                <div className="mt-1 text-xs text-blue-700 font-medium">
                                                                     Mã SV:{" "}
                                                                     {member.userId?.studentCode || "Chưa có"}
                                                                 </div>
@@ -559,7 +559,7 @@ export function ClassDetailDialog({
                                                                     type="button"
                                                                     disabled={isBusy}
                                                                     onClick={() => handleApprove(memberId)}
-                                                                    className="rounded-xl bg-sky-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-sky-700 shadow-xs disabled:opacity-70"
+                                                                    className="rounded-xl bg-blue-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-blue-700 shadow-xs disabled:opacity-70"
                                                                 >
                                                                     {isBusy ? "Đang xử lý..." : "Duyệt"}
                                                                 </button>
@@ -586,7 +586,7 @@ export function ClassDetailDialog({
                         </div>
                     )}
 
-                    <div className="mt-4 rounded-2xl bg-sky-50/50 border border-sky-100 p-4">
+                    <div className="mt-4 rounded-2xl bg-blue-50/50 border border-blue-100 p-4">
                         <p className="text-xs font-semibold text-slate-500">Mô tả khóa học</p>
                         <p className="mt-1 text-xs text-slate-700 leading-relaxed">
                             {classroom.description || "Chưa có mô tả"}
@@ -597,7 +597,7 @@ export function ClassDetailDialog({
                         <button
                             type="button"
                             onClick={onClose}
-                            className="rounded-xl bg-sky-600 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 hover:bg-sky-700 transition"
+                            className="rounded-xl bg-blue-600 px-6 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 transition"
                         >
                             Đóng
                         </button>

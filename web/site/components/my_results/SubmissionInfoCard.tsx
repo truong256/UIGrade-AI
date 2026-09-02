@@ -5,7 +5,7 @@ type SubmissionInfoCardProps = { item: ResultItem };
 
 export function SubmissionInfoCard({ item }: SubmissionInfoCardProps) {
     return (
-        <div className="rounded-2xl border border-sky-100 bg-white p-3.5 shadow-2xs">
+        <div className="rounded-2xl border border-blue-100 bg-white p-3.5 shadow-2xs">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Thông tin bài nộp</p>
             <div className="mt-2 space-y-1.5 text-xs text-slate-600">
                 <p>
@@ -17,7 +17,7 @@ export function SubmissionInfoCard({ item }: SubmissionInfoCardProps) {
                 <p className="break-all">
                     <span className="font-semibold text-slate-800">Repository / File:</span>{" "}
                     {item.repositoryUrl ? (
-                        <a href={item.repositoryUrl} target="_blank" rel="noreferrer" className="text-sky-600 hover:underline">
+                        <a href={item.repositoryUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
                             {item.repositoryUrl}
                         </a>
                     ) : (

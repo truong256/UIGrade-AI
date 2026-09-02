@@ -69,13 +69,13 @@ export function JoinClassDialog({
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/50 backdrop-blur-xs p-4">
             <div
-                className="w-full max-w-md rounded-3xl border border-sky-100 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
+                className="w-full max-w-md rounded-3xl border border-blue-100 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
                 role="dialog"
                 aria-modal="true"
             >
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                     <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                        <span className="material-symbols-outlined text-sky-600 text-[22px]">login</span>
+                        <span className="material-symbols-outlined text-blue-600 text-[22px]">login</span>
                         Tham gia Lớp học
                     </h3>
                     <button
@@ -99,7 +99,7 @@ export function JoinClassDialog({
                             onChange={(e) => setCode(e.target.value.toUpperCase())}
                             placeholder="VD: ANDR2026-L01"
                             autoFocus
-                            className="h-12 w-full rounded-2xl border border-slate-200 px-4 text-center text-base font-bold uppercase tracking-widest text-sky-950 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                            className="h-12 w-full rounded-2xl border border-slate-200 px-4 text-center text-base font-bold uppercase tracking-widest text-blue-950 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         />
                         <p className="mt-1 text-[11px] text-slate-500">
                             Nhập mã lớp 6-12 ký tự do giảng viên cung cấp để ghi danh vào lớp.
@@ -125,7 +125,7 @@ export function JoinClassDialog({
                         <button
                             type="submit"
                             disabled={loading}
-                            className="inline-flex items-center gap-1.5 rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 hover:bg-sky-700 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
+                            className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-70"
                         >
                             <span className="material-symbols-outlined text-[16px]">how_to_reg</span>
                             {loading ? "Đang tham gia..." : "Ghi danh vào lớp"}

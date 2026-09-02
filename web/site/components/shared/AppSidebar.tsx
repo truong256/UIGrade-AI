@@ -15,23 +15,21 @@ type AppSidebarProps = {
 };
 
 export function AppSidebar({
-                               collapsed,
-                               mobileOpen,
-                               onCloseMobile,
-                               onMouseEnter,
-                               onMouseLeave,
-                               currentUserRole,
-                           }: AppSidebarProps) {
+    collapsed,
+    mobileOpen,
+    onCloseMobile,
+    onMouseEnter,
+    onMouseLeave,
+    currentUserRole,
+}: AppSidebarProps) {
     const pathname = usePathname();
     const router = useRouter();
     const [loggingOut, setLoggingOut] = useState(false);
 
     // Role-aware navigation: each role sees only items appropriate to their permissions.
-    // This is a UX control — server-side authorization independently enforces access.
     const visibleNavItems = useMemo(() => {
         return getNavItemsForRole(currentUserRole);
     }, [currentUserRole]);
-
 
     const handleLogout = async () => {
         try {
@@ -74,20 +72,20 @@ export function AppSidebar({
             <aside
                 onMouseEnter={onMouseEnter}
                 onMouseLeave={onMouseLeave}
-                className={`fixed left-0 top-0 z-40 h-screen border-r border-sky-100 bg-white/95 backdrop-blur-md shadow-sm transition-[width,transform] duration-300 ease-out will-change-[width]
-                ${collapsed ? "lg:w-[92px]" : "lg:w-[272px]"}
+                className={`fixed left-0 top-0 z-40 h-screen border-r border-slate-200/80 bg-white/98 backdrop-blur-md shadow-xs transition-[width,transform] duration-300 ease-out will-change-[width]
+                ${collapsed ? "lg:w-[88px]" : "lg:w-[272px]"}
                 ${mobileOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"}
                 w-[272px]`}
             >
-                <div className="flex h-20 items-center border-b border-sky-100 px-3">
+                <div className="flex h-16 items-center border-b border-slate-200/80 px-3">
                     <Link
                         href="/ui/dashboard"
                         className="grid w-full grid-cols-[56px_minmax(0,1fr)] items-center group"
                         aria-label="Về trang tổng quan UIGrade AI"
                     >
-                        <div className="flex h-14 w-14 items-center justify-center">
-                            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-sky-500 to-sky-700 text-white shadow-md shadow-sky-500/20 group-hover:scale-105 transition-transform duration-200">
-                                <span className="material-symbols-outlined text-[26px]">
+                        <div className="flex h-12 w-12 items-center justify-center">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-blue-700 text-white shadow-xs group-hover:scale-105 transition-transform duration-200">
+                                <span className="material-symbols-outlined text-[22px]">
                                     auto_stories
                                 </span>
                             </div>
@@ -100,10 +98,10 @@ export function AppSidebar({
                                     : "max-w-[180px] translate-x-0 opacity-100"
                             }`}
                         >
-                            <p className="truncate text-lg font-bold text-sky-950 flex items-center gap-1.5">
-                                UIGrade <span className="text-xs px-1.5 py-0.5 rounded-md bg-sky-100 text-sky-700 font-semibold uppercase tracking-wider">AI</span>
+                            <p className="truncate text-base font-bold text-[#172033] flex items-center gap-1.5">
+                                UIGrade <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-blue-100 text-blue-700 font-bold uppercase tracking-wider">AI</span>
                             </p>
-                            <p className="truncate text-xs text-slate-500">
+                            <p className="truncate text-[11px] text-[#4A5568]">
                                 Chấm điểm Android Rubric
                             </p>
                         </div>
@@ -120,14 +118,14 @@ export function AppSidebar({
                                 href={item.href}
                                 onClick={onCloseMobile}
                                 title={collapsed ? item.label : undefined}
-                                className={`grid grid-cols-[44px_minmax(0,1fr)] items-center rounded-xl px-2 py-2.5 text-sm font-medium transition-all duration-200 ${
+                                className={`grid h-11 grid-cols-[44px_minmax(0,1fr)] items-center rounded-xl px-1.5 text-sm font-medium transition-all duration-200 ${
                                     active
-                                        ? "bg-sky-50 text-sky-700 font-semibold shadow-xs"
-                                        : "text-slate-600 hover:bg-sky-50/60 hover:text-sky-900"
+                                        ? "bg-blue-50 text-blue-600 font-semibold shadow-xs"
+                                        : "text-slate-600 hover:bg-slate-100/70 hover:text-[#172033]"
                                 }`}
                             >
                                 <span className="flex h-10 w-10 shrink-0 items-center justify-center">
-                                    <span className={`material-symbols-outlined text-[22px] ${active ? "text-sky-600" : "text-slate-500"}`}>
+                                    <span className={`material-symbols-outlined text-[20px] ${active ? "text-blue-600" : "text-slate-500"}`}>
                                         {item.icon}
                                     </span>
                                 </span>
@@ -145,17 +143,17 @@ export function AppSidebar({
                         );
                     })}
 
-                    <div className="pt-2 border-t border-sky-100 my-2" />
+                    <div className="pt-2 border-t border-slate-200/80 my-2" />
 
                     <button
                         type="button"
                         onClick={handleLogout}
                         disabled={loggingOut}
                         title={collapsed ? "Đăng xuất" : undefined}
-                        className="grid w-full grid-cols-[44px_minmax(0,1fr)] items-center rounded-xl px-2 py-2.5 text-left text-red-600 transition-all duration-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
+                        className="grid h-11 w-full grid-cols-[44px_minmax(0,1fr)] items-center rounded-xl px-1.5 text-left text-red-600 transition-all duration-200 hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-70"
                     >
                         <span className="flex h-10 w-10 shrink-0 items-center justify-center">
-                            <span className="material-symbols-outlined">
+                            <span className="material-symbols-outlined text-[20px]">
                                 logout
                             </span>
                         </span>

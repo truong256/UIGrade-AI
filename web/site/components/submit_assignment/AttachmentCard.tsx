@@ -2,9 +2,9 @@ import type { AssignmentItem } from "@/app/ui/submit_assignment/type/submit_assi
 
 export function AttachmentCard({ assignment }: { assignment: AssignmentItem | null }) {
     return (
-        <section className="rounded-3xl border border-sky-100 bg-white p-6 shadow-sm">
+        <section className="rounded-3xl border border-blue-100 bg-white p-6 shadow-sm">
             <h3 className="mb-4 text-base font-bold text-slate-900 flex items-center gap-2">
-                <span className="material-symbols-outlined text-sky-600 text-[20px]">attach_file</span>
+                <span className="material-symbols-outlined text-blue-600 text-[20px]">attach_file</span>
                 Tệp đính kèm bài tập
             </h3>
             {assignment?.attachments.length ? (
@@ -15,10 +15,10 @@ export function AttachmentCard({ assignment }: { assignment: AssignmentItem | nu
                             href={file.url}
                             target="_blank"
                             rel="noreferrer"
-                            className="block break-words rounded-xl border border-sky-100 bg-sky-50/50 px-3.5 py-2.5 text-sky-700 hover:bg-sky-100 hover:underline transition"
+                            className="block break-words rounded-xl border border-blue-100 bg-blue-50/50 px-3.5 py-2.5 text-blue-700 hover:bg-blue-100 hover:underline transition"
                         >
                             {file.originalName}
-                            <span className="ml-2 text-[10px] font-semibold uppercase text-sky-500">
+                            <span className="ml-2 text-[10px] font-semibold uppercase text-blue-500">
                                 ({file.kind})
                             </span>
                         </a>

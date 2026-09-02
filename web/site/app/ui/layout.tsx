@@ -3,7 +3,7 @@ import { AppHeader } from "@/components/shared/AppHeader";
 
 export default function UiLayout({ children }: { children: ReactNode }) {
     return (
-        <div className="min-h-screen bg-[#F0F9FF] text-[#0F172A]">
+        <div className="min-h-dvh bg-[#F6F9FF] text-[#172033]">
             <AppHeader>{children}</AppHeader>
         </div>
     );

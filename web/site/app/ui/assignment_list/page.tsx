@@ -10,6 +10,7 @@ import {
 } from "react";
 
 import AssignmentDetailDialog from "@/components/assignment_list/AssignmentDetailDialog";
+import { fetchCurrentUserClient } from "@/lib/auth-client";
 import AssignmentEditDialog from "@/components/assignment_list/AssignmentEditDialog";
 import AssignmentListAlerts from "@/components/assignment_list/AssignmentListAlerts";
 import AssignmentListFilters from "@/components/assignment_list/AssignmentListFilters";
@@ -78,15 +79,13 @@ export default function AssignmentListPage() {
             setLoading(true);
             setError("");
 
-            const [userRes, assignmentsRes, classesRes] = await Promise.all([
-                fetch("/api/auth/me", { cache: "no-store" }),
+            const [currentUserData, assignmentsRes, classesRes] = await Promise.all([
+                fetchCurrentUserClient(),
                 fetch("/api/assignments", { cache: "no-store" }),
                 fetch("/api/classes", { cache: "no-store" }),
             ]);
 
-            const userJson: ApiResult<CurrentUser> = await userRes
-                .json()
-                .catch(() => ({} as ApiResult<CurrentUser>));
+            setCurrentUser(currentUserData);
 
             const assignmentsJson: ApiResult<unknown> = await assignmentsRes
                 .json()
@@ -95,10 +94,6 @@ export default function AssignmentListPage() {
             const classesJson: ApiResult<ClassroomOption[]> = await classesRes
                 .json()
                 .catch(() => ({} as ApiResult<ClassroomOption[]>));
-
-            if (userRes.ok) {
-                setCurrentUser(userJson.user || userJson.data || null);
-            }
 
             if (!assignmentsRes.ok) {
                 throw new Error(
@@ -444,6 +439,11 @@ export default function AssignmentListPage() {
                 onKeywordChange={setKeyword}
                 onStatusFilterChange={setStatusFilter}
                 onClassFilterChange={setClassFilter}
+                onResetFilters={() => {
+                    setKeyword("");
+                    setStatusFilter("all");
+                    setClassFilter("all");
+                }}
             />
 
             <AssignmentTable
@@ -459,6 +459,11 @@ export default function AssignmentListPage() {
                 onOpenDetail={openDetail}
                 onOpenEdit={openEdit}
                 onDelete={handleDelete}
+                onResetFilters={() => {
+                    setKeyword("");
+                    setStatusFilter("all");
+                    setClassFilter("all");
+                }}
             />
 
             <AssignmentDetailDialog

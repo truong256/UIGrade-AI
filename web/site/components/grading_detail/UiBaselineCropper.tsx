@@ -136,7 +136,7 @@ export default function UiBaselineCropper({
                     <select
                         value={screenKey}
                         onChange={(event) => handleScreenChange(event.target.value)}
-                        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     >
                         {screenOptions.map((item) => (
                             <option key={item.screenKey} value={item.screenKey}>
@@ -151,7 +151,7 @@ export default function UiBaselineCropper({
                     <input
                         value={label}
                         onChange={(event) => setLabel(event.target.value)}
-                        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-sky-500 focus:ring-2 focus:ring-sky-100"
+                        className="mt-1 w-full rounded-xl border border-slate-200 px-3 py-2 text-xs outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     />
                 </label>
             </div>
@@ -183,7 +183,7 @@ export default function UiBaselineCropper({
                     type="button"
                     onClick={handleSave}
                     disabled={saving}
-                    className="rounded-xl bg-sky-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-sky-600/20 hover:bg-sky-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                    className="rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     {saving ? "Đang lưu..." : "Lưu ảnh UI chuẩn"}
                 </button>

@@ -133,9 +133,9 @@ export function RegisterFormCard({ data }: Props) {
 
     return (
         <div className="w-full max-w-[460px] mx-auto">
-            <div className="rounded-3xl border border-sky-100 bg-white p-7 sm:p-8 shadow-xl shadow-sky-950/5">
+            <div className="rounded-3xl border border-blue-100 bg-white p-7 sm:p-8 shadow-xl shadow-blue-950/5">
                 <div className="text-center mb-6">
-                    <div className="inline-block rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-sky-700 mb-2">
+                    <div className="inline-block rounded-full border border-blue-200 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-700 mb-2">
                         HỆ THỐNG CHẤM ĐIỂM THÔNG MINH
                     </div>
                     <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
@@ -159,7 +159,7 @@ export function RegisterFormCard({ data }: Props) {
                             value={name}
                             onChange={(e) => setName(e.target.value)}
                             disabled={loading}
-                            className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-50"
+                            className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
                             required
                         />
                     </div>
@@ -185,7 +185,7 @@ export function RegisterFormCard({ data }: Props) {
                             className={`h-10 w-full rounded-xl border px-3.5 text-xs outline-none transition focus:ring-2 disabled:bg-slate-50 ${
                                 emailError
                                     ? "border-rose-300 bg-rose-50/30 text-slate-900 focus:border-rose-500 focus:ring-rose-100"
-                                    : "border-slate-200 bg-white text-slate-900 focus:border-sky-500 focus:ring-sky-100"
+                                    : "border-slate-200 bg-white text-slate-900 focus:border-blue-500 focus:ring-blue-100"
                             }`}
                             required
                         />
@@ -207,7 +207,7 @@ export function RegisterFormCard({ data }: Props) {
                             value={studentCode}
                             onChange={(e) => setStudentCode(e.target.value.toUpperCase())}
                             disabled={loading}
-                            className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 font-mono text-xs uppercase text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-50"
+                            className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 font-mono text-xs uppercase text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
                         />
                     </div>
 
@@ -224,7 +224,7 @@ export function RegisterFormCard({ data }: Props) {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     disabled={loading}
-                                    className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-9 text-xs text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-50"
+                                    className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-9 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
                                     required
                                 />
                                 <button
@@ -251,7 +251,7 @@ export function RegisterFormCard({ data }: Props) {
                                     value={confirmPassword}
                                     onChange={(e) => setConfirmPassword(e.target.value)}
                                     disabled={loading}
-                                    className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-9 text-xs text-slate-900 outline-none transition focus:border-sky-500 focus:ring-2 focus:ring-sky-100 disabled:bg-slate-50"
+                                    className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-9 text-xs text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
                                     required
                                 />
                                 <button
@@ -275,15 +275,15 @@ export function RegisterFormCard({ data }: Props) {
                             type="checkbox"
                             checked={acceptedTerms}
                             onChange={(e) => setAcceptedTerms(e.target.checked)}
-                            className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-sky-600 focus:ring-sky-500"
+                            className="mt-0.5 h-3.5 w-3.5 rounded border-slate-300 text-blue-600 focus:ring-blue-500"
                         />
                         <label htmlFor="terms" className="cursor-pointer text-xs text-slate-600 leading-tight">
                             {data?.termsTextStart || "Tôi đồng ý với"}{" "}
-                            <Link href="/terms" className="font-semibold text-sky-600 hover:underline">
+                            <Link href="/terms" className="font-semibold text-blue-600 hover:underline">
                                 {data?.termsLink1 || "Điều khoản dịch vụ"}
                             </Link>{" "}
                             {data?.termsTextMiddle || "và"}{" "}
-                            <Link href="/privacy" className="font-semibold text-sky-600 hover:underline">
+                            <Link href="/privacy" className="font-semibold text-blue-600 hover:underline">
                                 {data?.termsLink2 || "Chính sách bảo mật"}
                             </Link>{" "}
                             {data?.termsTextEnd || "của UIGrade AI."}
@@ -302,7 +302,7 @@ export function RegisterFormCard({ data }: Props) {
                     <button
                         type="submit"
                         disabled={loading}
-                        className="w-full rounded-xl bg-sky-600 py-3 text-xs font-bold text-white shadow-md shadow-sky-600/20 transition hover:bg-sky-700 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-sky-300 disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center gap-2"
+                        className="w-full rounded-xl bg-blue-600 py-3 text-xs font-bold text-white shadow-md shadow-blue-600/20 transition hover:bg-blue-700 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center gap-2"
                     >
                         {loading ? (
                             <>
@@ -337,7 +337,7 @@ export function RegisterFormCard({ data }: Props) {
                         {data?.loginText || "Đã có tài khoản?"}{" "}
                         <Link
                             href="/login"
-                            className="font-bold text-sky-600 hover:text-sky-700 transition"
+                            className="font-bold text-blue-600 hover:text-blue-700 transition"
                         >
                             {data?.loginLabel || "Đăng nhập ngay"}
                         </Link>

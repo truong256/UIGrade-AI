@@ -15,15 +15,15 @@ export function LoginHero({ data }: Props) {
 
     return (
         <div className="text-center">
-            <div className="inline-block rounded-full border border-sky-200 bg-sky-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-sky-700 mb-2.5">
+            <div className="inline-block rounded-lg border border-blue-200/60 bg-blue-50 px-3 py-1 text-[11px] font-bold uppercase tracking-wider text-blue-700 mb-2.5">
                 {eyebrow}
             </div>
 
-            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#172033]">
                 {title}
             </h1>
 
-            <p className="mt-1.5 text-xs sm:text-sm text-slate-500 max-w-sm mx-auto">
+            <p className="mt-1 text-xs sm:text-sm text-[#4A5568] max-w-sm mx-auto">
                 {description}
             </p>
         </div>
