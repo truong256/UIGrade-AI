@@ -399,7 +399,7 @@ Quy tắc:
 `.trim();
 
         const response = await ai.models.generateContent({
-            model: process.env.GEMINI_MODEL || "gemini-3.7-flash",
+            model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
             contents: [
                 {
                     role: "user",

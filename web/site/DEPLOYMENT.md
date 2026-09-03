@@ -19,13 +19,13 @@ Tài liệu này hướng dẫn chi tiết quy trình chuẩn bị, cấu hình 
  │         │                        │                      │
  ▼         ▼                        ▼                      ▼
 [ MongoDB  [ Supabase Auth &        [ Google Gemini API    [ Android Grading Worker ]
-  Atlas ]    Storage Buckets ]        (gemini-3.7-flash) ]   (Dedicated VM / Host)
+  Atlas ]    Storage Buckets ]        (gemini-3.8-flash) ]   (Dedicated VM / Host)
 ```
 
 - **Web Frontend & API Routes**: Chạy trên **Vercel Serverless Functions**.
 - **Cơ sở dữ liệu chính (Primary DB)**: **MongoDB Atlas** (User, Classroom, Assignment, Submission, Settings).
 - **Xác thực & Lưu trữ tập tin (Auth & File Storage)**: **Supabase** (PostgreSQL, Supabase Auth, Supabase Storage Buckets cho avatar, assignment attachments, student submissions).
-- **AI Đánh giá giao diện**: **Google Gemini API** (`gemini-3.7-flash`).
+- **AI Đánh giá giao diện**: **Google Gemini API** (`gemini-3.8-flash`).
 - **Android Runtime Runner (Grading Worker)**: Chạy trên máy chủ chuyên dụng (có Android SDK, ADB, Emulator / AVD). **Không chạy trực tiếp bên trong Vercel Serverless Functions**.
 
 ---
@@ -68,7 +68,7 @@ Các biến này chỉ được truy cập trong môi trường Server / Serverl
 | `JWT_SECRET` | **Có** | Chuỗi bí mật ký JWT session (tối thiểu 32 ký tự ngẫu nhiên) |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Có** | Service Role Admin Key của Supabase (dùng cho backend operations) |
 | `GEMINI_API_KEY` | **Có** | API Key từ Google AI Studio / Google Cloud |
-| `GEMINI_MODEL` | Tùy chọn | Mặc định là `gemini-3.7-flash` |
+| `GEMINI_MODEL` | Tùy chọn | Mặc định là `gemini-3.8-flash` |
 | `NOTIFICATION_CRON_TOKEN` | Tùy chọn | Token bảo vệ endpoint trigger reminder tự động |
 | `SMTP_HOST` | Tùy chọn | Host SMTP gửi email thông báo |
 | `SMTP_PORT` | Tùy chọn | Port SMTP (587 hoặc 465) |

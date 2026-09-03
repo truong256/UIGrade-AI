@@ -487,7 +487,7 @@ export default function CreateAssignmentPage() {
 
             const aiConfig = {
                 enabled: true,
-                model: "gemini-3.7-flash",
+                model: "gemini-3.8-flash",
                 temperature: 0.2,
                 feedbackLanguage: "vi",
             };

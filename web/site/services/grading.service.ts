@@ -432,7 +432,7 @@ export const gradingService = {
                 model:
                     submission.assignmentSnapshot?.aiConfig?.model ||
                     process.env.GEMINI_MODEL ||
-                    "gemini-3.7-flash",
+                    "gemini-3.8-flash",
                 language: submission.assignmentSnapshot?.aiConfig?.feedbackLanguage || "vi",
             });
         }
