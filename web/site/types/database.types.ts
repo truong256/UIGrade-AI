@@ -6,7 +6,7 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type UserRole = "student" | "lecturer" | "teacher" | "admin";
+export type UserRole = "student" | "lecturer" | "teacher" | "admin" | "pending";
 export type UserStatus = "active" | "inactive" | "banned" | "pending";
 export type ClassStatus = "active" | "archived" | "closed";
 export type MemberStatus = "active" | "invited" | "pending" | "dropped";

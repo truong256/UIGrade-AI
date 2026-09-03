@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { getNavItemsForRole, isActivePath } from "@/lib/navigation";
 import { useMemo, useState } from "react";
+import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 
 type AppSidebarProps = {
     collapsed: boolean;
@@ -35,28 +36,42 @@ export function AppSidebar({
         try {
             setLoggingOut(true);
 
-            const res = await fetch("/api/auth/logout", {
-                method: "POST",
-            });
+            // Clear JWT cookie + Supabase session server-side
+            const res = await fetch("/api/auth/logout", { method: "POST" });
 
-            const result = await res.json();
+            // Also sign out Supabase client-side to clear SSR cookies
+            if (isSupabaseConfigured()) {
+                try {
+                    const supabase = getSupabaseBrowserClient();
+                    await supabase.auth.signOut();
+                } catch {
+                    // Non-fatal: server logout already cleared the cookie
+                }
+            }
+
+            // Clear any leftover client-side storage
+            try {
+                localStorage.removeItem("token");
+                localStorage.removeItem("user");
+            } catch {
+                // ignore in SSR context
+            }
 
             if (!res.ok) {
-                alert(result.message || "Đăng xuất thất bại");
+                // Still redirect to login even if server returned error
+                router.replace("/login");
                 return;
             }
 
             onCloseMobile?.();
-            router.push("/login");
+            router.replace("/login");
             router.refresh();
         } catch {
-            alert("Có lỗi xảy ra khi đăng xuất");
+            // Force redirect even on network failure
+            router.replace("/login");
         } finally {
             setLoggingOut(false);
         }
-
-        localStorage.removeItem("token");
-        localStorage.removeItem("user");
     };
 
     return (
