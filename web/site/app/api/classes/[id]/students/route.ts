@@ -1,22 +1,20 @@
-import { NextRequest } from "next/server";
-import { connectDB } from "@/lib/mongodb";
-import {
-    addStudentController,
-    getStudentsController,
-} from "@/controllers/classroom-member.controller";
+import { NextRequest, NextResponse } from "next/server";
+import { requireActiveRequestActor } from "@/lib/current-user";
+import { webMvpErrorResponse } from "@/lib/web-mvp-route";
+import { SupabaseWebClassService, WebMvpError } from "@/services/supabase/web-mvp.supabase";
 
-type RouteContext = {
-    params: Promise<{ id: string }>;
-};
-
-export async function GET(request: NextRequest, context: RouteContext) {
-    await connectDB();
-    const { id } = await context.params;
-    return getStudentsController(request, id);
+export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        const actor = await requireActiveRequestActor(request);
+        const { id } = await params;
+        const rawStatus = new URL(request.url).searchParams.get("status");
+        const status = rawStatus === "pending" ? "pending" : "active";
+        return NextResponse.json({ items: await SupabaseWebClassService.members(actor, id, status) });
+    } catch (error) {
+        return webMvpErrorResponse(error);
+    }
 }
 
-export async function POST(request: NextRequest, context: RouteContext) {
-    await connectDB();
-    const { id } = await context.params;
-    return addStudentController(request, id);
+export async function POST() {
+    return webMvpErrorResponse(new WebMvpError("Hãy yêu cầu sinh viên tham gia bằng mã lớp; thêm trực tiếp đã bị tắt", 409));
 }

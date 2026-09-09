@@ -1,4 +1,4 @@
-import type { AnyObj, AssignmentDetail, GradingTab, SidebarStudent } from "@/app/ui/grading_detail/type/grading_detail.type";
+import type { AnyObj, AssignmentDetail, GradingFilter, GradingTab, SidebarStudent } from "@/app/ui/grading_detail/type/grading_detail.type";
 import { formatDateTime } from "@/app/ui/grading_detail/type/grading_detail.unit";
 import { SidebarConfig } from "./SidebarConfig";
 import { StudentListItem } from "./StudentListItem";
@@ -9,10 +9,12 @@ type Props = {
     visibleStudents: SidebarStudent[];
     selectedStudentId: string;
     keyword: string;
+    statusFilter: GradingFilter;
     tab: GradingTab;
     rubric: AnyObj[];
     loading: boolean;
     onKeywordChange: (keyword: string) => void;
+    onStatusFilterChange: (filter: GradingFilter) => void;
     onTabChange: (tab: GradingTab) => void;
     onSelectStudent: (student: SidebarStudent) => void;
 };
@@ -23,10 +25,12 @@ export function GradingSidebar({
                                    visibleStudents,
                                    selectedStudentId,
                                    keyword,
+                                   statusFilter,
                                    tab,
                                    rubric,
                                    loading,
                                    onKeywordChange,
+                                   onStatusFilterChange,
                                    onTabChange,
                                    onSelectStudent,
                                }: Props) {
@@ -71,6 +75,21 @@ export function GradingSidebar({
                                 className="w-full rounded-xl border border-slate-200 bg-slate-50/50 py-2 pl-9 pr-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             />
                         </div>
+
+                        <select
+                            value={statusFilter}
+                            onChange={(event) => onStatusFilterChange(event.target.value as GradingFilter)}
+                            className="mt-2 h-9 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs font-medium text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            aria-label="Lọc trạng thái bài nộp"
+                        >
+                            <option value="all">Tất cả trạng thái</option>
+                            <option value="not_submitted">Chưa nộp</option>
+                            <option value="submitted">Đã nộp</option>
+                            <option value="late">Nộp trễ</option>
+                            <option value="ungraded">Chưa chấm</option>
+                            <option value="grading">Đang chấm</option>
+                            <option value="graded">Đã chấm</option>
+                        </select>
 
                         <div className="mt-3 flex max-h-[760px] flex-col gap-1.5 overflow-y-auto pr-1">
                             {loading ? (

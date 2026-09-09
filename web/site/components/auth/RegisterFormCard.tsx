@@ -33,11 +33,14 @@ type Props = {
     data?: RegisterFormData;
 };
 
+type RegistrationRole = "student" | "lecturer";
+
 export function RegisterFormCard({ data }: Props) {
     const router = useRouter();
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [studentCode, setStudentCode] = useState("");
+    const [role, setRole] = useState<RegistrationRole>("student");
     const [password, setPassword] = useState("");
     const [confirmPassword, setConfirmPassword] = useState("");
     const [showPassword, setShowPassword] = useState(false);
@@ -46,6 +49,7 @@ export function RegisterFormCard({ data }: Props) {
     const [emailError, setEmailError] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const [success, setSuccess] = useState("");
 
     const validateEmail = (val: string): boolean => {
         const trimmed = val.trim();
@@ -65,6 +69,7 @@ export function RegisterFormCard({ data }: Props) {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         setError("");
+        setSuccess("");
 
         const trimmedName = name.trim();
         const trimmedEmail = email.trim();
@@ -112,6 +117,7 @@ export function RegisterFormCard({ data }: Props) {
                     password,
                     confirmPassword,
                     studentCode: trimmedStudentCode || undefined,
+                    role,
                 }),
             });
 
@@ -122,7 +128,12 @@ export function RegisterFormCard({ data }: Props) {
                 return;
             }
 
-            router.push("/ui/dashboard");
+            if (result.requiresEmailConfirmation) {
+                setSuccess(result.message);
+                return;
+            }
+
+            router.push(result.redirectTo || "/ui/dashboard");
             router.refresh();
         } catch {
             setError("Có lỗi xảy ra trong quá trình tạo tài khoản. Vui lòng thử lại sau.");
@@ -196,8 +207,33 @@ export function RegisterFormCard({ data }: Props) {
                         )}
                     </div>
 
+                    {/* Role selection — admin is intentionally unavailable */}
+                    <fieldset>
+                        <legend className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1.5">
+                            Vai trò <span className="text-rose-500">*</span>
+                        </legend>
+                        <div className="grid grid-cols-2 gap-2">
+                            {(["student", "lecturer"] as const).map((value) => (
+                                <button
+                                    key={value}
+                                    type="button"
+                                    onClick={() => setRole(value)}
+                                    disabled={loading}
+                                    aria-pressed={role === value}
+                                    className={`h-10 rounded-xl border text-xs font-semibold transition focus:outline-none focus:ring-2 focus:ring-blue-200 disabled:opacity-60 ${
+                                        role === value
+                                            ? "border-blue-500 bg-blue-50 text-blue-700"
+                                            : "border-slate-200 bg-white text-slate-600 hover:border-blue-300"
+                                    }`}
+                                >
+                                    {value === "student" ? "Sinh viên" : "Giảng viên"}
+                                </button>
+                            ))}
+                        </div>
+                    </fieldset>
+
                     {/* Student Code */}
-                    <div>
+                    {role === "student" && <div>
                         <label className="block text-xs font-bold uppercase tracking-wider text-slate-700 mb-1">
                             {data?.studentCodeLabel || "Mã sinh viên / MSSV (Nếu có)"}
                         </label>
@@ -209,7 +245,7 @@ export function RegisterFormCard({ data }: Props) {
                             disabled={loading}
                             className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3.5 font-mono text-xs uppercase text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
                         />
-                    </div>
+                    </div>}
 
                     {/* Password & Confirm */}
                     <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
@@ -295,6 +331,12 @@ export function RegisterFormCard({ data }: Props) {
                         <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-600 font-medium flex items-center gap-2">
                             <span className="material-symbols-outlined text-[16px] shrink-0">error</span>
                             <span>{error}</span>
+                        </div>
+                    )}
+
+                    {success && (
+                        <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-3 text-xs font-medium text-emerald-700">
+                            {success}
                         </div>
                     )}
 

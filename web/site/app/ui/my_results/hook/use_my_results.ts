@@ -13,8 +13,8 @@ export function useMyResults() {
     const [statusFilter, setStatusFilter] = useState("all");
     const [selectedId, setSelectedId] = useState("");
 
-    const isTeacherView = currentUser?.role === "teacher" || currentUser?.role === "admin";
-    const canViewResults = !currentUser?.role || ["User", "admin", "teacher"].includes(currentUser.role);
+    const isTeacherView = false;
+    const canViewResults = !currentUser?.role || ["student", "User"].includes(currentUser.role);
 
     useEffect(() => {
         const loadData = async () => {
@@ -25,7 +25,7 @@ export function useMyResults() {
                 const user = await fetchCurrentUser();
                 setCurrentUser(user);
 
-                if (user?.role !== "User") {
+                if (user?.role !== "student" && user?.role !== "User") {
                     setItems([]);
                     setSelectedId("");
                     return;

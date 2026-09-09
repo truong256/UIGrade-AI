@@ -57,16 +57,8 @@ export class SupabaseStorageService {
 
     if (error) throw new Error(error.message);
 
-    // Submissions bucket is private; create signed URL or return path
-    const { data: signedData, error: signError } = await supabase.storage
-      .from("submissions")
-      .createSignedUrl(data.path, 60 * 60 * 24 * 7); // 7 days
-
-    if (signError || !signedData?.signedUrl) {
-      const { data: { publicUrl } } = supabase.storage.from("submissions").getPublicUrl(data.path);
-      return publicUrl;
-    }
-
-    return signedData.signedUrl;
+    // Persist the stable object path, never an expiring signed URL. Authorized
+    // download routes create short-lived links only when the user opens a file.
+    return data.path;
   }
 }

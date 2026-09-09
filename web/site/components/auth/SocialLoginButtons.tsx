@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Props = {
@@ -10,8 +10,11 @@ type Props = {
 
 export function SocialLoginButtons({ disabled = false, onError }: Props) {
     const [loadingGoogle, setLoadingGoogle] = useState(false);
+    const signingIn = useRef(false);
 
     const handleGoogleSignIn = async () => {
+        if (disabled || signingIn.current) return;
+        signingIn.current = true;
         try {
             setLoadingGoogle(true);
             const supabase = getSupabaseBrowserClient();
@@ -21,20 +24,18 @@ export function SocialLoginButtons({ disabled = false, onError }: Props) {
                 provider: "google",
                 options: {
                     redirectTo,
-                    queryParams: {
-                        access_type: "offline",
-                        prompt: "consent",
-                    },
                 },
             });
 
             if (error) {
-                onError?.(error.message || "Không thể khởi động đăng nhập với Google");
+                signingIn.current = false;
                 setLoadingGoogle(false);
+                onError?.("Không thể khởi động đăng nhập với Google. Vui lòng thử lại.");
             }
         } catch {
-            onError?.("Đã xảy ra lỗi khi kết nối với Google. Vui lòng thử lại sau.");
+            signingIn.current = false;
             setLoadingGoogle(false);
+            onError?.("Đã xảy ra lỗi khi kết nối với Google. Vui lòng thử lại sau.");
         }
     };
 

@@ -28,6 +28,7 @@ import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { normalizeRole, isAccountAccessAllowed, type CanonicalRole, AuthorizationError } from "@/lib/authorization";
+import { isAuthenticatedRole } from "@/lib/auth-routing";
 import { connectDB } from "@/lib/mongodb";
 import User from "@/models/User.model";
 
@@ -135,7 +136,7 @@ export async function getCurrentUserFromCookie(): Promise<CurrentUserPayload | n
                 .eq("id", user.id)
                 .single();
 
-            if (!profile) return null; // Fail secure if profile does not exist
+            if (!profile || !isAuthenticatedRole(profile.role)) return null;
 
             if (!isAccountAccessAllowed(profile.status)) {
                 return null; // Locked/inactive/banned in Supabase -> revoked
@@ -173,8 +174,137 @@ export async function getCurrentUserFromCookie(): Promise<CurrentUserPayload | n
  * Returns null when unauthenticated, token is invalid, or user is locked/deleted.
  */
 export async function getCurrentUserFromRequest(request: Request): Promise<CurrentUserPayload | null> {
+    // Route handlers can use the same verified Supabase cookie session as Server Components.
+    // This is essential for Google OAuth users, who do not have the legacy `token` cookie.
+    try {
+        const supabase = await createSupabaseServerClient();
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+            const { data: profile } = await (supabase as any)
+                .from("profiles")
+                .select("role, student_code, status")
+                .eq("id", user.id)
+                .single();
+
+            if (!profile || !isAuthenticatedRole(profile.role)) return null;
+            if (!isAccountAccessAllowed(profile.status)) return null;
+
+            return {
+                userId: user.id,
+                email: user.email ?? "",
+                role: profile.role,
+                studentCode: profile.student_code ?? undefined,
+            };
+        }
+    } catch {
+        // Supabase unavailable or not configured: try the legacy signed JWT path.
+    }
+
     const cookieToken = parseCookieToken(request.headers.get("cookie"));
     return resolveAuthoritativeActorFromToken(cookieToken);
+}
+
+export type RequestActorResolution =
+    | { state: "authenticated"; actor: CurrentUserPayload }
+    | { state: "anonymous" }
+    | { state: "forbidden" };
+
+/**
+ * Resolve a route actor while preserving the distinction between an absent
+ * session (401) and an authenticated account that is pending/disabled (403).
+ * Sensitive mutation routes use this instead of collapsing both cases to null.
+ */
+export async function resolveRequestActorAuthorization(
+    request: Request
+): Promise<RequestActorResolution> {
+    let supabaseUserWasVerified = false;
+
+    try {
+        const supabase = await createSupabaseServerClient();
+        const {
+            data: { user },
+        } = await supabase.auth.getUser();
+
+        if (user) {
+            supabaseUserWasVerified = true;
+            const { data: profile, error } = await supabase
+                .from("profiles")
+                .select("role, student_code, status")
+                .eq("id", user.id)
+                .maybeSingle();
+
+            if (
+                error ||
+                !profile ||
+                !isAuthenticatedRole(profile.role) ||
+                !isAccountAccessAllowed(profile.status)
+            ) {
+                return { state: "forbidden" };
+            }
+
+            return {
+                state: "authenticated",
+                actor: {
+                    userId: user.id,
+                    email: user.email ?? "",
+                    role: normalizeRole(profile.role),
+                    studentCode: profile.student_code ?? undefined,
+                },
+            };
+        }
+    } catch {
+        // Once Supabase verified an identity, a profile lookup failure must not
+        // fall through to a second credential with potentially broader access.
+        if (supabaseUserWasVerified) return { state: "forbidden" };
+        // Supabase unavailable before identity verification: retain legacy JWT.
+    }
+
+    const cookieToken = parseCookieToken(request.headers.get("cookie"));
+    const legacyActor = await resolveAuthoritativeActorFromToken(cookieToken);
+
+    return legacyActor
+        ? { state: "authenticated", actor: legacyActor }
+        : { state: "anonymous" };
+}
+
+export async function requireActiveRequestActor(
+    _request: Request
+): Promise<CurrentUserPayload> {
+    // Sensitive Web MVP routes are Supabase-only. This prevents a legacy
+    // Mongo ObjectId from crossing into UUID-backed Supabase queries.
+    let supabase;
+    try {
+        supabase = await createSupabaseServerClient();
+    } catch {
+        throw new AuthorizationError("Dịch vụ xác thực chưa được cấu hình", 503);
+    }
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+        throw new AuthorizationError("Bạn chưa đăng nhập", 401);
+    }
+    const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role, student_code, status")
+        .eq("id", user.id)
+        .maybeSingle();
+    if (
+        profileError || !profile || !isAuthenticatedRole(profile.role)
+        || !isAccountAccessAllowed(profile.status)
+    ) {
+        throw new AuthorizationError(
+            "Tài khoản chưa được kích hoạt hoặc đã bị vô hiệu hóa",
+            403
+        );
+    }
+    return {
+        userId: user.id,
+        email: user.email ?? "",
+        role: normalizeRole(profile.role),
+        studentCode: profile.student_code ?? undefined,
+    };
 }
 
 /**

@@ -1,7 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { mapSupabaseErrorToVietnamese } from "@/lib/supabase/errors";
 import { UserRole } from "@/types/database.types";
+import { authenticatedProfileRole } from "@/lib/auth-routing";
 
 export interface UserProfile {
   id: string;
@@ -16,57 +16,14 @@ export interface UserProfile {
   created_at: string;
 }
 
-export class SupabaseAuthService {
-  /**
-   * Đăng ký tài khoản với Supabase Auth và tự động tạo profile
-   */
-  static async register(params: {
-    email: string;
-    password: string;
-    fullName: string;
-    role?: UserRole;
-    phone?: string;
-    studentCode?: string;
-  }) {
-    const supabase = createSupabaseAdminClient();
-
-    // 1. Tạo user trong auth.users
-    const { data: authData, error: authError } = await supabase.auth.admin.createUser({
-      email: params.email,
-      password: params.password,
-      email_confirm: true,
-      user_metadata: {
-        full_name: params.fullName,
-        role: params.role || "student",
-      },
-    });
-
-    if (authError || !authData.user) {
-      throw new Error(mapSupabaseErrorToVietnamese(authError));
-    }
-
-    // 2. Tạo hoặc cập nhật record trong public.profiles
-    const { data: profile, error: profileError } = await (supabase as any)
-      .from("profiles")
-      .upsert({
-        id: authData.user.id,
-        email: params.email,
-        full_name: params.fullName,
-        role: params.role || "student",
-        status: "active",
-        phone: params.phone || null,
-        student_code: params.studentCode || null,
-      })
-      .select()
-      .single();
-
-    if (profileError) {
-      throw new Error(mapSupabaseErrorToVietnamese(profileError));
-    }
-
-    return { user: profile };
+export class AuthProfileUnavailableError extends Error {
+  constructor() {
+    super("Không thể tải hồ sơ. Vui lòng thử lại sau.");
+    this.name = "AuthProfileUnavailableError";
   }
+}
 
+export class SupabaseAuthService {
   /**
    * Đăng nhập với email và password
    */
@@ -87,23 +44,18 @@ export class SupabaseAuthService {
       .from("profiles")
       .select("*")
       .eq("id", data.user.id)
-      .single();
+      .maybeSingle();
 
-    if (profileError || !profile) {
-      return {
-        session: data.session,
-        user: {
-          id: data.user.id,
-          email: data.user.email || params.email,
-          full_name: data.user.user_metadata?.full_name || params.email.split("@")[0],
-          role: (data.user.user_metadata?.role as UserRole) || "student",
-          status: "active",
-          created_at: new Date().toISOString(),
-        } as UserProfile,
-      };
+    if (profileError) throw new AuthProfileUnavailableError();
+
+    if (!profile) {
+      // Never invent a default student role. Missing profiles must complete onboarding.
+      return { session: data.session, user: null };
     }
 
-    return { session: data.session, user: profile as UserProfile };
+    return { session: data.session, user: {
+      ...profile, role: authenticatedProfileRole(profile.role) ?? profile.role,
+    } as UserProfile };
   }
 
   /**
@@ -122,16 +74,9 @@ export class SupabaseAuthService {
         .eq("id", user.id)
         .single();
 
-      if (profile) return profile as UserProfile;
-
-      return {
-        id: user.id,
-        email: user.email || "",
-        full_name: user.user_metadata?.full_name || user.email?.split("@")[0] || "Người dùng",
-        role: (user.user_metadata?.role as UserRole) || "student",
-        status: "active",
-        created_at: user.created_at,
-      };
+      return profile && profile.status === "active" ? ({
+        ...profile, role: authenticatedProfileRole(profile.role) ?? profile.role,
+      } as UserProfile) : null;
     } catch {
       return null;
     }
@@ -142,7 +87,8 @@ export class SupabaseAuthService {
    */
   static async logout() {
     const supabase = await createSupabaseServerClient();
-    await supabase.auth.signOut();
+    const { error } = await supabase.auth.signOut({ scope: "global" });
+    if (error) throw new Error(mapSupabaseErrorToVietnamese(error));
   }
 
   /**
@@ -155,6 +101,7 @@ export class SupabaseAuthService {
     const safeUpdates = { ...updates };
     delete safeUpdates.role;
     delete safeUpdates.id;
+    delete safeUpdates.status;
 
     const { data, error } = await (supabase as any)
       .from("profiles")

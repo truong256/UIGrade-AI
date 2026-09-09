@@ -19,7 +19,7 @@ type Classroom = {
 
 type CurrentUser = {
     _id?: string;
-    role?: "admin" | "teacher" | "User";
+    role?: "admin" | "lecturer" | "student";
     name?: string;
 };
 
@@ -385,8 +385,7 @@ export default function CreateAssignmentPage() {
     const [rubricParseSource, setRubricParseSource] = useState<string>("");
     const [parsingRubric, setParsingRubric] = useState(false);
 
-    const canManageAssignments =
-        currentUser?.role === "teacher" || currentUser?.role === "admin";
+    const canManageAssignments = currentUser?.role === "lecturer";
 
     useEffect(() => {
         const bootstrap = async () => {

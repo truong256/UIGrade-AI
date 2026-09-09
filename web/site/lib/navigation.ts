@@ -22,8 +22,6 @@ export const adminNavItems: NavItem[] = [
     { label: "Tổng quan", href: "/ui/dashboard", icon: "dashboard" },
     { label: "Lớp học", href: "/ui/my_classes", icon: "groups" },
     { label: "Bài tập", href: "/ui/assignment_list", icon: "assignment" },
-    { label: "Cấu hình", href: "/ui/server_config", icon: "settings" },
-    { label: "Người dùng", href: "/ui/server_config/users", icon: "manage_accounts" },
     { label: "Tài khoản", href: "/ui/account", icon: "person" },
 ];
 
@@ -32,7 +30,6 @@ export const lecturerNavItems: NavItem[] = [
     { label: "Tổng quan", href: "/ui/dashboard", icon: "dashboard" },
     { label: "Lớp học", href: "/ui/my_classes", icon: "groups" },
     { label: "Bài tập", href: "/ui/assignment_list", icon: "assignment" },
-    { label: "Thư viện bài", href: "/ui/assignment_library", icon: "library_books" },
     { label: "Chấm bài", href: "/ui/grading_detail", icon: "grading" },
     { label: "Tài khoản", href: "/ui/account", icon: "person" },
 ];

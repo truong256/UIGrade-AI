@@ -39,7 +39,7 @@ export class SupabaseDashboardService {
         // 3. Bài tập
         const { data: assignments } = await (supabase as any)
           .from("assignments")
-          .select("id, title, max_score, due_at")
+          .select("id, class_id, title, max_score, due_at")
           .eq("lecturer_id", userId);
 
         const assignmentIds = (assignments || []).map((a: any) => a.id);
@@ -50,18 +50,23 @@ export class SupabaseDashboardService {
           .select(`
             id,
             status,
-            score,
             submitted_at,
-            assignment:assignments!submissions_assignment_id_fkey(id, title, max_score),
+            assignment:assignments!submissions_assignment_id_fkey(id, class_id, title, max_score),
+            grade:grades(status, score, max_score),
             student:profiles!submissions_student_id_fkey(id, full_name, student_code, avatar_url)
           `)
           .in("assignment_id", assignmentIds.length > 0 ? assignmentIds : ["00000000-0000-0000-0000-000000000000"])
           .order("submitted_at", { ascending: false });
 
         const subsList = submissions || [];
-        const gradedSubs = subsList.filter((s: any) => s.status === "graded");
+        const publishedGrade = (submission: any) => {
+          const relation = submission.grade;
+          const grade = Array.isArray(relation) ? relation[0] : relation;
+          return grade?.status === "published" ? grade : null;
+        };
+        const gradedSubs = subsList.filter((s: any) => publishedGrade(s));
         const pendingSubs = subsList.filter((s: any) => s.status === "pending" || s.status === "grading");
-        const totalScores = gradedSubs.reduce((sum: number, s: any) => sum + (s.score !== null ? Number(s.score) : 0), 0);
+        const totalScores = gradedSubs.reduce((sum: number, s: any) => sum + Number(publishedGrade(s)?.score || 0), 0);
         const avgScore = gradedSubs.length > 0 ? Number((totalScores / gradedSubs.length).toFixed(2)) : 0;
 
         return {
@@ -80,15 +85,22 @@ export class SupabaseDashboardService {
             avatar: s.student?.avatar_url,
             submittedAt: s.submitted_at,
             status: s.status,
-            score: s.score,
+            score: publishedGrade(s)?.score ?? null,
             maxScore: s.assignment?.max_score || 10,
           })),
-          class_performance: (classes || []).map((c: any) => ({
-            classId: c.id,
-            className: c.name,
-            classCode: c.class_code,
-            averageScore: avgScore,
-          })),
+          class_performance: (classes || []).map((c: any) => {
+            const classGrades = gradedSubs
+              .filter((s: any) => s.assignment?.class_id === c.id)
+              .map((s: any) => Number(publishedGrade(s)?.score || 0));
+            return {
+              classId: c.id,
+              className: c.name,
+              classCode: c.class_code,
+              averageScore: classGrades.length
+                ? Number((classGrades.reduce((sum: number, score: number) => sum + score, 0) / classGrades.length).toFixed(2))
+                : 0,
+            };
+          }),
         };
       } else {
         // Sinh viên xem thống kê cá nhân
@@ -104,16 +116,21 @@ export class SupabaseDashboardService {
           .select(`
             id,
             status,
-            score,
             submitted_at,
-            assignment:assignments!submissions_assignment_id_fkey(id, title, max_score, due_at)
+            assignment:assignments!submissions_assignment_id_fkey(id, title, max_score, due_at),
+            grade:grades(status, score, max_score)
           `)
           .eq("student_id", userId)
           .order("submitted_at", { ascending: false });
 
         const subsList = submissions || [];
-        const gradedSubs = subsList.filter((s: any) => s.status === "graded");
-        const totalScores = gradedSubs.reduce((sum: number, s: any) => sum + (s.score !== null ? Number(s.score) : 0), 0);
+        const publishedGrade = (submission: any) => {
+          const relation = submission.grade;
+          const grade = Array.isArray(relation) ? relation[0] : relation;
+          return grade?.status === "published" ? grade : null;
+        };
+        const gradedSubs = subsList.filter((s: any) => publishedGrade(s));
+        const totalScores = gradedSubs.reduce((sum: number, s: any) => sum + Number(publishedGrade(s)?.score || 0), 0);
         const avgScore = gradedSubs.length > 0 ? Number((totalScores / gradedSubs.length).toFixed(2)) : 0;
 
         return {
@@ -131,7 +148,7 @@ export class SupabaseDashboardService {
             studentCode: "",
             submittedAt: s.submitted_at,
             status: s.status,
-            score: s.score,
+            score: publishedGrade(s)?.score ?? null,
             maxScore: s.assignment?.max_score || 10,
           })),
           class_performance: [],

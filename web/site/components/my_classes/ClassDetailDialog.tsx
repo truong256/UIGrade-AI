@@ -5,7 +5,6 @@ import type {
     Classroom,
     ClassroomUserRef,
 } from "@/app/ui/my_classes/type/classroom.type";
-import { AddStudentDialog } from "./AddStudentDialog";
 
 type ClassroomMemberUser = ClassroomUserRef & {
     role?: string;
@@ -40,7 +39,6 @@ export function ClassDetailDialog({
                                       onClose,
                                       onStudentAdded,
                                   }: ClassDetailDialogProps) {
-    const [openAddStudent, setOpenAddStudent] = useState(false);
     const [loading, setLoading] = useState(false);
     const [actionId, setActionId] = useState("");
     const [error, setError] = useState("");
@@ -245,43 +243,6 @@ export function ClassDetailDialog({
         }
     };
 
-    const handleChangeRole = async (
-        memberId?: string,
-        roleInClass: "teacher" | "student" = "student"
-    ) => {
-        if (!memberId) return;
-
-        try {
-            setActionId(memberId);
-            setError("");
-
-            const res = await fetch(`/api/classes/${classroom._id}/students/${memberId}`, {
-                method: "PATCH",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                credentials: "include",
-                body: JSON.stringify({
-                    action: "change-role",
-                    roleInClass,
-                }),
-            });
-
-            const result = await res.json().catch(() => ({}));
-
-            if (!res.ok) {
-                setError(result.message || "Không thể cập nhật vai trò");
-                return;
-            }
-
-            await handleStudentChanged();
-        } catch {
-            setError("Có lỗi xảy ra khi cập nhật vai trò");
-        } finally {
-            setActionId("");
-        }
-    };
-
     const handleRemoveStudent = async (studentId?: string) => {
         if (!studentId) return;
 
@@ -400,13 +361,9 @@ export function ClassDetailDialog({
                                         </p>
                                     </div>
 
-                                    <button
-                                        type="button"
-                                        onClick={() => setOpenAddStudent(true)}
-                                        className="rounded-xl bg-blue-600 px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-blue-700 transition"
-                                    >
-                                        + Thêm sinh viên
-                                    </button>
+                                    <span className="rounded-xl bg-blue-50 px-4 py-2 text-xs font-bold text-blue-700">
+                                        Tham gia bằng mã lớp
+                                    </span>
                                 </div>
 
                                 <div className="mt-4 max-h-[360px] overflow-y-auto pr-1">
@@ -457,40 +414,6 @@ export function ClassDetailDialog({
 
                                                             {!member.isOwner ? (
                                                                 <div className="flex flex-col gap-2">
-                                                                    {member.roleInClass === "student" ? (
-                                                                        <button
-                                                                            type="button"
-                                                                            disabled={isBusy}
-                                                                            onClick={() =>
-                                                                                handleChangeRole(
-                                                                                    memberId,
-                                                                                    "teacher"
-                                                                                )
-                                                                            }
-                                                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-70"
-                                                                        >
-                                                                            {isBusy
-                                                                                ? "Đang xử lý..."
-                                                                                : "Đặt làm GV"}
-                                                                        </button>
-                                                                    ) : (
-                                                                        <button
-                                                                            type="button"
-                                                                            disabled={isBusy}
-                                                                            onClick={() =>
-                                                                                handleChangeRole(
-                                                                                    memberId,
-                                                                                    "student"
-                                                                                )
-                                                                            }
-                                                                            className="rounded-xl border border-slate-200 px-3 py-2 text-sm text-slate-700 hover:bg-slate-100 disabled:opacity-70"
-                                                                        >
-                                                                            {isBusy
-                                                                                ? "Đang xử lý..."
-                                                                                : "Đặt làm HS"}
-                                                                        </button>
-                                                                    )}
-
                                                                     <button
                                                                         type="button"
                                                                         disabled={isBusy}
@@ -604,16 +527,6 @@ export function ClassDetailDialog({
                     </div>
                 </div>
             </div>
-
-            <AddStudentDialog
-                open={openAddStudent}
-                classroomId={classroom._id}
-                onClose={() => setOpenAddStudent(false)}
-                onSuccess={async () => {
-                    setOpenAddStudent(false);
-                    await handleStudentChanged();
-                }}
-            />
         </>
     );
 }

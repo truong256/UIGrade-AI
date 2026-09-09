@@ -36,7 +36,7 @@ export function StudentListItem({ student, active, onSelect }: Props) {
                         student.missing ? "text-rose-500 font-medium" : active ? "text-blue-700 font-medium" : "text-slate-500"
                     }`}
                 >
-                    {student.studentCode ? `${student.studentCode} • ` : ""}
+                    {student.studentCode ? `${student.studentCode} • ` : student.email ? `${student.email} • ` : ""}
                     {student.statusText}
                 </p>
             </div>

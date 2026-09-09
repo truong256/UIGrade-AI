@@ -1,5 +1,6 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { mapSupabaseErrorToVietnamese } from "@/lib/supabase/errors";
+import { SupabaseGradingService } from "@/services/supabase/grading.supabase";
 import { Json } from "@/types/database.types";
 
 export interface SubmissionItem {
@@ -46,7 +47,9 @@ export class SupabaseSubmissionService {
     const supabase = await createSupabaseServerClient();
 
     let query = (supabase as any).from("submissions").select(`
-      *,
+      id, assignment_id, student_id, content, file_url, apk_file_url, apk_filename,
+      apk_size_bytes, source_zip_url, screenshot_urls, submitted_at, status, is_late,
+      execution_logs, test_results, created_at, updated_at,
       assignment:assignments!submissions_assignment_id_fkey(
         id,
         title,
@@ -54,7 +57,8 @@ export class SupabaseSubmissionService {
         due_at,
         class:classes!assignments_class_id_fkey(id, name)
       ),
-      student:profiles!submissions_student_id_fkey(id, full_name, email, student_code, avatar_url)
+      student:profiles!submissions_student_id_fkey(id, full_name, email, student_code, avatar_url),
+      grade:grades(status, score, max_score, feedback, rubric_breakdown, ai_feedback, graded_at, published_at)
     `);
 
     if (params.assignmentId) {
@@ -71,7 +75,10 @@ export class SupabaseSubmissionService {
       throw new Error(mapSupabaseErrorToVietnamese(error));
     }
 
-    return (data || []).map((s: any) => ({
+    return (data || []).map((s: any) => {
+      const gradeRelation = Array.isArray(s.grade) ? s.grade[0] : s.grade;
+      const grade = gradeRelation || null;
+      return {
       id: s.id,
       assignment_id: s.assignment_id,
       assignment_title: s.assignment?.title || "Bài tập",
@@ -90,18 +97,19 @@ export class SupabaseSubmissionService {
       submitted_at: s.submitted_at,
       status: s.status,
       is_late: s.is_late,
-      score: s.score !== null ? Number(s.score) : null,
-      ai_suggested_score: s.ai_suggested_score !== null ? Number(s.ai_suggested_score) : null,
-      ai_feedback: s.ai_feedback,
-      teacher_feedback: s.teacher_feedback,
-      graded_at: s.graded_at,
-      graded_by: s.graded_by,
-      breakdown: s.breakdown,
+      score: grade?.score !== null && grade?.score !== undefined ? Number(grade.score) : null,
+      ai_suggested_score: null,
+      ai_feedback: grade?.ai_feedback || null,
+      teacher_feedback: grade?.feedback || null,
+      graded_at: grade?.graded_at || null,
+      graded_by: null,
+      breakdown: grade?.rubric_breakdown || [],
       execution_logs: s.execution_logs,
       test_results: s.test_results,
       created_at: s.created_at,
       updated_at: s.updated_at,
-    }));
+      };
+    });
   }
 
   /**
@@ -113,7 +121,9 @@ export class SupabaseSubmissionService {
     const { data, error } = await (supabase as any)
       .from("submissions")
       .select(`
-        *,
+        id, assignment_id, student_id, content, file_url, apk_file_url, apk_filename,
+        apk_size_bytes, source_zip_url, screenshot_urls, submitted_at, status, is_late,
+        execution_logs, test_results, created_at, updated_at,
         assignment:assignments!submissions_assignment_id_fkey(
           id,
           title,
@@ -126,12 +136,18 @@ export class SupabaseSubmissionService {
           class:classes!assignments_class_id_fkey(id, name, class_code)
         ),
         student:profiles!submissions_student_id_fkey(id, full_name, email, student_code, avatar_url),
+        grade:grades(id, status, score, max_score, feedback, rubric_breakdown, ai_feedback, graded_at, published_at, updated_at),
         grading_history(
           id,
-          score,
-          teacher_feedback,
-          graded_at,
-          graded_by_profile:profiles!grading_history_graded_by_fkey(full_name)
+          action,
+          actor_id,
+          previous_score,
+          next_score,
+          previous_status,
+          next_status,
+          lecturer_feedback,
+          rubric_breakdown,
+          created_at
         )
       `)
       .eq("id", submissionId)
@@ -246,50 +262,25 @@ export class SupabaseSubmissionService {
     breakdown?: Json;
     gradedBy: string;
   }) {
-    const supabase = await createSupabaseServerClient();
-    const now = new Date().toISOString();
-
-    // 1. Cập nhật bài nộp
-    const { data: submission, error: updateError } = await (supabase as any)
-      .from("submissions")
-      .update({
-        score: params.score,
-        teacher_feedback: params.teacherFeedback || null,
-        breakdown: params.breakdown || {},
-        status: "graded",
-        graded_at: now,
-        graded_by: params.gradedBy,
-      })
-      .eq("id", params.submissionId)
-      .select()
-      .single();
-
-    if (updateError) {
-      throw new Error(mapSupabaseErrorToVietnamese(updateError));
-    }
-
-    // 2. Ghi lịch sử chấm bài
-    await (supabase as any).from("grading_history").insert({
-      submission_id: params.submissionId,
-      score: params.score,
-      teacher_feedback: params.teacherFeedback || null,
-      breakdown: params.breakdown || {},
-      graded_by: params.gradedBy,
-      graded_at: now,
+    // Compatibility wrapper for older callers. Authentication, assignment
+    // ownership, validation, audit and notification all live in one workflow.
+    void params.gradedBy; // Never trust a caller-supplied grader id.
+    const breakdown = Array.isArray(params.breakdown) ? params.breakdown : [];
+    return SupabaseGradingService.saveGrade({
+      submissionId: params.submissionId,
+      manualScore: params.score,
+      criteria: breakdown.map((entry) => {
+        const item = typeof entry === "object" && entry !== null
+          ? entry as Record<string, unknown>
+          : {};
+        return {
+          criterionCode: String(item.criterionCode ?? item.criterion_code ?? ""),
+          awardedPoints: item.awardedPoints ?? item.score,
+          feedback: item.feedback ?? item.note,
+        };
+      }),
+      lecturerFeedback: params.teacherFeedback,
+      publish: true,
     });
-
-    // 3. Tạo thông báo cho sinh viên
-    if (submission && (submission as any).student_id) {
-      await (supabase as any).from("notifications").insert({
-        user_id: (submission as any).student_id,
-        title: "Bài tập của bạn đã được chấm điểm",
-        content: `Điểm số: ${params.score}đ. ${params.teacherFeedback ? `Nhận xét: ${params.teacherFeedback}` : ""}`,
-        type: "grade",
-        metadata: { submission_id: params.submissionId },
-        is_read: false,
-      });
-    }
-
-    return submission;
   }
 }

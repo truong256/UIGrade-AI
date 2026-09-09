@@ -32,8 +32,8 @@ export function normalizeAssignment(raw: unknown): AssignmentDetail {
     return {
         _id: toText(item._id),
         title: toText(item.title, "Bài tập"),
-        dueAt: toText(item.dueAt) || undefined,
-        maxScore: toNum(item.maxScore, 10),
+        dueAt: toText(item.dueAt || item.due_at) || undefined,
+        maxScore: toNum(item.maxScore ?? item.max_score, 10),
         description: toText(item.description),
         classroom: classroom._id
             ? {
@@ -53,20 +53,22 @@ export function normalizeSubmissions(raw: unknown[]): NormalizedSubmission[] {
         const item = asObj(entry);
         const student = asObj(item.student || item.studentId);
         return {
-            _id: toText(item._id),
-            latest: Boolean(item.latest),
+            _id: toText(item._id || item.id),
+            latest: item.latest === undefined ? true : Boolean(item.latest),
             attemptNo: toNum(item.attemptNo, 1),
-            status: toText(item.status, "submitted"),
-            gradeStatus: toText(item.gradeStatus, "pending"),
-            submittedAt: toText(item.submittedAt) || undefined,
+            status: toText(item.status, "pending"),
+            gradeStatus: toText(item.gradeStatus || asObj(item.grade).status, "pending"),
+            submittedAt: toText(item.submittedAt || item.submitted_at) || undefined,
             finalScore:
                 item.finalScore === null || item.finalScore === undefined
                     ? null
                     : toNum(item.finalScore, 0),
+            isLate: Boolean(item.isLate ?? item.is_late),
             student: student._id
                 ? {
                     _id: toText(student._id),
                     name: toText(student.name, "Sinh viên"),
+                    email: toText(student.email),
                     studentCode: toText(student.studentCode),
                 }
                 : null,

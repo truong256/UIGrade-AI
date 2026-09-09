@@ -15,7 +15,7 @@ export async function fetchCurrentUser(): Promise<CurrentUser | null> {
 }
 
 export async function fetchMyResults(): Promise<ResultItem[]> {
-    const response = await fetch("/api/submissions", { cache: "no-store" });
+    const response = await fetch("/api/grading/results", { cache: "no-store" });
     const json = await readJson(response);
 
     if (!response.ok) {

@@ -17,6 +17,9 @@ export function SubmissionPreview({ detail, selectedFile }: Props) {
                     <p className="mt-1 text-sm text-slate-500">
                         Lần nộp #{toNum(detail?.attemptNo, 1)} • {formatDateTime(detail?.submittedAt)}
                     </p>
+                    <p className={`mt-1 text-xs font-semibold ${detail?.isLate ? "text-rose-600" : "text-emerald-600"}`}>
+                        Hạn nộp: {formatDateTime(detail?.assignment?.dueAt)} • {detail?.isLate ? "Nộp trễ" : "Đúng hạn"}
+                    </p>
                 </div>
 
                 {selectedFile?.url && (

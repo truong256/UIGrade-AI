@@ -5,9 +5,12 @@ import {
     updateClassroomSchema,
 } from "@/validations/classroom.schema";
 import { errorResponse, successResponse } from "@/lib/api-response";
-import { getCurrentUserFromCookie } from "@/lib/current-user";
+import { getCurrentUserFromCookie, requireActiveRequestActor } from "@/lib/current-user";
+import { AuthorizationError } from "@/lib/authorization";
+import { connectDB } from "@/lib/mongodb";
 
 function resolveStatus(error: unknown) {
+    if (error instanceof AuthorizationError) return error.statusCode;
     const message = error instanceof Error ? error.message : "";
 
     if (message.includes("chưa đăng nhập")) return 401;
@@ -40,9 +43,11 @@ export const classroomController = {
         }
     },
 
-    async getById(id: string) {
+    async getById(req: NextRequest, id: string) {
         try {
-            const data = await classroomService.getClassById(id);
+            const currentUser = await requireActiveRequestActor(req);
+            await connectDB();
+            const data = await classroomService.getClassById(id, currentUser);
             return successResponse(data, "Lấy chi tiết lớp học thành công");
         } catch (error) {
             return errorResponse(

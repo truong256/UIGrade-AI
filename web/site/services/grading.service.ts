@@ -10,6 +10,13 @@ import type {
 } from "@/lib/grading-contract";
 import { generateAiFeedback } from "@/services/gemini.service";
 import { runRunnerForSubmission } from "@/services/runner.service";
+import {
+    assertCanAccessSubmission,
+    assertCanGradeSubmission,
+    AuthorizationError,
+    ROLES,
+    type AuthenticatedActor,
+} from "@/lib/authorization";
 
 function toStringId(value: unknown): string {
     if (!value) return "";
@@ -323,6 +330,7 @@ function serializeSubmission(submission: any) {
                 dueAt: submission.assignmentId?.dueAt || null,
                 startAt: submission.assignmentId?.startAt || null,
                 status: submission.assignmentId?.status || "",
+                lecturerId: toStringId(submission.assignmentId?.teacherId),
             }
             : null,
         classroom: submission.classroomId
@@ -332,6 +340,7 @@ function serializeSubmission(submission: any) {
                 code: submission.classroomId?.code || "",
                 semester: submission.classroomId?.semester || "",
                 academicYear: submission.classroomId?.academicYear || "",
+                lecturerId: toStringId(submission.classroomId?.teacherId),
             }
             : null,
         student: submission.studentId
@@ -353,36 +362,56 @@ async function loadSubmission(submissionId: string) {
     return Submission.findById(submissionId)
         .populate(
             "assignmentId",
-            "title maxScore dueAt startAt status description rubricText attachments language rubric aiConfig"
+            "title maxScore dueAt startAt status description rubricText attachments language rubric aiConfig teacherId"
         )
-        .populate("classroomId", "name code semester academicYear")
+        .populate("classroomId", "name code semester academicYear teacherId")
         .populate("studentId", "name email studentCode");
 }
 
 export const gradingService = {
-    async getSubmissionDetail(submissionId: string) {
+    async getSubmissionDetail(submissionId: string, actor: AuthenticatedActor) {
         const submission = await loadSubmission(submissionId);
 
         if (!submission) {
             throw new Error("Không tìm thấy bài nộp");
         }
 
-        return serializeSubmission(submission);
+        const lecturerId = toStringId(submission.assignmentId?.teacherId || submission.classroomId?.teacherId);
+        assertCanAccessSubmission(actor, toStringId(submission.studentId), lecturerId);
+        const serialized = serializeSubmission(submission)!;
+        if (actor.role === ROLES.STUDENT && serialized?.gradeStatus !== "overridden") {
+            serialized.finalScore = null;
+            serialized.autoGrade = null;
+            serialized.teacherOverride = null;
+            serialized.gradeHistory = [];
+            serialized.gradeStatus = "pending";
+        }
+        return serialized;
     },
 
-    async getSubmissionHistory(submissionId: string) {
-        const submission = await Submission.findById(submissionId).select("gradeHistory");
+    async getSubmissionHistory(submissionId: string, actor: AuthenticatedActor) {
+        const submission = await loadSubmission(submissionId);
 
         if (!submission) {
             throw new Error("Không tìm thấy bài nộp");
         }
 
+        if (actor.role === ROLES.ADMIN) {
+            return Array.isArray(submission.gradeHistory) ? submission.gradeHistory : [];
+        }
+        if (actor.role !== ROLES.LECTURER) {
+            throw new AuthorizationError("Sinh viên không có quyền xem lịch sử chấm nội bộ");
+        }
+        assertCanGradeSubmission(
+            actor,
+            toStringId(submission.assignmentId?.teacherId || submission.classroomId?.teacherId)
+        );
         return Array.isArray(submission.gradeHistory) ? submission.gradeHistory : [];
     },
 
     async gradeSubmission(params: {
         submissionId: string;
-        actorId: string;
+        actor: AuthenticatedActor;
         regenerateAi?: boolean;
         regenerateRunner?: boolean;
         runnerReport?: RunnerReportInput | null;
@@ -392,6 +421,13 @@ export const gradingService = {
         if (!submission) {
             throw new Error("Không tìm thấy bài nộp");
         }
+        if (params.actor.role !== ROLES.LECTURER) {
+            throw new AuthorizationError("Chỉ giảng viên phụ trách mới có thể chấm bài");
+        }
+        assertCanGradeSubmission(
+            params.actor,
+            toStringId(submission.assignmentId?.teacherId || submission.classroomId?.teacherId)
+        );
 
         if (!submission.assignmentSnapshot) {
             throw new Error("Bài nộp chưa có assignmentSnapshot để chấm");
@@ -493,7 +529,7 @@ export const gradingService = {
 
         submission.gradeHistory.push({
             action: "AUTO_GRADE",
-            actorId: params.actorId,
+            actorId: params.actor.userId,
             note: needsTeacherReview
                 ? "Auto grade xong nhưng cần giáo viên xem lại."
                 : "Auto grade hoàn tất.",
@@ -505,7 +541,7 @@ export const gradingService = {
         if (params.regenerateAi) {
             submission.gradeHistory.push({
                 action: "AI_FEEDBACK_REFRESH",
-                actorId: params.actorId,
+                actorId: params.actor.userId,
                 note: "Đã refresh AI feedback.",
                 previousScore: submission.finalScore,
                 nextScore: submission.finalScore,
@@ -519,7 +555,7 @@ export const gradingService = {
 
     async overrideSubmissionScore(params: {
         submissionId: string;
-        actorId: string;
+        actor: AuthenticatedActor;
         score: number;
         comment: string;
     }) {
@@ -528,11 +564,23 @@ export const gradingService = {
         if (!submission) {
             throw new Error("Không tìm thấy bài nộp");
         }
+        if (params.actor.role !== ROLES.LECTURER) {
+            throw new AuthorizationError("Chỉ giảng viên phụ trách mới có thể chốt điểm");
+        }
+        assertCanGradeSubmission(
+            params.actor,
+            toStringId(submission.assignmentId?.teacherId || submission.classroomId?.teacherId)
+        );
+
+        const maxScore = Number(submission.assignmentSnapshot?.maxScore || submission.assignmentId?.maxScore || 0);
+        if (!Number.isFinite(params.score) || params.score < 0 || params.score > maxScore) {
+            throw new Error(`Điểm phải từ 0 đến ${maxScore}`);
+        }
 
         const previousScore = submission.finalScore ?? null;
 
         submission.teacherOverride = {
-            teacherId: params.actorId,
+            teacherId: params.actor.userId,
             score: Number(params.score || 0),
             comment: String(params.comment || ""),
             overriddenAt: new Date(),
@@ -548,7 +596,7 @@ export const gradingService = {
 
         submission.gradeHistory.push({
             action: "TEACHER_OVERRIDE",
-            actorId: params.actorId,
+            actorId: params.actor.userId,
             note: params.comment,
             previousScore,
             nextScore: submission.finalScore,

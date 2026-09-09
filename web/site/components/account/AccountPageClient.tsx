@@ -148,7 +148,7 @@ function mapSubmissions(submissions: SubmissionResponse[], role?: CurrentUser["r
         }
 
         const secondary =
-            role === "teacher" || role === "admin"
+            role === "lecturer" || role === "admin"
                 ? `${toText(student.name, "Sinh viên")} • ${toText(classroom.name, "Chưa có lớp")}`
                 : `${toText(classroom.name, "Chưa có lớp")} • ${toText(assignment.title, "Bài tập")}`;
 

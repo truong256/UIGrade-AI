@@ -101,7 +101,7 @@ export interface AuthenticatedActor {
 export class AuthorizationError extends Error {
     readonly statusCode: number;
 
-    constructor(message: string, statusCode: 401 | 403 = 403) {
+    constructor(message: string, statusCode: 401 | 403 | 503 = 403) {
         super(message);
         this.name = "AuthorizationError";
         this.statusCode = statusCode;

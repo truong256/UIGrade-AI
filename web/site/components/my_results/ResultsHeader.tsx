@@ -15,7 +15,7 @@ export function ResultsHeader({ currentUser }: ResultsHeaderProps) {
                         Điểm số và nhận xét bài tập của bạn
                     </h1>
                     <p className="mt-1 text-xs sm:text-sm text-[#4A5568]">
-                        Theo dõi chi tiết đánh giá UI Android, điểm AI đề xuất và nhận xét chính thức từ giảng viên.
+                        Theo dõi điểm đã công bố, phản hồi theo rubric và nhận xét chính thức từ giảng viên.
                     </p>
                 </div>
 

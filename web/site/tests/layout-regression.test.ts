@@ -26,11 +26,12 @@ describe("Layout & Navigation Regression Tests", () => {
             }
         });
 
-        it("should return admin-specific nav items for admin role", () => {
+        it("should hide deferred admin mutation screens in the MVP", () => {
             const adminItems = getNavItemsForRole("admin");
             const hrefs = adminItems.map((i) => i.href);
-            expect(hrefs).toContain("/ui/server_config");
-            expect(hrefs).toContain("/ui/server_config/users");
+            expect(hrefs).not.toContain("/ui/server_config");
+            expect(hrefs).not.toContain("/ui/server_config/users");
+            expect(hrefs).toContain("/ui/account");
         });
 
         it("should NOT expose admin config to lecturer or student roles", () => {

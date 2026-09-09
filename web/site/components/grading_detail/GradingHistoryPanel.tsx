@@ -5,6 +5,14 @@ type Props = {
     history: AnyObj[];
 };
 
+function actionLabel(action: string) {
+    if (action === "GRADE_DRAFT_SAVED") return "Đã lưu bản nháp";
+    if (action === "GRADE_PUBLISHED") return "Đã công bố điểm";
+    if (action === "GRADE_REPUBLISHED") return "Đã cập nhật và công bố lại";
+    if (action === "GRADE_UPDATED") return "Đã cập nhật bản chấm";
+    return action || "Cập nhật điểm";
+}
+
 export function GradingHistoryPanel({ history }: Props) {
     return (
         <section className="rounded-3xl border border-slate-200 bg-white p-5">
@@ -19,7 +27,7 @@ export function GradingHistoryPanel({ history }: Props) {
                             <div key={`${toText(item.action)}-${toText(item.createdAt)}-${index}`} className="rounded-2xl border border-slate-200 p-4">
                                 <div className="flex flex-wrap items-center justify-between gap-3">
                                     <div>
-                                        <p className="font-semibold text-slate-900">{toText(item.action)}</p>
+                                        <p className="font-semibold text-slate-900">{actionLabel(toText(item.action))}</p>
                                         <p className="mt-1 text-sm text-slate-500">{formatDateTime(toText(item.createdAt))}</p>
                                     </div>
 

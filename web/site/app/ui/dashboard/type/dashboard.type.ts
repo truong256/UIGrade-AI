@@ -6,7 +6,7 @@ export type Trend = {
 
 export type RangeDays = 7 | 30 | 90;
 
-export type DashboardUserRole = "admin" | "teacher" | "User";
+export type DashboardUserRole = "admin" | "lecturer" | "student";
 
 export type DashboardData = {
     generatedAt: string;

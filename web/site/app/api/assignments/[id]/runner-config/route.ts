@@ -1,46 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
-import Assignment from "@/models/Assignment.model";
-import { connectDB } from "@/lib/mongodb";
+import { NextResponse } from "next/server";
+import { requireActiveRequestActor } from "@/lib/current-user";
+import { webMvpErrorResponse } from "@/lib/web-mvp-route";
+import { SupabaseWebAssignmentService } from "@/services/supabase/web-mvp.supabase";
+import { runnerConfigSchema } from "@/validations/assignment.validation";
 
-export const runtime = "nodejs";
-
-export async function PUT(
-    request: NextRequest,
-    context: { params: Promise<{ id: string }> }
-) {
-    await connectDB();
-
-    const { id } = await context.params;
-    const body = await request.json();
-
-    const runnerConfig = body?.runnerConfig || {};
-
-    const updated = await Assignment.findByIdAndUpdate(
-        id,
-        {
-            $set: {
-                runnerConfig,
-            },
-        },
-        {
-            new: true,
-            runValidators: true,
-        }
-    ).lean();
-
-    if (!updated) {
-        return NextResponse.json(
-            {
-                success: false,
-                message: "Không tìm thấy bài tập.",
-            },
-            { status: 404 }
-        );
+export async function PUT(request: Request, { params }: { params: Promise<{ id: string }> }) {
+    try {
+        const actor = await requireActiveRequestActor(request);
+        const { id } = await params;
+        const body = await request.json();
+        const runnerConfig = runnerConfigSchema.parse(body.runnerConfig);
+        const data = await SupabaseWebAssignmentService.updateRunner(actor, id, runnerConfig);
+        return NextResponse.json({ success: true, message: "Đã lưu cấu hình kiểm thử UI.", data: data.runnerConfig });
+    } catch (error) {
+        return webMvpErrorResponse(error);
     }
-
-    return NextResponse.json({
-        success: true,
-        message: "Đã lưu cấu hình kiểm thử UI.",
-        data: updated.runnerConfig || {},
-    });
 }

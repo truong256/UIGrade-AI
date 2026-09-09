@@ -1,70 +1,27 @@
-import bcrypt from "bcryptjs";
 import { NextResponse } from "next/server";
-import { connectDB } from "@/lib/mongodb";
-import { getCurrentUserFromRequest } from "@/lib/current-user";
-import User from "@/models/User.model";
+import { requireActiveRequestActor } from "@/lib/current-user";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { webMvpErrorResponse } from "@/lib/web-mvp-route";
+import { WebMvpError } from "@/services/supabase/web-mvp.supabase";
 
 export async function PATCH(request: Request) {
     try {
-        const currentUser = await getCurrentUserFromRequest(request);
-
-        if (!currentUser?.userId) {
-            return NextResponse.json({ message: "Bạn chưa đăng nhập" }, { status: 401 });
-        }
-
+        const actor = await requireActiveRequestActor(request);
         const body = await request.json();
         const currentPassword = String(body.currentPassword || "");
         const newPassword = String(body.newPassword || "");
         const confirmPassword = String(body.confirmPassword || "");
-
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            return NextResponse.json({ message: "Vui lòng nhập đầy đủ thông tin" }, { status: 400 });
-        }
-
-        if (newPassword.length < 6) {
-            return NextResponse.json(
-                { message: "Mật khẩu mới phải có ít nhất 6 ký tự" },
-                { status: 400 }
-            );
-        }
-
-        if (newPassword !== confirmPassword) {
-            return NextResponse.json(
-                { message: "Mật khẩu xác nhận không khớp" },
-                { status: 400 }
-            );
-        }
-
-        if (currentPassword === newPassword) {
-            return NextResponse.json(
-                { message: "Mật khẩu mới phải khác mật khẩu hiện tại" },
-                { status: 400 }
-            );
-        }
-
-        await connectDB();
-
-        const user = await User.findById(currentUser.userId);
-        if (!user) {
-            return NextResponse.json({ message: "Không tìm thấy người dùng" }, { status: 404 });
-        }
-
-        const matched = await bcrypt.compare(currentPassword, user.password);
-        if (!matched) {
-            return NextResponse.json(
-                { message: "Mật khẩu hiện tại không đúng" },
-                { status: 400 }
-            );
-        }
-
-        user.password = await bcrypt.hash(newPassword, 10);
-        await user.save();
-
-        return NextResponse.json({ message: "Đổi mật khẩu thành công" }, { status: 200 });
+        if (!currentPassword || !newPassword || !confirmPassword) throw new WebMvpError("Vui lòng nhập đầy đủ thông tin", 400);
+        if (newPassword.length < 8) throw new WebMvpError("Mật khẩu mới phải có ít nhất 8 ký tự", 400);
+        if (newPassword !== confirmPassword) throw new WebMvpError("Mật khẩu xác nhận không khớp", 400);
+        if (currentPassword === newPassword) throw new WebMvpError("Mật khẩu mới phải khác mật khẩu hiện tại", 400);
+        const supabase = await createSupabaseServerClient();
+        const { error: verifyError } = await supabase.auth.signInWithPassword({ email: actor.email, password: currentPassword });
+        if (verifyError) throw new WebMvpError("Mật khẩu hiện tại không đúng hoặc tài khoản dùng Google", 400);
+        const { error } = await supabase.auth.updateUser({ password: newPassword });
+        if (error) throw new WebMvpError(error.message, 400);
+        return NextResponse.json({ message: "Đổi mật khẩu thành công" });
     } catch (error) {
-        return NextResponse.json(
-            { message: error instanceof Error ? error.message : "Không thể đổi mật khẩu" },
-            { status: 500 }
-        );
+        return webMvpErrorResponse(error);
     }
 }

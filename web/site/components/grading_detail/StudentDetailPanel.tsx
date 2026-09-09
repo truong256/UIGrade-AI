@@ -1,4 +1,5 @@
 import type { AnyObj, SidebarStudent } from "@/app/ui/grading_detail/type/grading_detail.type";
+import type { AssignmentRubricCriterion } from "@/lib/grading-workflow";
 import { badgeClass, statusLabel } from "@/app/ui/grading_detail/type/grading_detail.unit";
 import { AiFeedbackPanel } from "./AiFeedbackPanel";
 import { CriterionBreakdownPanel } from "./CriterionBreakdownPanel";
@@ -16,12 +17,21 @@ type Props = {
     loading: boolean;
     detailLoading: boolean;
     maxScore: number;
+    canGrade: boolean;
+    rubric: AssignmentRubricCriterion[];
     manualScore: string;
+    criterionScores: Record<string, string>;
+    criterionComments: Record<string, string>;
+    totalScore: number;
     teacherComment: string;
     saving: boolean;
+    publishing: boolean;
     onManualScoreChange: (score: string) => void;
+    onCriterionScoreChange: (code: string, score: string) => void;
+    onCriterionCommentChange: (code: string, comment: string) => void;
     onTeacherCommentChange: (comment: string) => void;
-    onSave: () => void;
+    onSaveDraft: () => void;
+    onPublish: () => void;
 };
 
 export function StudentDetailPanel({
@@ -33,12 +43,21 @@ export function StudentDetailPanel({
                                        loading,
                                        detailLoading,
                                        maxScore,
+                                       canGrade,
+                                       rubric,
                                        manualScore,
+                                       criterionScores,
+                                       criterionComments,
+                                       totalScore,
                                        teacherComment,
                                        saving,
+                                       publishing,
                                        onManualScoreChange,
+                                       onCriterionScoreChange,
+                                       onCriterionCommentChange,
                                        onTeacherCommentChange,
-                                       onSave,
+                                       onSaveDraft,
+                                       onPublish,
                                    }: Props) {
     return (
         <section className="flex flex-col gap-6 lg:col-span-8">
@@ -47,7 +66,9 @@ export function StudentDetailPanel({
                     <div>
                         <p className="text-sm text-slate-500">Sinh viên đang chọn</p>
                         <h3 className="text-lg font-bold text-slate-900">{selectedSidebar?.name || "Chưa chọn"}</h3>
-                        {selectedSidebar?.studentCode && <p className="text-sm text-slate-500">{selectedSidebar.studentCode}</p>}
+                        {(selectedSidebar?.studentCode || selectedSidebar?.email) && (
+                            <p className="text-sm text-slate-500">{selectedSidebar.studentCode || selectedSidebar.email}</p>
+                        )}
                     </div>
 
                     {selectedSidebar && (
@@ -76,6 +97,9 @@ export function StudentDetailPanel({
                             <ScoreEditorCard
                                 detail={detail}
                                 maxScore={maxScore}
+                                hasRubric={rubric.length > 0}
+                                canGrade={canGrade}
+                                totalScore={totalScore}
                                 manualScore={manualScore}
                                 onManualScoreChange={onManualScoreChange}
                             />
@@ -83,15 +107,25 @@ export function StudentDetailPanel({
                         </div>
 
                         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
-                            <CriterionBreakdownPanel detail={detail} />
+                            <CriterionBreakdownPanel
+                                rubric={rubric}
+                                scores={criterionScores}
+                                comments={criterionComments}
+                                disabled={!canGrade || saving || publishing || detailLoading}
+                                onScoreChange={onCriterionScoreChange}
+                                onCommentChange={onCriterionCommentChange}
+                            />
                             <TeacherFeedbackPanel
                                 detail={detail}
                                 teacherComment={teacherComment}
                                 saving={saving}
+                                publishing={publishing}
                                 detailLoading={detailLoading}
                                 selectedSubmissionId={selectedSubmissionId}
+                                canGrade={canGrade}
                                 onTeacherCommentChange={onTeacherCommentChange}
-                                onSave={onSave}
+                                onSaveDraft={onSaveDraft}
+                                onPublish={onPublish}
                             />
                         </div>
 

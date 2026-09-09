@@ -1,61 +1,121 @@
 import { useEffect, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import type { AnyObj, AssignmentDetail, AssignmentOption, GradingTab, SidebarStudent } from "../type/grading_detail.type";
+import type {
+    AnyObj,
+    AssignmentDetail,
+    AssignmentOption,
+    GradingFilter,
+    GradingTab,
+    SidebarStudent,
+} from "../type/grading_detail.type";
 import { normalizeAssignment, normalizeSubmissions, requestJson } from "../type/grading_detail.api";
-import { asObj, buildSidebar, toId, toText } from "../type/grading_detail.unit";
+import { asObj, buildSidebar, toText } from "../type/grading_detail.unit";
+import { normalizeAssignmentRubric } from "@/lib/grading-workflow";
+
+type ScoreMap = Record<string, string>;
 
 export function useGradingDetail() {
     const router = useRouter();
     const pathname = usePathname();
     const searchParams = useSearchParams();
-
     const assignmentId = searchParams.get("assignmentId") || "";
     const submissionIdParam = searchParams.get("submissionId") || "";
     const studentIdParam = searchParams.get("studentId") || "";
 
     const [assignment, setAssignment] = useState<AssignmentDetail | null>(null);
     const [assignmentOptions, setAssignmentOptions] = useState<AssignmentOption[]>([]);
+    const [canGrade, setCanGrade] = useState(false);
     const [students, setStudents] = useState<SidebarStudent[]>([]);
     const [selectedStudentId, setSelectedStudentId] = useState("");
     const [selectedSubmissionId, setSelectedSubmissionId] = useState<string | null>(null);
     const [detail, setDetail] = useState<AnyObj | null>(null);
     const [history, setHistory] = useState<AnyObj[]>([]);
     const [keyword, setKeyword] = useState("");
+    const [statusFilter, setStatusFilter] = useState<GradingFilter>("all");
     const [tab, setTab] = useState<GradingTab>("list");
     const [manualScore, setManualScore] = useState("");
+    const [criterionScores, setCriterionScores] = useState<ScoreMap>({});
+    const [criterionComments, setCriterionComments] = useState<ScoreMap>({});
     const [teacherComment, setTeacherComment] = useState("");
     const [loading, setLoading] = useState(true);
     const [detailLoading, setDetailLoading] = useState(false);
     const [grading, setGrading] = useState(false);
     const [saving, setSaving] = useState(false);
+    const [publishing, setPublishing] = useState(false);
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
 
     const visibleStudents = useMemo(() => {
         const q = keyword.trim().toLowerCase();
-        if (!q) return students;
-        return students.filter((item) => `${item.name} ${item.studentCode}`.toLowerCase().includes(q));
-    }, [keyword, students]);
+        return students.filter((item) => {
+            const searchMatch = !q
+                || `${item.name} ${item.email} ${item.studentCode}`.toLowerCase().includes(q);
+            const statusMatch = statusFilter === "all"
+                || (statusFilter === "not_submitted" && item.missing)
+                || (statusFilter === "submitted" && !item.missing)
+                || (statusFilter === "late" && item.isLate)
+                || (statusFilter === "ungraded" && !item.missing && item.gradeStatus === "pending")
+                || (statusFilter === "grading" && item.gradeStatus === "draft")
+                || (statusFilter === "graded" && item.gradeStatus === "published");
+            return searchMatch && statusMatch;
+        });
+    }, [keyword, statusFilter, students]);
 
     const selectedSidebar = useMemo(
         () => students.find((item) => item.studentId === selectedStudentId) || null,
         [students, selectedStudentId]
     );
-
-    const maxScore =
-        detail?.assignmentSnapshot?.maxScore ||
-        detail?.assignment?.maxScore ||
-        assignment?.maxScore ||
-        10;
-    const rubric = detail?.assignmentSnapshot?.rubric || assignment?.rubric || [];
+    const rubricState = useMemo(() => {
+        try {
+            return {
+                items: normalizeAssignmentRubric(detail?.assignment?.rubric || assignment?.rubric || []),
+                error: "",
+            };
+        } catch (rubricError) {
+            return {
+                items: [],
+                error: rubricError instanceof Error ? rubricError.message : "Rubric không hợp lệ.",
+            };
+        }
+    }, [assignment?.rubric, detail?.assignment?.rubric]);
+    const rubric = rubricState.items;
+    const maxScore = Number(detail?.assignment?.maxScore || assignment?.maxScore || 10);
     const selectedFile = detail?.sourceArchive || detail?.files?.[0] || null;
+    const totalScore = useMemo(() => {
+        if (!rubric.length) {
+            const value = Number(manualScore);
+            return manualScore !== "" && Number.isFinite(value) ? value : 0;
+        }
+        return Math.round(rubric.reduce((total, criterion) => {
+            const value = Number(criterionScores[criterion.code]);
+            return total + (Number.isFinite(value) ? value : 0);
+        }, 0) * 100) / 100;
+    }, [criterionScores, manualScore, rubric]);
+
+    useEffect(() => {
+        if (rubricState.error) setError(rubricState.error);
+    }, [rubricState.error]);
+
+    function syncUrl(nextAssignmentId: string, nextStudentId?: string | null, nextSubmissionId?: string | null) {
+        const params = new URLSearchParams(searchParams.toString());
+        if (nextAssignmentId) params.set("assignmentId", nextAssignmentId);
+        else params.delete("assignmentId");
+        if (nextStudentId) params.set("studentId", nextStudentId);
+        else params.delete("studentId");
+        if (nextSubmissionId) params.set("submissionId", nextSubmissionId);
+        else params.delete("submissionId");
+        router.replace(params.size ? `${pathname}?${params.toString()}` : pathname);
+    }
 
     async function loadAssignmentOptions() {
-        const json = await requestJson(`/api/assignments`);
-        const list = Array.isArray(json.data) ? json.data : [];
-
-        const normalized = list
-            .map((item) => normalizeAssignment(item))
+        const json = await requestJson(`/api/grading/assignments`);
+        const payload = asObj(json.data);
+        const rows = Array.isArray(json.data)
+            ? json.data
+            : Array.isArray(payload.items) ? payload.items : [];
+        setCanGrade(payload.canGrade === true);
+        const normalized = rows
+            .map(normalizeAssignment)
             .filter((item) => item._id)
             .map((item) => ({
                 _id: item._id,
@@ -63,19 +123,15 @@ export function useGradingDetail() {
                 dueAt: item.dueAt,
                 classroomName: item.classroom?.name || "",
             }));
-
         setAssignmentOptions(normalized);
         return normalized;
     }
 
-    function syncUrl(nextAssignmentId: string, nextStudentId?: string | null, nextSubmissionId?: string | null) {
-        const params = new URLSearchParams(searchParams.toString());
-        if (nextAssignmentId) params.set("assignmentId", nextAssignmentId);
-        if (nextStudentId) params.set("studentId", nextStudentId);
-        else params.delete("studentId");
-        if (nextSubmissionId) params.set("submissionId", nextSubmissionId);
-        else params.delete("submissionId");
-        router.replace(`${pathname}?${params.toString()}`);
+    function resetGradeForm() {
+        setManualScore("");
+        setCriterionScores({});
+        setCriterionComments({});
+        setTeacherComment("");
     }
 
     async function loadDetail(
@@ -86,89 +142,76 @@ export function useGradingDetail() {
     ) {
         setSelectedStudentId(nextStudentId);
         setSelectedSubmissionId(nextSubmissionId);
-
-        if (updateUrl) {
-            syncUrl(nextAssignmentId, nextStudentId, nextSubmissionId);
-        }
-
+        if (updateUrl) syncUrl(nextAssignmentId, nextStudentId, nextSubmissionId);
         if (!nextSubmissionId) {
             setDetail(null);
             setHistory([]);
-            setManualScore("");
-            setTeacherComment("");
+            resetGradeForm();
             return;
         }
 
         setDetailLoading(true);
         setError("");
-
         try {
             const [detailJson, historyJson] = await Promise.all([
-                requestJson(`/api/submissions/${nextSubmissionId}`),
-                requestJson(`/api/submissions/${nextSubmissionId}/history`),
+                requestJson(`/api/grading/submissions/${nextSubmissionId}`),
+                requestJson(`/api/grading/submissions/${nextSubmissionId}/history`),
             ]);
-
             const detailData = asObj(detailJson.data);
+            const grade = asObj(detailData.grade);
+            const scoreMap: ScoreMap = {};
+            const commentMap: ScoreMap = {};
+            for (const raw of Array.isArray(grade.rubricBreakdown) ? grade.rubricBreakdown : []) {
+                const entry = asObj(raw);
+                const code = toText(entry.criterionCode);
+                if (!code) continue;
+                scoreMap[code] = toText(entry.awardedPoints);
+                commentMap[code] = toText(entry.feedback || entry.note);
+            }
             setDetail(detailData);
             setHistory(Array.isArray(historyJson.data) ? historyJson.data.map(asObj) : []);
-            setManualScore(
-                detailData.finalScore !== null && detailData.finalScore !== undefined
-                    ? String(detailData.finalScore)
-                    : detailData.autoGrade?.score !== null && detailData.autoGrade?.score !== undefined
-                        ? String(detailData.autoGrade.score)
-                        : ""
-            );
-            setTeacherComment(toText(detailData.teacherOverride?.comment));
-        } catch (e) {
-            setError(e instanceof Error ? e.message : "Không thể tải chi tiết bài nộp");
+            setManualScore(grade.score === null || grade.score === undefined ? "" : String(grade.score));
+            setCriterionScores(scoreMap);
+            setCriterionComments(commentMap);
+            setTeacherComment(toText(grade.lecturerFeedback));
+        } catch (loadError) {
+            setError(loadError instanceof Error ? loadError.message : "Không thể tải chi tiết bài nộp");
         } finally {
             setDetailLoading(false);
         }
     }
 
-    async function loadPage(
-        nextAssignmentId: string,
-        preferSubmissionId?: string | null,
-        preferStudentId?: string | null
-    ) {
+    async function loadPage(nextAssignmentId: string, preferredSubmission?: string | null, preferredStudent?: string | null) {
         setLoading(true);
         setError("");
-
         try {
-            const assignmentJson = await requestJson(`/api/assignments/${nextAssignmentId}`);
-            const assignmentData = normalizeAssignment(assignmentJson.data);
-            setAssignment(assignmentData);
-
-            const [classJson, submissionsJson] = await Promise.all([
-                assignmentData.classroom?._id
-                    ? requestJson(`/api/classes/${assignmentData.classroom._id}/students?status=active`)
-                    : Promise.resolve({ items: [] }),
-                requestJson(`/api/submissions?assignmentId=${nextAssignmentId}`),
-            ]);
-
+            const json = await requestJson(`/api/grading/assignments/${nextAssignmentId}/submissions`);
+            const workspace = asObj(json.data);
+            const assignmentData = normalizeAssignment(workspace.assignment);
             const submissionList = normalizeSubmissions(
-                Array.isArray(submissionsJson.data) ? submissionsJson.data : []
+                Array.isArray(workspace.submissions) ? workspace.submissions : []
             );
-            const sidebar = buildSidebar(Array.isArray(classJson.items) ? classJson.items : [], submissionList);
+            const sidebar = buildSidebar(
+                Array.isArray(workspace.students) ? workspace.students : [],
+                submissionList
+            );
+            setAssignment(assignmentData);
             setStudents(sidebar);
-
-            const picked =
-                sidebar.find((item) => item.submissionId && item.submissionId === preferSubmissionId) ||
-                sidebar.find((item) => item.studentId === preferStudentId) ||
-                sidebar.find((item) => item.submissionId) ||
-                sidebar[0] ||
-                null;
-
-            if (picked) {
-                await loadDetail(nextAssignmentId, picked.studentId, picked.submissionId, false);
-            } else {
+            const picked = sidebar.find((item) => item.submissionId === preferredSubmission)
+                || sidebar.find((item) => item.studentId === preferredStudent)
+                || sidebar.find((item) => item.submissionId)
+                || sidebar[0]
+                || null;
+            if (picked) await loadDetail(nextAssignmentId, picked.studentId, picked.submissionId, false);
+            else {
                 setSelectedStudentId("");
                 setSelectedSubmissionId(null);
                 setDetail(null);
                 setHistory([]);
+                resetGradeForm();
             }
-        } catch (e) {
-            setError(e instanceof Error ? e.message : "Không thể tải trang chấm bài");
+        } catch (loadError) {
+            setError(loadError instanceof Error ? loadError.message : "Không thể tải trang chấm bài");
         } finally {
             setLoading(false);
         }
@@ -177,186 +220,109 @@ export function useGradingDetail() {
     useEffect(() => {
         const run = async () => {
             try {
-                if (!assignmentOptions.length) {
-                    await loadAssignmentOptions();
-                }
-            } catch (e) {
-                setError(e instanceof Error ? e.message : "Không thể tải danh sách bài tập");
-            }
-
-            if (!assignmentId && submissionIdParam) {
-                try {
-                    setLoading(true);
-                    const submissionJson = await requestJson(`/api/submissions/${submissionIdParam}`);
-                    const submission = asObj(submissionJson.data);
-
-                    const resolvedAssignmentId = toId(
-                        asObj(submission.assignment || submission.assignmentId)._id ||
-                        submission.assignmentId
-                    );
-
-                    const resolvedStudentId = toId(
-                        asObj(submission.student || submission.studentId)._id ||
-                        submission.studentId
-                    );
-
-                    if (resolvedAssignmentId) {
-                        syncUrl(
-                            resolvedAssignmentId,
-                            resolvedStudentId || null,
-                            submissionIdParam
-                        );
-                    } else {
-                        setError("Không xác định được bài tập của bài nộp này.");
-                        setLoading(false);
-                    }
-                } catch (e) {
-                    setError(e instanceof Error ? e.message : "Không thể tải chi tiết bài nộp");
+                const options = assignmentOptions.length ? assignmentOptions : await loadAssignmentOptions();
+                const targetAssignment = assignmentId || options[0]?._id || "";
+                if (!targetAssignment) {
+                    setError("Chưa có bài tập nào để chấm.");
                     setLoading(false);
+                    return;
                 }
-                return;
-            }
-
-            if (!assignmentId) {
-                try {
-                    setLoading(true);
-                    const options = assignmentOptions.length
-                        ? assignmentOptions
-                        : await loadAssignmentOptions();
-
-                    const first = options[0] || null;
-
-                    if (first?._id) {
-                        syncUrl(first._id, null, null);
-                    } else {
-                        setError("Chưa có bài tập nào để chấm.");
-                        setLoading(false);
-                    }
-                } catch (e) {
-                    setError(e instanceof Error ? e.message : "Không thể tải danh sách bài tập");
-                    setLoading(false);
+                if (!assignmentId) {
+                    syncUrl(targetAssignment, null, null);
+                    return;
                 }
-                return;
+                await loadPage(targetAssignment, submissionIdParam || null, studentIdParam || null);
+            } catch (loadError) {
+                setError(loadError instanceof Error ? loadError.message : "Không thể tải dữ liệu chấm bài");
+                setLoading(false);
             }
-
-            await loadPage(assignmentId, submissionIdParam || null, studentIdParam || null);
         };
-
         void run();
+        // URL parameters are the authoritative page selection.
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [assignmentId, submissionIdParam, studentIdParam]);
 
-    async function handleGrade(mode: "grade" | "regrade") {
-        if (!selectedSubmissionId) return;
-
-        const isRegrade = mode === "regrade";
-
-        setGrading(true);
-        setError("");
-        setNotice("");
-
-        try {
-            const json = await requestJson(`/api/submissions/${selectedSubmissionId}/grade`, {
-                method: "POST",
-                body: JSON.stringify({
-                    regenerateAi: isRegrade,
-                    regenerateRunner: isRegrade,
-                    mode: isRegrade ? "full" : "normal",
-                }),
-            });
-
-            setNotice(
-                json.message ||
-                (isRegrade ? "Chấm lại bài thành công" : "Chấm AI thành công")
-            );
-
-            await loadPage(assignmentId, selectedSubmissionId, selectedStudentId);
-        } catch (e) {
-            setError(
-                e instanceof Error
-                    ? e.message
-                    : isRegrade
-                        ? "Không thể chấm lại bài"
-                        : "Không thể chấm AI"
-            );
-        } finally {
-            setGrading(false);
-        }
+    function gradePayload() {
+        return {
+            manualScore,
+            lecturerFeedback: teacherComment,
+            criteria: rubric.flatMap((criterion) => {
+                const awardedPoints = criterionScores[criterion.code];
+                return awardedPoints === undefined || awardedPoints === "" ? [] : [{
+                    criterionCode: criterion.code,
+                    awardedPoints,
+                    feedback: criterionComments[criterion.code] || "",
+                }];
+            }),
+        };
     }
 
-    async function handleSave() {
-        if (!selectedSubmissionId) return;
+    async function refreshSelected(message?: string) {
+        await loadPage(assignmentId, selectedSubmissionId, selectedStudentId);
+        if (message) setNotice(message);
+    }
 
-        const score = Number(manualScore);
-
-        if (!Number.isFinite(score)) {
-            setError("Điểm không hợp lệ.");
-            return;
-        }
-
-        if (score < 0 || score > maxScore) {
-            setError(`Điểm phải từ 0 đến ${maxScore}.`);
-            return;
-        }
-
-        if (!teacherComment.trim()) {
-            setError("Vui lòng nhập nhận xét của giảng viên.");
-            return;
-        }
-
+    async function handleSaveDraft() {
+        if (!canGrade || !selectedSubmissionId || saving || publishing) return;
         setSaving(true);
         setError("");
         setNotice("");
-
         try {
-            const json = await requestJson(`/api/submissions/${selectedSubmissionId}/override`, {
-                method: "POST",
-                body: JSON.stringify({
-                    score,
-                    comment: teacherComment.trim(),
-                }),
+            const json = await requestJson(`/api/grading/submissions/${selectedSubmissionId}/draft`, {
+                method: "PUT",
+                body: JSON.stringify(gradePayload()),
             });
-
-            setNotice(json.message || "Lưu phản hồi thành công");
-            await loadPage(assignmentId, selectedSubmissionId, selectedStudentId);
-        } catch (e) {
-            setError(e instanceof Error ? e.message : "Không thể lưu điểm thủ công");
+            await refreshSelected(json.message || "Đã lưu bản chấm nháp");
+        } catch (saveError) {
+            setError(saveError instanceof Error ? saveError.message : "Không thể lưu bản chấm nháp");
         } finally {
             setSaving(false);
         }
     }
 
+    async function handlePublish() {
+        if (!canGrade || !selectedSubmissionId || saving || publishing) return;
+        setPublishing(true);
+        setError("");
+        setNotice("");
+        try {
+            const json = await requestJson(`/api/grading/submissions/${selectedSubmissionId}/publish`, {
+                method: "POST",
+                body: JSON.stringify(gradePayload()),
+            });
+            await refreshSelected(json.message || "Đã công bố điểm cho sinh viên");
+        } catch (publishError) {
+            setError(publishError instanceof Error ? publishError.message : "Không thể công bố điểm");
+        } finally {
+            setPublishing(false);
+        }
+    }
+
+    async function handleGrade() {
+        if (!canGrade || !selectedSubmissionId || grading || saving || publishing) return;
+        setGrading(true);
+        setError("");
+        setNotice("");
+        try {
+            const json = await requestJson(`/api/grading/submissions/${selectedSubmissionId}/ai-suggest`, {
+                method: "POST",
+            });
+            await refreshSelected(json.message || "AI đã tạo gợi ý để giảng viên tham khảo");
+        } catch (gradeError) {
+            setError(gradeError instanceof Error ? gradeError.message : "Không thể tạo gợi ý AI");
+        } finally {
+            setGrading(false);
+        }
+    }
+
     return {
-        assignmentId,
-        assignment,
-        assignmentOptions,
-        students,
-        visibleStudents,
-        selectedSidebar,
-        selectedStudentId,
-        selectedSubmissionId,
-        detail,
-        history,
-        keyword,
-        setKeyword,
-        tab,
-        setTab,
-        manualScore,
-        setManualScore,
-        teacherComment,
-        setTeacherComment,
-        loading,
-        detailLoading,
-        grading,
-        saving,
-        error,
-        notice,
-        maxScore,
-        rubric,
-        selectedFile,
-        loadDetail,
-        syncUrl,
-        handleGrade,
-        handleSave,
+        assignmentId, assignment, assignmentOptions, students, visibleStudents, selectedSidebar,
+        canGrade,
+        selectedStudentId, selectedSubmissionId, detail, history, keyword, setKeyword,
+        statusFilter, setStatusFilter, tab, setTab, manualScore, setManualScore,
+        criterionScores, setCriterionScores, criterionComments, setCriterionComments,
+        teacherComment, setTeacherComment, loading, detailLoading, grading, saving, publishing,
+        error, notice, maxScore, rubric, selectedFile, totalScore, loadDetail, syncUrl,
+        handleGrade, handleSaveDraft, handlePublish,
     };
 }

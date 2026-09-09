@@ -20,6 +20,9 @@ captures/
 .externalNativeBuild/
 *.apk
 *.aab
+*.jks
+*.keystore
+keystore/
 *.ap_
 output.json
 .kotlin/
@@ -44,6 +47,8 @@ web/site/.env*
 web/project-files/.env.local
 .env
 .env.local
+.env.production
+.env.*.local
 *.env.local
 
 # ==================================================

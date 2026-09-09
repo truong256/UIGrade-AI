@@ -6,12 +6,13 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[];
 
-export type UserRole = "student" | "lecturer" | "teacher" | "admin" | "pending";
+export type UserRole = "student" | "lecturer" | "admin" | "pending";
 export type UserStatus = "active" | "inactive" | "banned" | "pending";
 export type ClassStatus = "active" | "archived" | "closed";
 export type MemberStatus = "active" | "invited" | "pending" | "dropped";
 export type AssignmentStatus = "draft" | "published" | "closed" | "archived";
-export type SubmissionStatus = "pending" | "grading" | "graded" | "error";
+export type SubmissionStatus = "draft" | "pending" | "grading" | "graded" | "error";
+export type GradeLifecycleStatus = "draft" | "published";
 export type NotificationType = "assignment" | "grade" | "class" | "system" | "reminder";
 
 export interface Database {
@@ -60,6 +61,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       classes: {
         Row: {
@@ -104,6 +106,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       class_members: {
         Row: {
@@ -130,6 +133,7 @@ export interface Database {
           joined_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       assignments: {
         Row: {
@@ -151,6 +155,14 @@ export interface Database {
           is_active: boolean;
           allow_late_submission: boolean;
           late_penalty_percent: number | null;
+          language: string;
+          rubric_text: string | null;
+          submission_policy: Json;
+          runner_config: Json;
+          ai_config: Json;
+          attachments: Json;
+          start_at: string;
+          allow_resubmit: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -173,6 +185,14 @@ export interface Database {
           is_active?: boolean;
           allow_late_submission?: boolean;
           late_penalty_percent?: number | null;
+          language?: string;
+          rubric_text?: string | null;
+          submission_policy?: Json;
+          runner_config?: Json;
+          ai_config?: Json;
+          attachments?: Json;
+          start_at?: string;
+          allow_resubmit?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -195,9 +215,18 @@ export interface Database {
           is_active?: boolean;
           allow_late_submission?: boolean;
           late_penalty_percent?: number | null;
+          language?: string;
+          rubric_text?: string | null;
+          submission_policy?: Json;
+          runner_config?: Json;
+          ai_config?: Json;
+          attachments?: Json;
+          start_at?: string;
+          allow_resubmit?: boolean;
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       submissions: {
         Row: {
@@ -223,6 +252,10 @@ export interface Database {
           breakdown: Json;
           execution_logs: string | null;
           test_results: Json;
+          repository_url: string | null;
+          files: Json;
+          attempt_no: number;
+          is_current: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -249,6 +282,10 @@ export interface Database {
           breakdown?: Json;
           execution_logs?: string | null;
           test_results?: Json;
+          repository_url?: string | null;
+          files?: Json;
+          attempt_no?: number;
+          is_current?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -275,9 +312,14 @@ export interface Database {
           breakdown?: Json;
           execution_logs?: string | null;
           test_results?: Json;
+          repository_url?: string | null;
+          files?: Json;
+          attempt_no?: number;
+          is_current?: boolean;
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       grades: {
         Row: {
@@ -285,9 +327,13 @@ export interface Database {
           submission_id: string;
           lecturer_id: string;
           score: number;
+          max_score: number;
+          status: GradeLifecycleStatus;
           feedback: string | null;
           rubric_breakdown: Json;
-          graded_at: string;
+          ai_feedback: Json | null;
+          graded_at: string | null;
+          published_at: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -296,9 +342,13 @@ export interface Database {
           submission_id: string;
           lecturer_id: string;
           score: number;
+          max_score: number;
+          status?: GradeLifecycleStatus;
           feedback?: string | null;
           rubric_breakdown?: Json;
-          graded_at?: string;
+          ai_feedback?: Json | null;
+          graded_at?: string | null;
+          published_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -307,17 +357,68 @@ export interface Database {
           submission_id?: string;
           lecturer_id?: string;
           score?: number;
+          max_score?: number;
+          status?: GradeLifecycleStatus;
           feedback?: string | null;
           rubric_breakdown?: Json;
-          graded_at?: string;
+          ai_feedback?: Json | null;
+          graded_at?: string | null;
+          published_at?: string | null;
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
+      };
+      grading_history: {
+        Row: {
+          id: string;
+          grade_id: string;
+          submission_id: string;
+          actor_id: string | null;
+          action: "GRADE_DRAFT_SAVED" | "GRADE_PUBLISHED" | "GRADE_UPDATED" | "GRADE_REPUBLISHED";
+          previous_score: number | null;
+          next_score: number | null;
+          previous_status: string | null;
+          next_status: GradeLifecycleStatus;
+          lecturer_feedback: string | null;
+          rubric_breakdown: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          grade_id: string;
+          submission_id: string;
+          actor_id?: string | null;
+          action: "GRADE_DRAFT_SAVED" | "GRADE_PUBLISHED" | "GRADE_UPDATED" | "GRADE_REPUBLISHED";
+          previous_score?: number | null;
+          next_score?: number | null;
+          previous_status?: string | null;
+          next_status: GradeLifecycleStatus;
+          lecturer_feedback?: string | null;
+          rubric_breakdown?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          grade_id?: string;
+          submission_id?: string;
+          actor_id?: string | null;
+          action?: "GRADE_DRAFT_SAVED" | "GRADE_PUBLISHED" | "GRADE_UPDATED" | "GRADE_REPUBLISHED";
+          previous_score?: number | null;
+          next_score?: number | null;
+          previous_status?: string | null;
+          next_status?: GradeLifecycleStatus;
+          lecturer_feedback?: string | null;
+          rubric_breakdown?: Json;
+          created_at?: string;
+        };
+        Relationships: [];
       };
       rubrics: {
         Row: {
           id: string;
           assignment_id: string | null;
+          owner_id: string | null;
           title: string;
           description: string | null;
           criteria: Json;
@@ -328,6 +429,7 @@ export interface Database {
         Insert: {
           id?: string;
           assignment_id?: string | null;
+          owner_id?: string | null;
           title: string;
           description?: string | null;
           criteria?: Json;
@@ -338,6 +440,7 @@ export interface Database {
         Update: {
           id?: string;
           assignment_id?: string | null;
+          owner_id?: string | null;
           title?: string;
           description?: string | null;
           criteria?: Json;
@@ -345,6 +448,7 @@ export interface Database {
           created_at?: string;
           updated_at?: string;
         };
+        Relationships: [];
       };
       notifications: {
         Row: {
@@ -377,6 +481,7 @@ export interface Database {
           link?: string | null;
           created_at?: string;
         };
+        Relationships: [];
       };
       system_configs: {
         Row: {
@@ -403,6 +508,25 @@ export interface Database {
           updated_by?: string | null;
           updated_at?: string;
         };
+        Relationships: [];
+      };
+    };
+    Views: Record<never, never>;
+    Functions: {
+      join_class_by_code: {
+        Args: { input_code: string };
+        Returns: Json;
+      };
+      save_student_submission: {
+        Args: {
+          input_assignment_id: string;
+          input_content: string;
+          input_repository_url: string;
+          input_files: Json;
+          input_action: "draft" | "submit";
+          input_source_zip_url: string | null;
+        };
+        Returns: Json;
       };
     };
   };

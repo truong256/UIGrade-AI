@@ -1,90 +1,49 @@
 import { NextRequest, NextResponse } from "next/server";
-import bcrypt from "bcryptjs";
-import { connectDB } from "@/lib/mongodb";
-import User from "@/models/User.model";
-import { signToken } from "@/lib/auth";
-import { normalizeRole } from "@/lib/authorization";
+import { dashboardForRole, isAuthenticatedRole } from "@/lib/auth-routing";
+import { AuthProfileUnavailableError, SupabaseAuthService } from "@/services/supabase/auth.supabase";
 
-export async function POST(req: NextRequest) {
+export async function POST(request: NextRequest) {
     try {
-        const body = await req.json();
-        const { email, password } = body;
+        const body = await request.json();
+        const email = String(body?.email || "").trim().toLowerCase();
+        const password = String(body?.password || "");
 
         if (!email || !password) {
             return NextResponse.json(
-                { message: "Vui lòng nhập email và mật khẩu" },
+                { message: "Vui lòng nhập email và mật khẩu." },
                 { status: 400 }
             );
         }
 
-        const normalizedEmail = email.trim().toLowerCase();
+        const { user } = await SupabaseAuthService.login({ email, password });
 
-        await connectDB();
+        if (user && user.status !== "active") {
+            return NextResponse.json({ message: "Tài khoản hiện không hoạt động." }, { status: 403 });
+        }
 
-        const user = await User.findOne({ email: normalizedEmail });
-
-        if (!user) {
+        if (!user || !isAuthenticatedRole(user.role)) {
             return NextResponse.json(
-                { message: "Email hoặc mật khẩu không đúng" },
-                { status: 401 }
+                { message: "Vui lòng hoàn tất chọn vai trò.", redirectTo: "/auth/select-role" },
+                { status: 200 }
             );
         }
 
-        // chặn user khi bị khóa
-        if (user.isActive === false) {
-            return NextResponse.json(
-                { message: "Tài khoản đã bị tạm khóa" },
-                { status: 403 }
-            );
-        }
-
-        const isPasswordMatched = await bcrypt.compare(password, user.password);
-
-        if (!isPasswordMatched) {
-            return NextResponse.json(
-                { message: "Email hoặc mật khẩu không đúng" },
-                { status: 401 }
-            );
-        }
-
-        user.lastLoginAt = new Date();
-        await user.save();
-
-        const canonicalRole = normalizeRole(user.role);
-
-        const token = signToken({
-            userId: user._id.toString(),
-            email: user.email,
-            role: canonicalRole,
-        });
-
-        const response = NextResponse.json(
+        return NextResponse.json(
             {
-                message: "Đăng nhập thành công",
-                user: {
-                    id: user._id,
-                    name: user.name,
-                    email: user.email,
-                    role: canonicalRole,
-                },
+                message: "Đăng nhập thành công.",
+                user,
+                redirectTo: dashboardForRole(user.role),
             },
             { status: 200 }
         );
-
-        response.cookies.set("token", token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "lax",
-            path: "/",
-            maxAge: 60 * 60 * 24 * 7,
-        });
-
-        return response;
     } catch (error) {
-        console.error("LOGIN_ERROR:", error);
         return NextResponse.json(
-            { message: "Lỗi server khi đăng nhập" },
-            { status: 500 }
+            {
+                message: error instanceof Error
+                    ? error.message
+                    : "Đăng nhập thất bại. Vui lòng thử lại.",
+            },
+            { status: error instanceof AuthProfileUnavailableError ? 503 : 401 }
         );
     }
 }

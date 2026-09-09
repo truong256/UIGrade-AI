@@ -81,11 +81,13 @@ export function latestSubmissionMap(list: NormalizedSubmission[]) {
 export function submissionStatus(submission: NormalizedSubmission | null) {
     if (!submission) return "Chưa nộp";
     const d = submission.submittedAt ? formatDate(submission.submittedAt) : "--";
+    if (submission.gradeStatus === "published") return `Đã công bố • ${d}`;
+    if (submission.gradeStatus === "draft" || submission.status === "grading") return `Đang chấm • ${d}`;
     if (submission.gradeStatus === "overridden") return `GV đã duyệt • ${d}`;
     if (submission.gradeStatus === "auto_graded") return `Đã chấm AI • ${d}`;
     if (submission.gradeStatus === "needs_teacher_review") return `Cần duyệt • ${d}`;
-    if (submission.status === "late") return `Nộp muộn • ${d}`;
-    return "Đã nộp • Đang chờ";
+    if (submission.isLate || submission.status === "late") return `Nộp muộn • ${d}`;
+    return `Đã nộp • ${d}`;
 }
 
 export function buildSidebar(classItems: unknown[], submissionItems: NormalizedSubmission[]) {
@@ -95,8 +97,8 @@ export function buildSidebar(classItems: unknown[], submissionItems: NormalizedS
 
     for (const memberRaw of classItems) {
         const member = asObj(memberRaw);
-        const user = asObj(member.userId || member.user);
-        const studentId = toId(user._id);
+        const user = asObj(member.userId || member.user || member.student || member);
+        const studentId = toId(user._id || user.id || member.studentId || member.student_id);
         if (!studentId) continue;
         if (member.roleInClass === "teacher" || user.role === "teacher") continue;
         if (seen.has(studentId)) continue;
@@ -107,11 +109,17 @@ export function buildSidebar(classItems: unknown[], submissionItems: NormalizedS
         result.push({
             studentId,
             name: toText(user.name, "Sinh viên"),
+            email: toText(user.email),
             studentCode: toText(user.studentCode),
             submissionId: submission?._id || null,
+            submittedAt: submission?.submittedAt,
+            submissionStatus: submission?.status || "not_submitted",
             statusText: submissionStatus(submission),
-            scoreText: submission ? formatScore(submission.finalScore) : "0.0",
+            scoreText: submission?.finalScore === null || submission?.finalScore === undefined
+                ? "--"
+                : formatScore(submission.finalScore),
             gradeStatus: submission?.gradeStatus || "pending",
+            isLate: Boolean(submission?.isLate),
             missing: !submission,
         });
     }
@@ -122,11 +130,15 @@ export function buildSidebar(classItems: unknown[], submissionItems: NormalizedS
         result.push({
             studentId,
             name: submission.student?.name || "Sinh viên",
+            email: submission.student?.email || "",
             studentCode: submission.student?.studentCode || "",
             submissionId: submission._id,
+            submittedAt: submission.submittedAt,
+            submissionStatus: submission.status,
             statusText: submissionStatus(submission),
             scoreText: formatScore(submission.finalScore),
             gradeStatus: submission.gradeStatus,
+            isLate: submission.isLate,
             missing: false,
         });
     }
@@ -135,6 +147,8 @@ export function buildSidebar(classItems: unknown[], submissionItems: NormalizedS
 }
 
 export function badgeClass(status: string) {
+    if (status === "published") return "bg-green-50 text-green-700 border-green-200";
+    if (status === "draft") return "bg-amber-50 text-amber-700 border-amber-200";
     if (status === "overridden") return "bg-green-50 text-green-700 border-green-200";
     if (status === "auto_graded") return "bg-blue-50 text-blue-700 border-blue-200";
     if (status === "needs_teacher_review") return "bg-amber-50 text-amber-700 border-amber-200";
@@ -143,6 +157,8 @@ export function badgeClass(status: string) {
 }
 
 export function statusLabel(status: string) {
+    if (status === "published") return "Đã công bố";
+    if (status === "draft") return "Bản nháp";
     if (status === "overridden") return "Giáo viên chốt điểm";
     if (status === "auto_graded") return "Đã chấm AI";
     if (status === "needs_teacher_review") return "Cần duyệt";

@@ -1,9 +1,11 @@
 import jwt from "jsonwebtoken";
 
-const JWT_SECRET = process.env.JWT_SECRET as string;
-
-if (!JWT_SECRET) {
-    throw new Error("Thiếu JWT_SECRET trong file .env.local");
+function getJwtSecret(): string {
+    const secret = process.env.JWT_SECRET;
+    if (!secret) {
+        throw new Error("JWT legacy chưa được cấu hình");
+    }
+    return secret;
 }
 
 export type TokenPayload = {
@@ -14,13 +16,13 @@ export type TokenPayload = {
 };
 
 export function signToken(payload: TokenPayload) {
-    return jwt.sign(payload, JWT_SECRET, {
+    return jwt.sign(payload, getJwtSecret(), {
         expiresIn: "7d",
     });
 }
 
 export function verifyToken(token: string) {
-    return jwt.verify(token, JWT_SECRET) as TokenPayload;
+    return jwt.verify(token, getJwtSecret()) as TokenPayload;
 }
 
 export const authCookieOptions = {

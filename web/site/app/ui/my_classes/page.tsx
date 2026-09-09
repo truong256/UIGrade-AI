@@ -37,8 +37,7 @@ export default function MyClassesPage() {
     const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
     const [loadingUser, setLoadingUser] = useState(true);
 
-    const canManageClassUI =
-        currentUser?.role === "teacher" || currentUser?.role === "lecturer" || currentUser?.role === "admin";
+    const canManageClassUI = currentUser?.role === "lecturer";
 
     const fetchCurrentUser = async () => {
         try {

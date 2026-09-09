@@ -1,10 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { getNavItemsForRole, isActivePath } from "@/lib/navigation";
 import { useMemo, useState } from "react";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
+import { clearCurrentUserCache } from "@/lib/auth-client";
 
 type AppSidebarProps = {
     collapsed: boolean;
@@ -24,7 +25,6 @@ export function AppSidebar({
     currentUserRole,
 }: AppSidebarProps) {
     const pathname = usePathname();
-    const router = useRouter();
     const [loggingOut, setLoggingOut] = useState(false);
 
     // Role-aware navigation: each role sees only items appropriate to their permissions.
@@ -33,44 +33,46 @@ export function AppSidebar({
     }, [currentUserRole]);
 
     const handleLogout = async () => {
+        if (loggingOut) return;
+        setLoggingOut(true);
         try {
-            setLoggingOut(true);
-
-            // Clear JWT cookie + Supabase session server-side
-            const res = await fetch("/api/auth/logout", { method: "POST" });
-
-            // Also sign out Supabase client-side to clear SSR cookies
+            await fetch("/api/auth/logout", { method: "POST", signal: AbortSignal.timeout(15000) });
+        } catch {
+            // Offline logout still clears local state below.
+        } finally {
             if (isSupabaseConfigured()) {
+                let timeout: ReturnType<typeof setTimeout> | undefined;
                 try {
-                    const supabase = getSupabaseBrowserClient();
-                    await supabase.auth.signOut();
+                    await Promise.race([
+                        getSupabaseBrowserClient().auth.signOut(),
+                        new Promise<void>(resolve => { timeout = setTimeout(resolve, 15000); }),
+                    ]);
                 } catch {
-                    // Non-fatal: server logout already cleared the cookie
+                    // Persisted cookies are cleared below even on network failure.
+                } finally {
+                    clearTimeout(timeout);
                 }
             }
-
-            // Clear any leftover client-side storage
+            const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            if (url) {
+                const key = `sb-${new URL(url).hostname.split(".")[0]}-auth-token`;
+                for (const cookie of document.cookie.split(";")) {
+                    const name = cookie.split("=")[0].trim();
+                    if (name === key || name.startsWith(`${key}.`) || name === `${key}-code-verifier`) {
+                        document.cookie = `${name}=; Max-Age=0; Path=/; SameSite=Lax`;
+                    }
+                }
+            }
+            clearCurrentUserCache();
             try {
                 localStorage.removeItem("token");
                 localStorage.removeItem("user");
             } catch {
-                // ignore in SSR context
+                // Storage may be disabled by browser policy.
             }
-
-            if (!res.ok) {
-                // Still redirect to login even if server returned error
-                router.replace("/login");
-                return;
-            }
-
             onCloseMobile?.();
-            router.replace("/login");
-            router.refresh();
-        } catch {
-            // Force redirect even on network failure
-            router.replace("/login");
-        } finally {
-            setLoggingOut(false);
+            // Full navigation discards the in-memory Supabase session and Router Cache.
+            window.location.replace("/login");
         }
     };
 

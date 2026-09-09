@@ -41,7 +41,10 @@ export class SupabaseAssignmentService {
       *,
       class:classes!assignments_class_id_fkey(id, name, class_code),
       lecturer:profiles!assignments_lecturer_id_fkey(full_name),
-      submissions(id, status, score, student_id, submitted_at)
+      submissions(
+        id, status, student_id, submitted_at,
+        grade:grades(status, score, max_score, feedback, rubric_breakdown, ai_feedback, published_at)
+      )
     `);
 
     if (userRole === "lecturer" || userRole === "teacher") {
@@ -67,7 +70,15 @@ export class SupabaseAssignmentService {
     return (data || []).map((a: any) => {
       const submissions = a.submissions || [];
       const mySub = userRole === "student" ? submissions.find((s: any) => s.student_id === userId) : null;
-      const graded = submissions.filter((s: any) => s.status === "graded").length;
+      const gradeOf = (submission: any) => {
+        const relation = submission.grade;
+        return Array.isArray(relation) ? relation[0] : relation;
+      };
+      const graded = submissions.filter((s: any) => gradeOf(s)?.status === "published").length;
+      const normalizedMySubmission = mySub ? {
+        ...mySub,
+        score: gradeOf(mySub)?.status === "published" ? Number(gradeOf(mySub).score) : null,
+      } : null;
 
       return {
         id: a.id,
@@ -92,7 +103,7 @@ export class SupabaseAssignmentService {
         late_penalty_percent: a.late_penalty_percent,
         submissions_count: submissions.length,
         graded_count: graded,
-        my_submission: mySub,
+        my_submission: normalizedMySubmission,
         created_at: a.created_at,
         updated_at: a.updated_at,
       };
@@ -115,13 +126,10 @@ export class SupabaseAssignmentService {
           id,
           student_id,
           status,
-          score,
-          ai_suggested_score,
-          ai_feedback,
-          teacher_feedback,
           submitted_at,
           is_late,
           file_url,
+          grade:grades(status, score, max_score, feedback, rubric_breakdown, ai_feedback, graded_at, published_at),
           student:profiles!submissions_student_id_fkey(id, full_name, email, student_code)
         )
       `)
@@ -132,7 +140,20 @@ export class SupabaseAssignmentService {
       throw new Error(mapSupabaseErrorToVietnamese(error || "Không tìm thấy bài tập"));
     }
 
-    return data;
+    return {
+      ...data,
+      submissions: (data.submissions || []).map((submission: any) => {
+        const relation = submission.grade;
+        const grade = Array.isArray(relation) ? relation[0] : relation;
+        return {
+          ...submission,
+          score: grade?.status === "published" ? Number(grade.score) : null,
+          teacher_feedback: grade?.status === "published" ? grade.feedback : null,
+          ai_feedback: grade?.status === "published" ? grade.ai_feedback : null,
+          grade,
+        };
+      }),
+    };
   }
 
   /**

@@ -7,7 +7,7 @@ type Props = {
 };
 
 function getRoleLabel(role?: CurrentUser["role"]) {
-    if (role === "teacher") return "Giảng viên";
+    if (role === "lecturer") return "Giảng viên";
     if (role === "admin") return "Quản trị viên";
     return "Sinh viên";
 }

@@ -2,7 +2,7 @@ export type CurrentUser = {
     _id: string;
     name: string;
     email: string;
-    role: "admin" | "teacher" | "User";
+    role: "admin" | "lecturer" | "student";
     studentCode?: string;
     avatar?: string;
     phone?: string;

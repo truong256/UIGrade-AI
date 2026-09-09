@@ -1,7 +1,5 @@
 import { jwtVerify } from "jose";
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
-
 export type AuthPayload = {
     userId: string;
     email: string;
@@ -10,6 +8,9 @@ export type AuthPayload = {
 
 export async function verifyAuthToken(token: string) {
     try {
+        const jwtSecret = process.env.JWT_SECRET;
+        if (!jwtSecret) return null;
+        const secret = new TextEncoder().encode(jwtSecret);
         const { payload } = await jwtVerify(token, secret);
         return payload as AuthPayload;
     } catch {

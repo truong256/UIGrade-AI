@@ -150,40 +150,16 @@ export class SupabaseClassroomService {
   /**
    * Tham gia lớp học bằng mã lớp
    */
-  static async joinClassByCode(classCode: string, studentId: string) {
+  static async joinClassByCode(classCode: string, _studentId?: string) {
     const supabase = await createSupabaseServerClient();
-
-    // 1. Tìm lớp theo mã
-    const { data: cls, error: clsError } = await (supabase as any)
-      .from("classes")
-      .select("id, name, status")
-      .eq("class_code", classCode.toUpperCase().trim())
-      .single();
-
-    if (clsError || !cls) {
-      throw new Error("Mã lớp không tồn tại hoặc đã bị đóng.");
-    }
-
-    if ((cls as any).status !== "active") {
-      throw new Error("Lớp học này hiện không nhận thêm sinh viên.");
-    }
-
-    // 2. Thêm vào class_members
-    const { data, error } = await (supabase as any)
-      .from("class_members")
-      .insert({
-        class_id: (cls as any).id,
-        student_id: studentId,
-        status: "active",
-      })
-      .select()
-      .single();
+    const { data, error } = await supabase.rpc("join_class_by_code", {
+      input_code: classCode.toUpperCase().trim(),
+    });
 
     if (error) {
       throw new Error(mapSupabaseErrorToVietnamese(error));
     }
-
-    return { class: cls, member: data };
+    return data;
   }
 
   /**

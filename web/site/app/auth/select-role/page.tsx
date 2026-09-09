@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 
@@ -26,13 +26,16 @@ export default function SelectRolePage() {
     const [selectedRole, setSelectedRole] = useState<Role | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
+    const submitting = useRef(false);
 
     const handleConfirm = async () => {
+        if (submitting.current) return;
         if (!selectedRole) {
             setError("Vui lòng chọn vai trò trước khi tiếp tục.");
             return;
         }
 
+        submitting.current = true;
         setLoading(true);
         setError("");
 
@@ -51,20 +54,25 @@ export default function SelectRolePage() {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ role: selectedRole }),
+                signal: AbortSignal.timeout(20000),
             });
 
+            const data = await res.json().catch(() => ({}));
+
             if (!res.ok) {
-                const data = await res.json().catch(() => ({}));
                 setError(data.message || "Không thể lưu vai trò. Vui lòng thử lại.");
                 setLoading(false);
+                submitting.current = false;
                 return;
             }
 
             // Role saved — redirect to dashboard
-            router.replace("/ui/dashboard");
+            router.replace(data.redirectTo || "/ui/dashboard");
+            router.refresh();
         } catch {
             setError("Đã xảy ra lỗi. Vui lòng thử lại sau.");
             setLoading(false);
+            submitting.current = false;
         }
     };
 

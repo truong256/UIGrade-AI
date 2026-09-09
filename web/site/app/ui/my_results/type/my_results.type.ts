@@ -1,7 +1,7 @@
 export type CurrentUser = {
     _id?: string;
     name?: string;
-    role?: "admin" | "teacher" | "User";
+    role?: "admin" | "lecturer" | "student" | "teacher" | "User";
     studentCode?: string;
 };
 
@@ -26,9 +26,12 @@ export type ResultItem = {
     studentCode: string;
     dueAt?: string;
     submittedAt?: string;
+    gradedAt?: string;
+    publishedAt?: string;
     attemptNo: number;
     submissionStatus: string;
     gradeStatus: string;
+    isLate: boolean;
     finalScore: number | null;
     maxScore: number;
     repositoryUrl: string;

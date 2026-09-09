@@ -51,6 +51,7 @@ export function formatScore(value: number | null | undefined) {
 }
 
 export function gradeStatusLabel(status: string) {
+    if (status === "published") return "Đã công bố";
     if (status === "overridden") return "Giảng viên đã chốt";
     if (status === "auto_graded") return "AI đã chấm";
     if (status === "needs_teacher_review") return "Chờ giảng viên duyệt";
@@ -59,6 +60,7 @@ export function gradeStatusLabel(status: string) {
 }
 
 export function gradeStatusClass(status: string) {
+    if (status === "published") return "border-green-200 bg-green-50 text-green-700";
     if (status === "overridden") return "border-green-200 bg-green-50 text-green-700";
     if (status === "auto_graded") return "border-blue-200 bg-blue-50 text-blue-700";
     if (status === "needs_teacher_review") return "border-amber-200 bg-amber-50 text-amber-700";
@@ -66,16 +68,49 @@ export function gradeStatusClass(status: string) {
 }
 
 export function isItemGraded(item: ResultItem) {
-    return (
-        item.finalScore !== null ||
-        item.gradeStatus === "auto_graded" ||
-        item.gradeStatus === "overridden" ||
-        item.gradeStatus === "graded"
-    );
+    return item.gradeStatus === "published" && item.finalScore !== null;
 }
 
 export function normalizeResult(raw: unknown): ResultItem {
     const item = asObject(raw);
+    const isPublished = item.gradeStatus === "published";
+    const directAiFeedback = asObject(item.aiFeedback);
+    if (item.assignmentTitle !== undefined) {
+        return {
+            _id: toText(item._id),
+            assignmentId: toText(item.assignmentId),
+            assignmentTitle: toText(item.assignmentTitle, "Bài tập chưa đặt tên"),
+            classroomName: toText(item.classroomName, "Chưa có lớp"),
+            classroomCode: toText(item.classroomCode),
+            studentId: toText(item.studentId),
+            studentName: toText(item.studentName, "Sinh viên"),
+            studentCode: toText(item.studentCode),
+            dueAt: toText(item.dueAt) || undefined,
+            submittedAt: toText(item.submittedAt) || undefined,
+            gradedAt: toText(item.gradedAt) || undefined,
+            publishedAt: toText(item.publishedAt) || undefined,
+            attemptNo: toNumberValue(item.attemptNo, 1),
+            submissionStatus: toText(item.submissionStatus, "graded"),
+            gradeStatus: isPublished ? "published" : "pending",
+            isLate: Boolean(item.isLate),
+            finalScore: isPublished ? toNumberValue(item.finalScore, 0) : null,
+            maxScore: toNumberValue(item.maxScore, 10),
+            repositoryUrl: toText(item.repositoryUrl),
+            studentNote: toText(item.studentNote),
+            teacherComment: isPublished ? toText(item.teacherComment) : "",
+            aiSummary: isPublished ? toText(directAiFeedback.summary) : "",
+            strengths: isPublished && Array.isArray(directAiFeedback.strengths)
+                ? directAiFeedback.strengths.map((entry: unknown) => toText(entry)).filter(Boolean)
+                : [],
+            nextSteps: isPublished && Array.isArray(directAiFeedback.nextSteps)
+                ? directAiFeedback.nextSteps.map((entry: unknown) => toText(entry)).filter(Boolean)
+                : [],
+            criterionBreakdown: isPublished && Array.isArray(item.criterionBreakdown)
+                ? item.criterionBreakdown.map(normalizeCriterion)
+                : [],
+        };
+    }
+
     const assignment = asObject(item.assignmentId || item.assignment);
     const classroom = asObject(item.classroomId || item.classroom);
     const student = asObject(item.studentId || item.student);
@@ -83,6 +118,7 @@ export function normalizeResult(raw: unknown): ResultItem {
     const aiFeedback = asObject(autoGrade.aiFeedback);
     const teacherOverride = asObject(item.teacherOverride);
 
+    const legacyPublished = item.gradeStatus === "published";
     return {
         _id: toText(item._id),
         assignmentId: toText(assignment._id || item.assignmentId),
@@ -94,38 +130,40 @@ export function normalizeResult(raw: unknown): ResultItem {
         studentCode: toText(student.studentCode),
         dueAt: toText(assignment.dueAt) || undefined,
         submittedAt: toText(item.submittedAt) || undefined,
+        gradedAt: undefined,
+        publishedAt: undefined,
         attemptNo: toNumberValue(item.attemptNo, 1),
         submissionStatus: toText(item.status, "submitted"),
-        gradeStatus: toText(item.gradeStatus, "pending"),
-        finalScore:
-            item.finalScore === null || item.finalScore === undefined
-                ? autoGrade.score === null || autoGrade.score === undefined
-                    ? null
-                    : toNumberValue(autoGrade.score, 0)
-                : toNumberValue(item.finalScore, 0),
+        gradeStatus: legacyPublished ? "published" : "pending",
+        isLate: Boolean(item.isLate || item.status === "late"),
+        finalScore: legacyPublished && item.finalScore !== null && item.finalScore !== undefined
+            ? toNumberValue(item.finalScore, 0)
+            : null,
         maxScore: toNumberValue(assignment.maxScore || autoGrade.maxScore, 10),
         repositoryUrl: toText(item.repositoryUrl),
         studentNote: toText(item.note),
-        teacherComment: toText(teacherOverride.comment),
-        aiSummary: toText(aiFeedback.summary),
-        strengths: Array.isArray(aiFeedback.strengths)
+        teacherComment: legacyPublished ? toText(teacherOverride.comment) : "",
+        aiSummary: legacyPublished ? toText(aiFeedback.summary) : "",
+        strengths: legacyPublished && Array.isArray(aiFeedback.strengths)
             ? aiFeedback.strengths.map((entry: unknown) => toText(entry)).filter(Boolean)
             : [],
-        nextSteps: Array.isArray(aiFeedback.nextSteps)
+        nextSteps: legacyPublished && Array.isArray(aiFeedback.nextSteps)
             ? aiFeedback.nextSteps.map((entry: unknown) => toText(entry)).filter(Boolean)
             : [],
-        criterionBreakdown: Array.isArray(autoGrade.criterionBreakdown)
-            ? autoGrade.criterionBreakdown.map((criterion: unknown) => {
-                const entry = asObject(criterion);
-                return {
-                    title: toText(entry.title, "Tiêu chí"),
-                    gradingSource: toText(entry.gradingSource, "manual"),
-                    awardedPoints: toNumberValue(entry.awardedPoints, 0),
-                    maxPoints: toNumberValue(entry.maxPoints, 0),
-                    note: toText(entry.note),
-                };
-            })
+        criterionBreakdown: legacyPublished && Array.isArray(autoGrade.criterionBreakdown)
+            ? autoGrade.criterionBreakdown.map(normalizeCriterion)
             : [],
+    };
+}
+
+function normalizeCriterion(criterion: unknown) {
+    const entry = asObject(criterion);
+    return {
+        title: toText(entry.title, "Tiêu chí"),
+        gradingSource: toText(entry.gradingSource, "manual"),
+        awardedPoints: toNumberValue(entry.awardedPoints, 0),
+        maxPoints: toNumberValue(entry.maxPoints, 0),
+        note: toText(entry.feedback || entry.note),
     };
 }
 

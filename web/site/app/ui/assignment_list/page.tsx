@@ -70,9 +70,8 @@ export default function AssignmentListPage() {
     const [menuOpenId, setMenuOpenId] = useState("");
     const menuWrapRef = useRef<HTMLDivElement | null>(null);
 
-    const canManage =
-        currentUser?.role === "teacher" || currentUser?.role === "admin";
-    const isStudent = currentUser?.role === "User";
+    const canManage = currentUser?.role === "lecturer";
+    const isStudent = currentUser?.role === "student";
 
     const fetchAssignments = async () => {
         try {

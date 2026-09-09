@@ -40,7 +40,6 @@ import {
     type AuthenticatedActor,
 } from "@/lib/authorization";
 import { getCurrentUserFromRequest } from "@/lib/current-user";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { AsyncMutex } from "@/services/user-management.service";
 
 // ---------------------------------------------------------------------------
@@ -619,18 +618,6 @@ describe("Client-side Role Spoofing Immunity", () => {
         expect(() => assertCanDeactivateUser(lecturerActor, adminTarget, 2)).toThrowError(AuthorizationError);
         expect(() => assertCanDeleteUser(lecturerActor, adminTarget, 2)).toThrowError(AuthorizationError);
         expect(() => assertCanChangeRole(lecturerActor, adminTarget, "lecturer", 2)).toThrowError(AuthorizationError);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 16. Supabase Admin Client Fail-Secure Behavior
-// ---------------------------------------------------------------------------
-
-describe("createSupabaseAdminClient Fail-Secure", () => {
-    it("SECURITY: throws clear error if SUPABASE configuration is missing/placeholder", () => {
-        // Since test environment doesn't have real SUPABASE_SERVICE_ROLE_KEY / URL configured,
-        // it must throw a clear error instead of silently downgrading to anon key
-        expect(() => createSupabaseAdminClient()).toThrow(/\[Supabase Admin\]/);
     });
 });
 

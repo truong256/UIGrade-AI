@@ -66,7 +66,6 @@ Các biến này chỉ được truy cập trong môi trường Server / Serverl
 | :--- | :---: | :--- |
 | `MONGODB_URI` | **Có** | Chuỗi kết nối MongoDB Atlas (dạng `mongodb+srv://...`) |
 | `JWT_SECRET` | **Có** | Chuỗi bí mật ký JWT session (tối thiểu 32 ký tự ngẫu nhiên) |
-| `SUPABASE_SERVICE_ROLE_KEY` | **Có** | Service Role Admin Key của Supabase (dùng cho backend operations) |
 | `GEMINI_API_KEY` | **Có** | API Key từ Google AI Studio / Google Cloud |
 | `GEMINI_MODEL` | Tùy chọn | Mặc định là `gemini-3.8-flash` |
 | `NOTIFICATION_CRON_TOKEN` | Tùy chọn | Token bảo vệ endpoint trigger reminder tự động |
@@ -80,13 +79,28 @@ Các biến này chỉ được truy cập trong môi trường Server / Serverl
 
 ## 4. Cấu Hình Supabase (Auth & Storage)
 
+Luồng xác thực Email/Google thông thường chỉ dùng URL dự án và Anon Key công khai;
+không cần cấu hình `SUPABASE_SERVICE_ROLE_KEY`.
+
 ### A. Authentication URL Configuration
 Trong Supabase Dashboard: `Project Settings` → `Authentication` → `URL Configuration`:
 1. **Site URL**: Điền Production URL chính thức, ví dụ `https://uigrade-ai.vercel.app`.
 2. **Redirect URLs**:
-   - `https://uigrade-ai.vercel.app/**`
-   - `https://uigrade-ai.vercel.app/auth/callback`
-   - `https://uigrade-ai.vercel.app/ui/dashboard`
+   - `http://localhost:3000/auth/callback`
+   - `<VERIFIED_PRODUCTION_ORIGIN>/auth/callback`
+
+`uigrade-ai.vercel.app` trong tài liệu này là ví dụ, chưa được xác minh bằng cấu hình
+deployment. Kiểm tra domain thật trong Vercel trước khi đặt Site URL và redirect URL;
+không cần wildcard hoặc redirect trực tiếp dashboard cho OAuth.
+
+Google Web OAuth Client: thêm `http://localhost:3000` và origin production đã xác minh
+vào Authorized JavaScript Origins. Authorized Redirect URI phải là
+`https://plcrwxcwgfcqtfuidloz.supabase.co/auth/v1/callback`.
+
+Google Provider trong Supabase: nhập danh sách `<WEB_CLIENT_ID>,<ANDROID_CLIENT_ID>`
+(Web đứng đầu), nhập Web Client Secret trực tiếp trong Dashboard và giữ kiểm tra nonce
+bật. Không đưa secret vào Vercel hoặc Android. Android OAuth Client dùng package
+`com.uigrade.ai` và SHA-1 thật từ `gradlew.bat signingReport` trên máy developer.
 
 ### B. Storage Buckets
 Hệ thống sử dụng các bucket Supabase Storage cho tệp tải lên (chạy migration `supabase/migrations/20260828000003_storage_setup.sql`):
@@ -136,7 +150,6 @@ vercel env add MONGODB_URI production
 vercel env add JWT_SECRET production
 vercel env add NEXT_PUBLIC_SUPABASE_URL production
 vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
-vercel env add SUPABASE_SERVICE_ROLE_KEY production
 vercel env add GEMINI_API_KEY production
 vercel env add GEMINI_MODEL production
 ```

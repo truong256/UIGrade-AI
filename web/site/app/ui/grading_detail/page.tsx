@@ -17,6 +17,7 @@ function GradingDetailContent() {
                 assignmentOptions={grading.assignmentOptions}
                 selectedSubmissionId={grading.selectedSubmissionId}
                 grading={grading.grading}
+                canGrade={grading.canGrade}
                 detailLoading={grading.detailLoading}
                 error={grading.error}
                 notice={grading.notice}
@@ -24,7 +25,7 @@ function GradingDetailContent() {
                     if (!nextId || nextId === grading.assignmentId) return;
                     grading.syncUrl(nextId, null, null);
                 }}
-                onGrade={(mode) => void grading.handleGrade(mode)}
+                onGrade={() => void grading.handleGrade()}
             />
 
             <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
@@ -34,10 +35,12 @@ function GradingDetailContent() {
                     visibleStudents={grading.visibleStudents}
                     selectedStudentId={grading.selectedStudentId}
                     keyword={grading.keyword}
+                    statusFilter={grading.statusFilter}
                     tab={grading.tab}
                     rubric={grading.rubric}
                     loading={grading.loading}
                     onKeywordChange={grading.setKeyword}
+                    onStatusFilterChange={grading.setStatusFilter}
                     onTabChange={grading.setTab}
                     onSelectStudent={(student) =>
                         void grading.loadDetail(
@@ -58,12 +61,25 @@ function GradingDetailContent() {
                     loading={grading.loading}
                     detailLoading={grading.detailLoading}
                     maxScore={grading.maxScore}
+                    canGrade={grading.canGrade}
+                    rubric={grading.rubric}
                     manualScore={grading.manualScore}
+                    criterionScores={grading.criterionScores}
+                    criterionComments={grading.criterionComments}
+                    totalScore={grading.totalScore}
                     teacherComment={grading.teacherComment}
                     saving={grading.saving}
+                    publishing={grading.publishing}
                     onManualScoreChange={grading.setManualScore}
+                    onCriterionScoreChange={(code, score) =>
+                        grading.setCriterionScores((previous) => ({ ...previous, [code]: score }))
+                    }
+                    onCriterionCommentChange={(code, comment) =>
+                        grading.setCriterionComments((previous) => ({ ...previous, [code]: comment }))
+                    }
                     onTeacherCommentChange={grading.setTeacherComment}
-                    onSave={() => void grading.handleSave()}
+                    onSaveDraft={() => void grading.handleSaveDraft()}
+                    onPublish={() => void grading.handlePublish()}
                 />
             </div>
         </div>

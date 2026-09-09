@@ -48,9 +48,8 @@ Tạo tệp `.env.local` tại thư mục gốc của dự án:
 NEXT_PUBLIC_APP_URL=http://localhost:3000
 
 # Supabase Credentials
-NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_URL=https://plcrwxcwgfcqtfuidloz.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-supabase-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-supabase-service-role-key
 
 # AI Evaluation
 GEMINI_API_KEY=your-gemini-api-key
@@ -79,17 +78,18 @@ Hệ thống cung cấp sẵn các tệp migration SQL đầy đủ trong thư m
    - Bảo vệ phân quyền chặt chẽ: Sinh viên chỉ xem bài của mình; Giảng viên quản lý lớp & bài tập do mình phụ trách; Quản trị viên toàn quyền.
 3. **Storage Buckets**: `supabase/migrations/20260828000003_storage_setup.sql`
    - Tạo các bucket: `submissions_apk`, `assignments_attachment`, `avatars`, `baseline_images`.
+4. **Role onboarding & security**: `supabase/migrations/20260903000001_fix_role_security_and_pending.sql`
+   - Google user mới ở trạng thái `pending`, chỉ được chọn `student` hoặc `lecturer` một lần.
+   - Không tự gán Google user thành sinh viên và không cho người dùng tự nâng quyền `admin`.
 
 ---
 
-## 🔑 Tài Khoản Mẫu Kiểm Thử (Demo Seed Accounts)
+## 🔑 Tài Khoản Kiểm Thử
 
-| Vai trò | Email | Mật khẩu mặc định | Ghi chú |
-| :--- | :--- | :--- | :--- |
-| **Quản trị viên (Admin)** | `admin@uigrade.edu.vn` | `Admin@123456` | Quản trị hệ thống, server config, người dùng |
-| **Giảng viên (Lecturer)** | `giangvien@uigrade.edu.vn` | `Teacher@123456` | Tạo lớp học, ra đề bài tập, chấm điểm Rubric |
-| **Sinh viên 1 (Student)** | `sinhvien1@uigrade.edu.vn` | `Student@123456` | Ghi danh lớp bằng mã, nộp bài APK, xem kết quả |
-| **Sinh viên 2 (Student)** | `sinhvien2@uigrade.edu.vn` | `Student@123456` | Sinh viên kiểm thử nộp bài và nhận phản hồi |
+Không lưu email hoặc mật khẩu dùng chung trong repository. Hãy tạo tài khoản kiểm
+thử riêng bằng Supabase Auth và chọn vai trò `student` hoặc `lecturer` qua màn hình
+onboarding. Tài khoản `admin` phải được cấp bởi quản trị viên trực tiếp trong
+Supabase, không được tự đăng ký từ giao diện Web.
 
 ---
 

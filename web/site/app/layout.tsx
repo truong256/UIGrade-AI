@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { VisitBoundary } from "@/components/auth/VisitBoundary";
 
 const inter = Inter({
     subsets: ["latin", "vietnamese"],
@@ -27,6 +28,7 @@ export default function RootLayout({
             />
         </head>
         <body className={`${inter.className} bg-[#F6F9FF] text-[#172033] antialiased selection:bg-blue-100 selection:text-blue-900`}>
+            <VisitBoundary />
             {children}
         </body>
         </html>

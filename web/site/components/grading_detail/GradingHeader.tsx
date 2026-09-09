@@ -9,11 +9,12 @@ type Props = {
     assignmentOptions: AssignmentOption[];
     selectedSubmissionId: string | null;
     grading: boolean;
+    canGrade: boolean;
     detailLoading: boolean;
     error: string;
     notice: string;
     onChangeAssignment: (assignmentId: string) => void;
-    onGrade: (mode: "grade" | "regrade") => void;
+    onGrade: () => void;
 };
 
 export function GradingHeader({
@@ -22,6 +23,7 @@ export function GradingHeader({
     assignmentOptions,
     selectedSubmissionId,
     grading,
+    canGrade,
     detailLoading,
     error,
     notice,
@@ -73,27 +75,32 @@ export function GradingHeader({
                 <div className="flex flex-wrap gap-2.5">
                     <button
                         type="button"
-                        onClick={() => onGrade("grade")}
-                        disabled={!selectedSubmissionId || grading || detailLoading}
+                        onClick={onGrade}
+                        disabled={!canGrade || !selectedSubmissionId || grading || detailLoading}
                         className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-blue-600 px-5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 active:scale-98 transition disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
-                        {grading ? "AI đang chấm..." : "Chấm AI tự động"}
+                        {grading ? "AI đang phân tích..." : "Tạo gợi ý AI"}
                     </button>
 
                     <button
                         type="button"
-                        onClick={() => onGrade("regrade")}
-                        disabled={!selectedSubmissionId || grading || detailLoading}
+                        onClick={onGrade}
+                        disabled={!canGrade || !selectedSubmissionId || grading || detailLoading}
                         className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/70 px-4 text-xs sm:text-sm font-semibold text-blue-700 hover:bg-blue-100 transition active:scale-98 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <span className="material-symbols-outlined text-[18px]">refresh</span>
-                        {grading ? "Đang chấm lại..." : "Chấm lại bài"}
+                        {grading ? "Đang tạo lại..." : "Tạo lại gợi ý"}
                     </button>
                 </div>
             </div>
 
             <AlertMessages error={error} notice={notice} />
+            {!canGrade && (
+                <p className="mt-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-2.5 text-xs font-medium text-amber-800">
+                    Chế độ chỉ xem: quản trị viên có thể kiểm tra dữ liệu nhưng không thể sửa hoặc công bố điểm.
+                </p>
+            )}
         </section>
     );
 }

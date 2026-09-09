@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import { dashboardForRole } from "@/lib/auth-routing";
 
 const ALLOWED_SELF_ASSIGN_ROLES = ["student", "lecturer"] as const;
 type AllowedRole = (typeof ALLOWED_SELF_ASSIGN_ROLES)[number];
@@ -48,22 +48,29 @@ export async function POST(request: NextRequest) {
             );
         }
 
-        const adminClient = createSupabaseAdminClient() as any;
-
         // Check existing profile to prevent re-assignment of already-set roles
-        const { data: existing } = await adminClient
+        const { data: existing, error: readError } = await supabase
             .from("profiles")
-            .select("id, role")
+            .select("id, role, status")
             .eq("id", user.id)
             .maybeSingle();
 
-        const existingRole: string | null = (existing as { id: string; role: string } | null)?.role ?? null;
+        if (readError) {
+            console.error("[set-role] Profile read failed");
+            return NextResponse.json(
+                { message: "Không thể đọc hồ sơ. Vui lòng thử lại." },
+                { status: 500 }
+            );
+        }
+
+        const profile = existing as { id: string; role: string; status: string } | null;
+        if (profile && profile.status !== "active") {
+            return NextResponse.json({ message: "Tài khoản hiện không hoạt động." }, { status: 403 });
+        }
 
         // Reject if profile already has a permanent role (student/lecturer/admin)
         if (
-            existingRole &&
-            existingRole !== "pending" &&
-            ["student", "lecturer", "admin"].includes(existingRole)
+            profile && profile.role !== "pending"
         ) {
             return NextResponse.json(
                 { message: "Vai trò đã được thiết lập. Không thể thay đổi qua trang này." },
@@ -80,35 +87,42 @@ export async function POST(request: NextRequest) {
         const avatarUrl =
             user.user_metadata?.avatar_url || user.user_metadata?.picture || null;
 
-        // Upsert profile (insert or update)
-        const { error: upsertError } = await adminClient.from("profiles").upsert({
-            id: user.id,
+        const profileValues = {
             email: user.email || "",
             full_name: fullName,
             avatar_url: avatarUrl,
             role,
-            status: "active",
-        });
+            status: "active" as const,
+        };
 
-        if (upsertError) {
-            console.error("[set-role] Profile upsert error:", upsertError.message);
+        // Do not use service_role here. RLS + the migration's trigger allow only the
+        // one-time pending -> student/lecturer onboarding transition for this user.
+        // The hand-maintained Database type predates generated Relationships metadata,
+        // so mutations use the same narrow compatibility cast as existing services.
+        const profiles = (supabase as any).from("profiles");
+        const mutation = existing
+            ? profiles.update({ role }).eq("id", user.id).eq("role", "pending").eq("status", "active")
+            : profiles.insert({ id: user.id, ...profileValues });
+        const { data: saved, error: saveError } = await mutation.select("id, role, status").single();
+
+        if (saveError || !saved || saved.id !== user.id || saved.status !== "active" ||
+            !ALLOWED_SELF_ASSIGN_ROLES.includes(saved.role)) {
             return NextResponse.json(
                 { message: "Không thể lưu thông tin. Vui lòng thử lại." },
                 { status: 500 }
             );
         }
 
-        // Update app_metadata so middleware Supabase JWT includes the role
-        await adminClient.auth.admin.updateUserById(user.id, {
-            app_metadata: { role },
-        });
-
         return NextResponse.json(
-            { message: "Vai trò đã được cập nhật.", role },
+            {
+                message: "Vai trò đã được cập nhật.",
+                role: saved.role,
+                redirectTo: dashboardForRole(saved.role),
+            },
             { status: 200 }
         );
-    } catch (err) {
-        console.error("[set-role] Unexpected error:", err);
+    } catch {
+        console.error("[set-role] Unexpected failure");
         return NextResponse.json(
             { message: "Lỗi server. Vui lòng thử lại sau." },
             { status: 500 }

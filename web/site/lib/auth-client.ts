@@ -23,6 +23,7 @@ export type AuthUser = {
 
 let userPromise: Promise<AuthUser | null> | null = null;
 let cachedUser: AuthUser | null = null;
+let cacheGeneration = 0;
 
 export async function fetchCurrentUserClient(forceRefresh = false): Promise<AuthUser | null> {
     if (!forceRefresh && cachedUser) {
@@ -32,20 +33,22 @@ export async function fetchCurrentUserClient(forceRefresh = false): Promise<Auth
         return userPromise;
     }
 
+    const generation = ++cacheGeneration;
     userPromise = (async () => {
         try {
             const res = await fetch("/api/auth/me", { cache: "no-store" });
             if (!res.ok) {
-                cachedUser = null;
+                if (generation === cacheGeneration) cachedUser = null;
                 return null;
             }
             const json = await res.json();
+            if (generation !== cacheGeneration) return null;
             cachedUser = json.user || json.data || null;
             return cachedUser;
         } catch {
             return null;
         } finally {
-            userPromise = null;
+            if (generation === cacheGeneration) userPromise = null;
         }
     })();
 
@@ -53,6 +56,7 @@ export async function fetchCurrentUserClient(forceRefresh = false): Promise<Auth
 }
 
 export function clearCurrentUserCache() {
+    cacheGeneration++;
     cachedUser = null;
     userPromise = null;
 }

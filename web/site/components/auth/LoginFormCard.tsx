@@ -78,7 +78,7 @@ export function LoginFormCard({ data }: Props) {
                 return;
             }
 
-            router.push("/ui/dashboard");
+            router.push(result.redirectTo || "/ui/dashboard");
             router.refresh();
         } catch {
             setError("Có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau.");
@@ -90,6 +90,9 @@ export function LoginFormCard({ data }: Props) {
     return (
         <div className="w-full max-w-[440px] mx-auto">
             <div className="rounded-2xl border border-slate-200/80 bg-white p-7 sm:p-8 shadow-xs">
+                <p className="mb-5 text-xs text-slate-600">
+                    Để bảo vệ tài khoản, bạn cần đăng nhập lại khi mở hoặc tải lại trang.
+                </p>
                 <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                     {/* Email Field */}
                     <div>

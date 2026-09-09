@@ -68,7 +68,7 @@ export default function DashboardPage() {
     const statCards = useMemo<StatCardProps[]>(() => {
         if (!data) return [];
 
-        const attentionTitle = data.user.role === "User" ? "Chờ chấm" : "Cần xử lý";
+        const attentionTitle = data.user.role === "student" ? "Bài chưa nộp" : "Cần xử lý";
 
         return [
             {

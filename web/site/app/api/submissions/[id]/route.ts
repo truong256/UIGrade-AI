@@ -1,41 +1,12 @@
-import { successResponse, errorResponse } from "@/lib/api-response";
-import { getActorIdFromRequest } from "@/lib/current-user";
-import { gradingService } from "@/services/grading.service";
-import { connectDB } from "@/lib/mongodb";
+import { successResponse } from "@/lib/api-response";
+import { webMvpErrorResponse } from "@/lib/web-mvp-route";
+import { SupabaseGradingService } from "@/services/supabase/grading.supabase";
 
-type RouteContext = {
-    params: Promise<{
-        id: string;
-    }>;
-};
-
-function getErrorMessage(error: unknown): string {
-    if (error instanceof Error) {
-        return error.message;
-    }
-
-    return "Lỗi không xác định";
-}
-
-async function resolveId(context: RouteContext): Promise<string> {
-    const { id } = await context.params;
-    return id;
-}
-
-export async function GET(request: Request, context: RouteContext) {
+export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
     try {
-        await connectDB();
-
-        await getActorIdFromRequest(request);
-
-        const id = await resolveId(context);
-        const data = await gradingService.getSubmissionDetail(id);
-
-        return successResponse(data, "Lấy chi tiết bài nộp thành công");
+        const { id } = await params;
+        return successResponse(await SupabaseGradingService.getSubmissionDetail(id), "Lấy chi tiết bài nộp thành công");
     } catch (error) {
-        const message = getErrorMessage(error);
-        const status = message.includes("đăng nhập") ? 401 : 400;
-
-        return errorResponse(message, status);
+        return webMvpErrorResponse(error);
     }
 }

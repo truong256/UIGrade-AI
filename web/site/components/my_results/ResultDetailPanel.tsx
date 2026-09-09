@@ -1,5 +1,5 @@
 import type { ResultItem } from "@/app/ui/my_results/type/my_results.type";
-import { formatDate, formatScore, gradeStatusLabel } from "@/app/ui/my_results/type/my_results.utils";
+import { formatDate, formatDateTime, formatScore, gradeStatusLabel } from "@/app/ui/my_results/type/my_results.utils";
 import { CriterionBreakdown } from "./CriterionBreakdown";
 import { FeedbackListCard } from "./FeedbackListCard";
 import { SubmissionInfoCard } from "./SubmissionInfoCard";
@@ -7,6 +7,9 @@ import { SubmissionInfoCard } from "./SubmissionInfoCard";
 type ResultDetailPanelProps = { item: ResultItem | null };
 
 export function ResultDetailPanel({ item }: ResultDetailPanelProps) {
+    const percentage = item && item.finalScore !== null && item.maxScore > 0
+        ? Math.round((item.finalScore / item.maxScore) * 1000) / 10
+        : null;
     return (
         <aside className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm xl:sticky xl:top-24">
             {!item ? (
@@ -32,6 +35,9 @@ export function ResultDetailPanel({ item }: ResultDetailPanelProps) {
                             <span className="pb-1 text-xs font-bold text-slate-400">/ {item.maxScore}đ</span>
                         </div>
                         <p className="mt-2 text-xs font-semibold text-blue-700">Trạng thái: {gradeStatusLabel(item.gradeStatus)}</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                            {percentage === null ? "--" : `${percentage}%`} • Công bố {formatDateTime(item.publishedAt)}
+                        </p>
                     </div>
 
                     <div className="rounded-2xl border border-blue-200 bg-white p-3.5 shadow-xs">

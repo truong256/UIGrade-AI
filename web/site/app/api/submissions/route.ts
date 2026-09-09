@@ -1,56 +1,36 @@
-import Submission from "@/models/Submission.model";
-import { submissionController } from "@/controllers/submission.controller";
-import { errorResponse, successResponse } from "@/lib/api-response";
-import { getCurrentUserFromRequest } from "@/lib/current-user";
-import { connectDB } from "@/lib/mongodb";
+import { successResponse } from "@/lib/api-response";
+import { requireActiveRequestActor } from "@/lib/current-user";
+import { webMvpErrorResponse } from "@/lib/web-mvp-route";
+import { SupabaseWebSubmissionService } from "@/services/supabase/web-mvp.supabase";
+import { extractSubmissionPayload } from "@/validations/submission.validation";
+
+export const runtime = "nodejs";
 
 export async function GET(request: Request) {
     try {
-        await connectDB();
-
-        const currentUser = await getCurrentUserFromRequest(request);
-
-        if (!currentUser?.userId) {
-            return errorResponse("Bạn chưa đăng nhập", 401);
-        }
-
-        const { searchParams } = new URL(request.url);
-        const assignmentId = searchParams.get("assignmentId");
-        const studentIdParam = searchParams.get("studentId");
-        const classroomId = searchParams.get("classroomId");
-
-        const filter: Record<string, unknown> = {};
-
-        if (assignmentId) {
-            filter.assignmentId = assignmentId;
-        }
-
-        if (classroomId) {
-            filter.classroomId = classroomId;
-        }
-
-        if (currentUser.role === "student") {
-            filter.studentId = currentUser.userId;
-        } else if (studentIdParam) {
-            filter.studentId = studentIdParam;
-        }
-
-        const data = await Submission.find(filter)
-            .populate("assignmentId", "title maxScore dueAt startAt status")
-            .populate("classroomId", "name code semester academicYear")
-            .populate("studentId", "name email studentCode")
-            .sort({ submittedAt: -1 });
-
+        const actor = await requireActiveRequestActor(request);
+        const params = new URL(request.url).searchParams;
+        const data = await SupabaseWebSubmissionService.list(actor, {
+            assignmentId: params.get("assignmentId") || undefined,
+            studentId: params.get("studentId") || undefined,
+            classId: params.get("classroomId") || undefined,
+        });
         return successResponse(data, "Lấy danh sách bài nộp thành công");
     } catch (error) {
-        return errorResponse(
-            error instanceof Error ? error.message : "Không thể lấy danh sách bài nộp",
-            400
-        );
+        return webMvpErrorResponse(error);
     }
 }
 
 export async function POST(request: Request) {
-    await connectDB();
-    return submissionController.create(request);
+    try {
+        const actor = await requireActiveRequestActor(request);
+        const formData = await request.formData();
+        const payload = extractSubmissionPayload(formData);
+        const files = formData.getAll("submissionFiles")
+            .filter((item): item is File => item instanceof File && item.size > 0);
+        const data = await SupabaseWebSubmissionService.save(actor, payload, files);
+        return successResponse(data, payload.action === "draft" ? "Đã lưu bản nháp" : "Nộp bài thành công", 201);
+    } catch (error) {
+        return webMvpErrorResponse(error);
+    }
 }

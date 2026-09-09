@@ -6,6 +6,7 @@ type Props = {
 };
 
 export function AiFeedbackPanel({ detail }: Props) {
+    const aiFeedback = detail?.grade?.aiFeedback;
     return (
         <section className="rounded-2xl border border-slate-200/80 bg-white p-5 xl:col-span-2 shadow-xs">
             <h3 className="text-base font-bold text-[#172033] flex items-center gap-2">
@@ -13,15 +14,15 @@ export function AiFeedbackPanel({ detail }: Props) {
                 Nhận xét phân tích từ AI
             </h3>
 
-            {!detail?.autoGrade ? (
+            {!aiFeedback ? (
                 <div className="mt-4 rounded-xl border border-dashed border-blue-200 bg-blue-50/30 px-4 py-8 text-center text-xs text-slate-400">
-                    Bài tập này chưa được chấm bằng AI. Nhấn nút &ldquo;Chấm AI tự động&rdquo; phía trên để tiến hành chấm.
+                    Chưa có gợi ý AI. AI chỉ hỗ trợ phân tích; giảng viên vẫn phải nhập và công bố điểm chính thức.
                 </div>
             ) : (
                 <div className="mt-4 space-y-3.5">
-                    {toText(detail?.autoGrade?.aiFeedback?.summary) && (
+                    {toText(aiFeedback?.summary) && (
                         <div className="rounded-xl border border-blue-200/80 bg-blue-50/50 p-4 text-xs leading-relaxed text-[#172033]">
-                            {toText(detail?.autoGrade?.aiFeedback?.summary)}
+                            {toText(aiFeedback?.summary)}
                         </div>
                     )}
 
@@ -30,7 +31,7 @@ export function AiFeedbackPanel({ detail }: Props) {
                             title="Điểm mạnh đạt được"
                             icon="task_alt"
                             emptyText="Chưa có nhận xét."
-                            items={detail?.autoGrade?.aiFeedback?.strengths || []}
+                            items={aiFeedback?.strengths || []}
                             className="border-emerald-200 bg-emerald-50/60 text-emerald-950"
                             titleClassName="text-emerald-800"
                         />
@@ -39,7 +40,7 @@ export function AiFeedbackPanel({ detail }: Props) {
                             title="Gợi ý cải thiện tiếp theo"
                             icon="lightbulb"
                             emptyText="Chưa có gợi ý."
-                            items={detail?.autoGrade?.aiFeedback?.nextSteps || []}
+                            items={aiFeedback?.nextSteps || []}
                             className="border-blue-200 bg-blue-50/60 text-blue-950"
                             titleClassName="text-blue-800"
                         />

@@ -230,15 +230,51 @@ export const classroomService = {
         return attachStudentCount(docs as RepoClassroom[]);
     },
 
-    async getClassById(id: string) {
+    async getClassById(id: string, currentUser: CurrentUser) {
         const classroom = await classroomRepository.findById(id);
 
         if (!classroom) {
             throw new Error("Không tìm thấy lớp học");
         }
 
+        const ownerId = toStringId((classroom as RepoClassroom).teacherId);
+
+        if (currentUser.role === "lecturer" && ownerId !== currentUser.userId) {
+            throw new Error("Bạn không có quyền xem lớp học này");
+        }
+
+        if (currentUser.role === "student") {
+            const membership = await classroomMemberRepo.findMember(id, currentUser.userId);
+            if (!membership || membership.status !== "active") {
+                throw new Error("Bạn không có quyền xem lớp học này");
+            }
+        }
+
+        if (!["admin", "lecturer", "student"].includes(currentUser.role)) {
+            throw new Error("Bạn không có quyền xem lớp học này");
+        }
+
         const count = await classroomMemberRepo.countActiveStudentsByClassroomId(id);
-        return mapClassroomResponse(classroom as RepoClassroom, { [id]: count });
+        const mapped = mapClassroomResponse(classroom as RepoClassroom, { [id]: count });
+
+        if (!mapped) return null;
+
+        return {
+            _id: mapped._id,
+            name: mapped.name,
+            code: mapped.code,
+            description: mapped.description,
+            semester: mapped.semester,
+            academicYear: mapped.academicYear,
+            status: mapped.status,
+            teacher: mapped.teacher
+                ? { _id: mapped.teacher._id, name: mapped.teacher.name }
+                : null,
+            teacherId: ownerId,
+            approvedStudentCount: mapped.approvedStudentCount,
+            createdAt: mapped.createdAt,
+            updatedAt: mapped.updatedAt,
+        };
     },
 
     async createClass(data: CreateClassPayload, currentUser: CurrentUser) {

@@ -43,7 +43,7 @@ const uiActionSchema = z.object({
     tag: z.string().trim().optional(),
     value: z.string().trim().optional(),
 });
-const runnerConfigSchema = z.object({
+export const runnerConfigSchema = z.object({
     requiredFiles: z.array(z.string().trim()).default([]),
     entryFiles: z.array(z.string().trim()).default([]),
     buildCommand: z.string().trim().default(""),
