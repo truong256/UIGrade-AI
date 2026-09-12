@@ -1,6 +1,7 @@
 import type { CurrentUserPayload } from "@/lib/current-user";
 import { requireAdmin, validateRoleInput } from "@/lib/authorization";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";
+import type { UserStatus } from "@/types/database.types";
 
 type LegacyUiRole = "admin" | "teacher" | "User";
 type CanonicalRole = "admin" | "lecturer" | "student";
@@ -38,8 +39,8 @@ function legacyUiRole(role: string): LegacyUiRole {
     return "User";
 }
 
-function normalizeStatus(isActive: boolean | undefined) {
-    return isActive === false ? "locked" : "active";
+function normalizeStatus(isActive: boolean | undefined): UserStatus {
+    return isActive === false ? "inactive" : "active";
 }
 
 function isEducationEmail(value: string) {
@@ -161,7 +162,7 @@ export const userManagementService = {
             full_name: name,
             email,
             role,
-            status: "active",
+            status: "active" as const,
             student_code: role === "student" ? String(input.studentCode || "").trim() || null : null,
             department: String(input.department || "").trim() || null,
             cohort: String(input.cohort || "").trim() || null,
@@ -198,7 +199,7 @@ export const userManagementService = {
         const desiredRole = input.roles !== undefined || input.role !== undefined
             ? canonicalRole(input.roles ?? input.role)
             : canonicalRole(existing.role);
-        const desiredStatus = input.isActive === undefined ? existing.status : normalizeStatus(input.isActive);
+        const desiredStatus: UserStatus = input.isActive === undefined ? existing.status : normalizeStatus(input.isActive);
         const name = input.name === undefined ? existing.full_name : String(input.name).trim();
         const email = input.email === undefined ? existing.email : String(input.email).trim().toLowerCase();
         if (!name) throw new Error("Tên người dùng không được để trống");
