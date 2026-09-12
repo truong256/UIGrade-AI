@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { dashboardForRole } from "@/lib/auth-routing";
 import { mapSupabaseErrorToVietnamese } from "@/lib/supabase/errors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { isEducationEmail, normalizeEmail } from "@/lib/education-email";
 
 const SELF_REGISTER_ROLES = ["student", "lecturer"] as const;
 type SelfRegisterRole = (typeof SELF_REGISTER_ROLES)[number];
@@ -10,7 +11,7 @@ export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
         const fullName = String(body?.name || "").trim();
-        const email = String(body?.email || "").trim().toLowerCase();
+        const email = normalizeEmail(body?.email);
         const password = String(body?.password || "");
         const studentCode = String(body?.studentCode || "").trim().toUpperCase();
         const role = body?.role as SelfRegisterRole;
@@ -21,8 +22,11 @@ export async function POST(request: NextRequest) {
                 { status: 400 }
             );
         }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-            return NextResponse.json({ message: "Email không hợp lệ." }, { status: 400 });
+        if (!isEducationEmail(email)) {
+            return NextResponse.json(
+                { message: "Chỉ có thể đăng ký bằng email giáo dục có tên miền .edu.vn." },
+                { status: 400 }
+            );
         }
         if (password.length < 6) {
             return NextResponse.json(

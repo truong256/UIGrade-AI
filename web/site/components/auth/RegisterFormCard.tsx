@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { SocialLoginButtons } from "./SocialLoginButtons";
+import { isEducationEmail } from "@/lib/education-email";
 
 type RegisterFormData = {
     title?: string;
@@ -57,9 +58,8 @@ export function RegisterFormCard({ data }: Props) {
             setEmailError("Vui lòng nhập địa chỉ email");
             return false;
         }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(trimmed)) {
-            setEmailError("Địa chỉ email không hợp lệ");
+        if (!isEducationEmail(trimmed)) {
+            setEmailError("Vui lòng dùng email giáo dục có tên miền .edu.vn");
             return false;
         }
         setEmailError("");

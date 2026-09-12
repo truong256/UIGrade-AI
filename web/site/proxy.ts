@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
-import { AUTH_ENTRY_COOKIE, expireVisitCookies, hasOAuthArrival, isDocumentEntry } from "@/lib/auth-visit";
+import { AUTH_ENTRY_COOKIE, isDocumentEntry } from "@/lib/auth-visit";
 import {
     dashboardForRole,
     authenticatedProfileRole,
@@ -63,10 +63,13 @@ async function getSupabaseIdentity(request: NextRequest) {
                 getAll() {
                     return request.cookies.getAll();
                 },
-                setAll(cookiesToSet) {
+                setAll(cookiesToSet, headers) {
                     cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
                     cookiesToSet.forEach(({ name, value, options }) => {
                         response.cookies.set(name, value, options);
+                    });
+                    Object.entries(headers).forEach(([name, value]) => {
+                        response.headers.set(name, value);
                     });
                 },
             },
@@ -104,12 +107,6 @@ export async function proxy(request: NextRequest) {
     const { pathname } = request.nextUrl;
 
     const documentEntry = isDocumentEntry(request);
-    // A new document (including reload/new tab) must not silently reuse an old
-    // browser session. OAuth's immediate redirect consumes its one-use handoff.
-    if (documentEntry && !hasOAuthArrival(request)) {
-        return expireVisitCookies(request, isPublicPath(pathname));
-    }
-
     const { response, user, role, status } = await getSupabaseIdentity(request);
     response.headers.set("Cache-Control", "no-store");
     if (documentEntry) {

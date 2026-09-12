@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { dashboardForRole, authenticatedProfileRole } from "@/lib/auth-routing";
 import { allowOAuthArrival } from "@/lib/auth-visit";
+import { isEducationEmail } from "@/lib/education-email";
 
 export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
@@ -71,6 +72,17 @@ export async function GET(request: Request) {
         if (existingRole) {
             const destination = dashboardForRole(existingRole);
             return allowOAuthArrival(NextResponse.redirect(`${origin}${destination}`), destination);
+        }
+
+        // The .edu.vn rule applies only while creating/onboarding a new account.
+        // A permanent existing profile (including a legacy Admin) was accepted above.
+        if (!isEducationEmail(user.email)) {
+            try {
+                await supabase.auth.signOut({ scope: "local" });
+            } catch {
+                // The redirect still closes this signup flow. Do not expose provider details.
+            }
+            return NextResponse.redirect(`${origin}/login?error=education_email_required`);
         }
 
         // Profile doesn't exist or has pending role → create/keep partial profile and redirect to role selection

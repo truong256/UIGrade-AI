@@ -22,6 +22,7 @@ export const adminNavItems: NavItem[] = [
     { label: "Tổng quan", href: "/ui/dashboard", icon: "dashboard" },
     { label: "Lớp học", href: "/ui/my_classes", icon: "groups" },
     { label: "Bài tập", href: "/ui/assignment_list", icon: "assignment" },
+    { label: "Quản trị", href: "/ui/server_config", icon: "admin_panel_settings" },
     { label: "Tài khoản", href: "/ui/account", icon: "person" },
 ];
 

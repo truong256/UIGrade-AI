@@ -32,7 +32,7 @@ export function isRouteAllowedForRole(
     pathname: string,
     role: AuthenticatedRole
 ): boolean {
-    if (matchesPath(pathname, ADMIN_ONLY_PATHS)) return false;
+    if (matchesPath(pathname, ADMIN_ONLY_PATHS)) return role === "admin";
     if (matchesPath(pathname, LECTURER_MUTATION_PATHS)) return role === "lecturer";
     if (matchesPath(pathname, LECTURER_ONLY_PATHS)) {
         return role === "lecturer" || role === "admin";

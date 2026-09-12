@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SocialLoginButtons } from "./SocialLoginButtons";
@@ -19,16 +19,18 @@ type LoginFormData = {
 
 type Props = {
     data?: LoginFormData;
+    initialError?: string;
 };
 
-export function LoginFormCard({ data }: Props) {
+export function LoginFormCard({ data, initialError = "" }: Props) {
     const router = useRouter();
+    const submitting = useRef(false);
     const [showPassword, setShowPassword] = useState(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [emailError, setEmailError] = useState("");
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState("");
+    const [error, setError] = useState(initialError);
 
     const validateEmail = (val: string): boolean => {
         const trimmed = val.trim();
@@ -47,6 +49,7 @@ export function LoginFormCard({ data }: Props) {
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (submitting.current) return;
         setError("");
 
         const isEmailValid = validateEmail(email);
@@ -58,6 +61,7 @@ export function LoginFormCard({ data }: Props) {
         }
 
         try {
+            submitting.current = true;
             setLoading(true);
 
             const res = await fetch("/api/auth/login", {
@@ -83,6 +87,7 @@ export function LoginFormCard({ data }: Props) {
         } catch {
             setError("Có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau.");
         } finally {
+            submitting.current = false;
             setLoading(false);
         }
     };
@@ -91,7 +96,7 @@ export function LoginFormCard({ data }: Props) {
         <div className="w-full max-w-[440px] mx-auto">
             <div className="rounded-2xl border border-slate-200/80 bg-white p-7 sm:p-8 shadow-xs">
                 <p className="mb-5 text-xs text-slate-600">
-                    Để bảo vệ tài khoản, bạn cần đăng nhập lại khi mở hoặc tải lại trang.
+                    Phiên đăng nhập được xác minh lại an toàn khi bạn mở hoặc tải lại trang.
                 </p>
                 <form className="space-y-4" onSubmit={handleSubmit} noValidate>
                     {/* Email Field */}

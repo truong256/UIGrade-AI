@@ -26,10 +26,10 @@ describe("Layout & Navigation Regression Tests", () => {
             }
         });
 
-        it("should hide deferred admin mutation screens in the MVP", () => {
+        it("should expose the guarded admin configuration entry only to admins", () => {
             const adminItems = getNavItemsForRole("admin");
             const hrefs = adminItems.map((i) => i.href);
-            expect(hrefs).not.toContain("/ui/server_config");
+            expect(hrefs).toContain("/ui/server_config");
             expect(hrefs).not.toContain("/ui/server_config/users");
             expect(hrefs).toContain("/ui/account");
         });

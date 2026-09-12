@@ -201,7 +201,7 @@ export function ServerConfigClient() {
             };
 
             const response = await fetch("/api/server-config", {
-                method: "PUT",
+                method: "PATCH",
                 headers: {
                     "Content-Type": "application/json",
                 },

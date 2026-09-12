@@ -7,7 +7,7 @@ const mock = vi.hoisted(() => ({
     user: { id: "auth-user-id", email: "test@example.com", user_metadata: {
         name: "Google Name", picture: "https://example.com/avatar.png",
     } },
-    getUser: vi.fn(), exchange: vi.fn(), signOut: vi.fn(), signInWithPassword: vi.fn(),
+    getUser: vi.fn(), exchange: vi.fn(), signOut: vi.fn(), signInWithPassword: vi.fn(), signUp: vi.fn(),
     insert: vi.fn(), update: vi.fn(), eq: vi.fn(),
     cookies: [] as Array<{ name: string; value: string }>,
 }));
@@ -19,7 +19,7 @@ vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => mock.cook
 function client() {
     return {
         auth: { getUser: mock.getUser, exchangeCodeForSession: mock.exchange, signOut: mock.signOut,
-            signInWithPassword: mock.signInWithPassword },
+            signInWithPassword: mock.signInWithPassword, signUp: mock.signUp },
         from: () => {
             const query = {
                 select: () => query,
@@ -40,6 +40,7 @@ import { POST as setRole } from "@/app/api/auth/set-role/route";
 import { POST as logout } from "@/app/api/auth/logout/route";
 import { GET as me } from "@/app/api/auth/me/route";
 import { POST as emailLogin } from "@/app/api/auth/login/route";
+import { POST as register } from "@/app/api/auth/register/route";
 import { proxy } from "@/proxy";
 import { POST as endVisit } from "@/app/api/auth/end-visit/route";
 import { AUTH_ENTRY_COOKIE } from "@/lib/auth-visit";
@@ -64,6 +65,8 @@ beforeEach(() => {
     mock.exchange.mockResolvedValue({ data: { user: mock.user }, error: null });
     mock.signOut.mockResolvedValue({ error: null });
     mock.signInWithPassword.mockResolvedValue({ data: { user: mock.user }, error: null });
+    mock.signUp.mockResolvedValue({ data: { user: mock.user, session: null }, error: null });
+    mock.user.email = "student@university.edu.vn";
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_URL", "https://plcrwxcwgfcqtfuidloz.supabase.co");
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-public-key");
 });
@@ -132,6 +135,24 @@ describe("real callback handler with mocked Supabase boundary", () => {
         const res = await callback(request("/auth/callback?code=one-time-code"));
         expect(mock.exchange).toHaveBeenCalledWith("one-time-code");
         expect(res.headers.get("location")).toBe(`${origin}/ui/dashboard`);
+        expect(mock.insert).not.toHaveBeenCalled();
+    });
+
+    it("allows an existing non-.edu.vn Admin through Google callback", async () => {
+        mock.user.email = "legacy-admin@example.com";
+        read(profile("admin"));
+        const res = await callback(request("/auth/callback?code=one-time-code"));
+        expect(res.headers.get("location")).toBe(`${origin}/ui/dashboard`);
+        expect(mock.signOut).not.toHaveBeenCalled();
+        expect(mock.insert).not.toHaveBeenCalled();
+    });
+
+    it("rejects onboarding a new non-.edu.vn Google account", async () => {
+        mock.user.email = "new-user@example.com";
+        read(null);
+        const res = await callback(request("/auth/callback?code=one-time-code"));
+        expect(res.headers.get("location")).toBe(`${origin}/login?error=education_email_required`);
+        expect(mock.signOut).toHaveBeenCalledWith({ scope: "local" });
         expect(mock.insert).not.toHaveBeenCalled();
     });
 
@@ -230,6 +251,11 @@ describe("database-backed navigation guard", () => {
             .toBe(`${origin}/ui/dashboard?error=forbidden`);
     });
 
+    it("allows an active Admin to open the direct admin route", async () => {
+        read(profile("admin"));
+        expect((await proxy(request("/ui/server_config"))).headers.get("location")).toBeNull();
+    });
+
     it("sends pending profiles to onboarding", async () => {
         read(profile("pending"));
         expect((await proxy(request("/ui/dashboard"))).headers.get("location")).toBe(`${origin}/auth/select-role`);
@@ -269,32 +295,34 @@ describe("fresh browser visit", () => {
         } });
     }
 
-    it.each(["/ui/dashboard", "/ui/server_config", "/auth/select-role"])(
-        "requires login on opening or reloading %s even with an existing session", async path => {
-            const res = await proxy(documentRequest(path));
-            expect(res.headers.get("location")).toBe(`${origin}/login`);
-            expect(res.cookies.get(`${key}.0`)?.maxAge).toBe(0);
-            expect(res.cookies.get(`${key}.1`)?.maxAge).toBe(0);
-            expect(res.cookies.get("token")?.maxAge).toBe(0);
-            expect(res.cookies.get("unrelated")).toBeUndefined();
-            expect(res.headers.get("cache-control")).toBe("no-store");
-            expect(mock.getUser).not.toHaveBeenCalled();
-        }
-    );
+    it.each([
+        ["/ui/dashboard", "student"],
+        ["/ui/dashboard", "lecturer"],
+        ["/ui/server_config", "admin"],
+        ["/auth/select-role", "pending"],
+    ])("preserves an authenticated %s document session for %s on reload", async (path, role) => {
+        read(profile(role));
+        const res = await proxy(documentRequest(path));
+        expect(res.headers.get("location")).toBeNull();
+        expect(res.cookies.get(`${key}.0`)).toBeUndefined();
+        expect(res.cookies.get(`${key}.1`)).toBeUndefined();
+        expect(res.headers.get("cache-control")).toBe("no-store");
+        expect(mock.getUser).toHaveBeenCalled();
+    });
 
     it.each(["/", "/login", "/register", "/help"])(
-        "strips old cookies from browser and upstream rendering of %s", async path => {
+        "keeps %s public for an anonymous document request", async path => {
+            mock.getUser.mockResolvedValueOnce({ data: { user: null }, error: null });
             const req = documentRequest(path);
             const res = await proxy(req);
             expect(res.headers.get("location")).toBeNull();
-            expect(req.cookies.get(`${key}.0`)).toBeUndefined();
-            expect(res.headers.get("x-middleware-request-cookie")).not.toContain("old-session");
-            expect(res.headers.get("x-middleware-request-cookie")).toContain("unrelated=keep");
-            expect(mock.getUser).not.toHaveBeenCalled();
+            expect(req.cookies.get(`${key}.0`)?.value).toBe("old-session");
+            expect(res.headers.get("cache-control")).toBe("no-store");
         }
     );
 
     it("also handles document requests without fetch metadata", async () => {
+        mock.getUser.mockResolvedValueOnce({ data: { user: null }, error: null });
         const req = new NextRequest(`${origin}/ui/dashboard`, { headers: { accept: "text/html" } });
         expect((await proxy(req)).headers.get("location")).toBe(`${origin}/login`);
     });
@@ -309,7 +337,7 @@ describe("fresh browser visit", () => {
     });
 
     it.each(["student", "lecturer", "admin", "pending"])(
-        "allows one immediate OAuth arrival for %s then requires login on reload", async role => {
+        "allows OAuth arrival for %s and preserves the verified session on reload", async role => {
             read(profile(role));
             const result = await callback(request("/auth/callback?code=fresh-code"));
             const handoff = result.cookies.get(AUTH_ENTRY_COOKIE)!;
@@ -322,16 +350,18 @@ describe("fresh browser visit", () => {
             const arrival = await proxy(req);
             expect(arrival.headers.get("location")).toBeNull();
             expect(arrival.cookies.get(AUTH_ENTRY_COOKIE)?.maxAge).toBe(0);
+            read(profile(role));
             const reload = await proxy(documentRequest(destination));
-            expect(reload.headers.get("location")).toBe(`${origin}/login`);
+            expect(reload.headers.get("location")).toBeNull();
         }
     );
 
     it.each(["broken-json", JSON.stringify({ path: "/ui/dashboard", expires: 1 }),
         JSON.stringify({ path: "/ui/server_config", expires: Date.now() + 30_000 })])(
-        "rejects a malformed expired or wrong-destination handoff", async value => {
+        "never treats a malformed handoff as authentication", async value => {
             const req = documentRequest("/ui/dashboard");
             req.cookies.set(AUTH_ENTRY_COOKIE, value);
+            mock.getUser.mockResolvedValueOnce({ data: { user: null }, error: null });
             expect((await proxy(req)).headers.get("location")).toBe(`${origin}/login`);
         }
     );
@@ -420,4 +450,44 @@ describe("email login profile resolution", () => {
         const res = await emailLogin(request("/api/auth/login", { email: "test@example.com", password: "fixture-password" }));
         expect((await res.json()).user.role).toBe("lecturer");
     });
+
+    it("allows an existing non-.edu.vn Admin to sign in", async () => {
+        read(profile("admin"));
+        const res = await emailLogin(request("/api/auth/login", {
+            email: " Legacy-Admin@Example.com ", password: "fixture-password",
+        }));
+        expect(res.status).toBe(200);
+        expect((await res.json()).redirectTo).toBe("/ui/dashboard");
+        expect(mock.signInWithPassword).toHaveBeenCalledWith({
+            email: "legacy-admin@example.com", password: "fixture-password",
+        });
+    });
+});
+
+describe("education email registration boundary", () => {
+    const validRegistration = {
+        name: "New User", password: "fixture-password", role: "student",
+    };
+
+    it.each(["new-user@example.com", "new-user@edu.vn.attacker.com", "invalid"])(
+        "rejects new non-education account %s before Supabase signup", async email => {
+            const res = await register(request("/api/auth/register", { ...validRegistration, email }));
+            expect(res.status).toBe(400);
+            expect((await res.json()).message).toContain(".edu.vn");
+            expect(mock.signUp).not.toHaveBeenCalled();
+        }
+    );
+
+    it.each(["student@university.edu.vn", "LECTURER@EDU.VN"])(
+        "allows a new education account %s", async email => {
+            const res = await register(request("/api/auth/register", { ...validRegistration, email }));
+            expect(res.status).toBe(201);
+            expect(mock.signUp).toHaveBeenCalledWith(expect.objectContaining({
+                email: email.toLowerCase(),
+                options: expect.objectContaining({
+                    data: expect.objectContaining({ role: "student" }),
+                }),
+            }));
+        }
+    );
 });
