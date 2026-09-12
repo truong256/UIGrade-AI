@@ -1,4 +1,4 @@
-import { readFileSync, readdirSync, statSync } from "node:fs";
+import { existsSync, readFileSync, readdirSync, statSync } from "node:fs";
 import { extname, join, relative, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
@@ -20,6 +20,8 @@ const LEGACY_MONGO = /mongodb|mongoose|MongoClient|ObjectId|MONGODB_URI|MONGO_UR
 
 function collectFiles(path: string): string[] {
   const absolute = resolve(ROOT, path);
+  if (!existsSync(absolute)) return [];
+
   const stat = statSync(absolute);
   if (stat.isFile()) return TEXT_EXTENSIONS.has(extname(absolute)) ? [absolute] : [];
 
