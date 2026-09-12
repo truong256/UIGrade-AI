@@ -1,6 +1,7 @@
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { emailService } from "@/services/email.service";
 import { systemConfigService } from "@/services/system-config.service";
+import type { Json } from "@/types/database.types";
 
 type StudentRecipient = { id: string; name: string; email: string };
 type AssignmentRow = {
@@ -60,7 +61,7 @@ async function markSent(params: {
     assignmentId: string;
     studentId: string;
     email: string;
-    meta?: Record<string, unknown>;
+    meta?: Json;
 }) {
     const supabase = await createSupabaseServerClient();
     const { error } = await supabase.from("email_notification_logs").insert({
