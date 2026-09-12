@@ -23,7 +23,6 @@ type PublicConfig = {
     };
     backup: { backupFrequency: string; cloudProvider: string };
     updatedAt?: string;
-    createdAt?: string;
 };
 
 function asObject(value: unknown): AnyObject {
@@ -93,7 +92,7 @@ function getDefaultConfig() {
     };
 }
 
-function normalizeInternalConfig(value: unknown, updatedAt?: string, createdAt?: string) {
+function normalizeInternalConfig(value: unknown, updatedAt?: string) {
     const doc = asObject(value);
     const defaults = getDefaultConfig();
     return {
@@ -125,7 +124,6 @@ function normalizeInternalConfig(value: unknown, updatedAt?: string, createdAt?:
             cloudProvider: toText(doc.backup?.cloudProvider, defaults.backup.cloudProvider),
         },
         updatedAt,
-        createdAt,
     };
 }
 
@@ -141,7 +139,7 @@ async function readConfigRow() {
     const supabase = await createSupabaseServerClient();
     const { data, error } = await supabase
         .from("system_configs")
-        .select("value, created_at, updated_at")
+        .select("value, updated_at")
         .eq("key", "default")
         .maybeSingle();
     if (error) throw new Error(`Không thể đọc cấu hình hệ thống: ${error.message}`);
@@ -151,7 +149,7 @@ async function readConfigRow() {
     const { data: created, error: createError } = await supabase
         .from("system_configs")
         .insert({ key: "default", value: defaults, description: "UIGrade AI Web system configuration" })
-        .select("value, created_at, updated_at")
+        .select("value, updated_at")
         .single();
     if (createError) throw new Error(`Không thể khởi tạo cấu hình hệ thống: ${createError.message}`);
     return created;
@@ -160,7 +158,7 @@ async function readConfigRow() {
 export const systemConfigService = {
     async getInternalConfig() {
         const row = await readConfigRow();
-        return normalizeInternalConfig(row.value, row.updated_at, row.created_at);
+        return normalizeInternalConfig(row.value, row.updated_at);
     },
 
     async getPublicConfig() {
@@ -231,9 +229,9 @@ export const systemConfigService = {
                 },
                 { onConflict: "key" }
             )
-            .select("value, created_at, updated_at")
+            .select("value, updated_at")
             .single();
         if (error) throw new Error(`Không thể lưu cấu hình hệ thống: ${error.message}`);
-        return toPublicConfig(normalizeInternalConfig(data.value, data.updated_at, data.created_at));
+        return toPublicConfig(normalizeInternalConfig(data.value, data.updated_at));
     },
 };
