@@ -29,6 +29,7 @@ export function TeacherFeedbackPanel({
                                      }: Props) {
     const [confirmingPublish, setConfirmingPublish] = useState(false);
     const busy = saving || publishing || detailLoading;
+    const isPublished = detail?.grade?.status === "published";
 
     return (
         <section className="rounded-3xl border border-blue-100 bg-white p-5 shadow-sm">
@@ -68,11 +69,12 @@ export function TeacherFeedbackPanel({
                 <button
                     type="button"
                     onClick={onSaveDraft}
-                    disabled={!canGrade || !selectedSubmissionId || busy}
+                    disabled={!canGrade || !selectedSubmissionId || busy || isPublished}
+                    title={isPublished ? "Điểm đã công bố; hãy dùng Công bố điểm để xác nhận bản cập nhật" : undefined}
                     className="inline-flex items-center gap-2 rounded-xl border border-blue-200 bg-white px-5 py-2.5 text-xs font-bold text-blue-700 hover:bg-blue-50 transition active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     <span className="material-symbols-outlined text-[16px]">save</span>
-                    {saving ? "Đang lưu..." : "Lưu nháp"}
+                    {saving ? "Đang lưu..." : isPublished ? "Không thể lưu nháp" : "Lưu nháp"}
                 </button>
                 <button
                     type="button"

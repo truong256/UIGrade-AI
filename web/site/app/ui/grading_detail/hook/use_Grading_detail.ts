@@ -309,7 +309,8 @@ export function useGradingDetail() {
             });
             await refreshSelected(json.message || "AI đã tạo gợi ý để giảng viên tham khảo");
         } catch (gradeError) {
-            setError(gradeError instanceof Error ? gradeError.message : "Không thể tạo gợi ý AI");
+            const detail = gradeError instanceof Error ? gradeError.message : "Dịch vụ AI không phản hồi.";
+            setError(`Không thể tạo gợi ý AI. Bạn vẫn có thể chấm bài thủ công. ${detail}`);
         } finally {
             setGrading(false);
         }

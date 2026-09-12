@@ -7,6 +7,7 @@ type Props = {
 };
 
 export function SubmissionPreview({ detail, selectedFile }: Props) {
+    const files = Array.isArray(detail?.files) ? detail.files : [];
     return (
         <div className="overflow-hidden rounded-3xl border border-slate-200">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 bg-white px-4 py-4">
@@ -48,6 +49,25 @@ export function SubmissionPreview({ detail, selectedFile }: Props) {
                 ) : (
                     <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-4 py-10 text-center text-sm text-slate-500">
                         Bài nộp này không có file nguồn.
+                    </div>
+                )}
+
+                {files.length > 1 && (
+                    <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
+                        <p className="text-xs font-semibold text-slate-700">Tất cả tệp đính kèm</p>
+                        <div className="mt-2 flex flex-col gap-2">
+                            {files.map((file: AnyObj, index: number) => (
+                                <a
+                                    key={`${toText(file.url)}-${index}`}
+                                    href={toText(file.url)}
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="rounded-xl border border-blue-100 px-3 py-2 text-xs font-medium text-blue-700 hover:bg-blue-50"
+                                >
+                                    {toText(file.originalName, `Tệp ${index + 1}`)}
+                                </a>
+                            ))}
+                        </div>
                     </div>
                 )}
             </div>

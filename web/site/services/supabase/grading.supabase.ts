@@ -8,6 +8,10 @@ import {
 } from "@/lib/grading-workflow";
 import { generateAiFeedback } from "@/services/gemini.service";
 import { buildGradingContext } from "@/services/grading-context.service";
+import {
+    assertSubmissionObjectOwnership,
+    resolvePrivateSubmissionObjectPath,
+} from "@/lib/grading-storage";
 
 type AnyRecord = Record<string, any>;
 type GradingActor = {
@@ -153,11 +157,15 @@ function normalizeSubmission(row: AnyRecord) {
         _id: String(row.id || ""),
         assignmentId: String(row.assignment_id || assignment?.id || ""),
         studentId: String(row.student_id || student?.id || ""),
+        attemptNo: Number(row.attempt_no || 1),
+        latest: row.is_current !== false,
         status: String(row.status || "pending"),
         gradeStatus: grade?.status || "pending",
         isLate: Boolean(row.is_late),
         submittedAt: row.submitted_at || null,
+        updatedAt: row.updated_at || null,
         content: String(row.content || ""),
+        repositoryUrl: String(row.repository_url || ""),
         sourceArchive: files[0] || null,
         files,
         screenshotUrls: Array.isArray(row.screenshot_urls) ? row.screenshot_urls : [],
@@ -183,7 +191,8 @@ const ASSIGNMENT_SELECT = `
 
 const SUBMISSION_SELECT = `
     id, assignment_id, student_id, content, file_url, apk_file_url, apk_filename,
-    source_zip_url, files, repository_url, screenshot_urls, submitted_at, status, is_late, created_at, updated_at,
+    source_zip_url, files, repository_url, screenshot_urls, submitted_at, status, is_late,
+    attempt_no, is_current, created_at, updated_at,
     assignment:assignments!submissions_assignment_id_fkey(
         id, lecturer_id, class_id, title, description, instructions, due_at, max_score, rubric,
         class:classes!assignments_class_id_fkey(id, name, class_code)
@@ -308,22 +317,18 @@ export const SupabaseGradingService = {
                     : row.file_url || "");
         if (!raw) throw new GradingAccessError("Không tìm thấy tệp bài nộp.", 404);
 
-        let objectPath = raw.replace(/^\/+/, "");
-        if (/^https?:\/\//i.test(raw)) {
-            const parsed = new URL(raw);
-            const marker = "/storage/v1/object/";
-            const markerIndex = parsed.pathname.indexOf(marker);
-            if (markerIndex < 0) {
-                if (parsed.protocol !== "https:") {
-                    throw new GradingAccessError("Liên kết tệp không an toàn.", 403);
-                }
-                return raw;
-            }
-            const afterObject = parsed.pathname.slice(markerIndex + marker.length)
-                .replace(/^(sign|public|authenticated)\//, "");
-            objectPath = decodeURIComponent(afterObject).replace(/^submissions\//, "");
-        } else {
-            objectPath = objectPath.replace(/^submissions\//, "");
+        let objectPath: string;
+        try {
+            objectPath = resolvePrivateSubmissionObjectPath(
+                raw,
+                process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co"
+            );
+            assertSubmissionObjectOwnership(objectPath, row.student_id, row.assignment_id);
+        } catch (pathError) {
+            throw new GradingAccessError(
+                pathError instanceof Error ? pathError.message : "Đường dẫn tệp bài nộp không hợp lệ.",
+                403
+            );
         }
 
         const { data, error } = await client.storage.from("submissions")
@@ -419,6 +424,14 @@ export const SupabaseGradingService = {
             throw new Error("Bài tập chưa có rubric để AI phân tích theo tiêu chí.");
         }
 
+        const existingGrade = normalizeGrade(row.grade);
+        if (existingGrade?.status === "published") {
+            throw new GradingAccessError(
+                "Điểm đã được công bố. Gợi ý AI đã khóa để không thay đổi kết quả sinh viên đang xem.",
+                409
+            );
+        }
+
         const context = await buildGradingContext({
             assignmentId: {
                 title: assignment.title,
@@ -443,7 +456,6 @@ export const SupabaseGradingService = {
             language: "vi",
         });
 
-        const existingGrade = normalizeGrade(row.grade);
         let query;
         if (existingGrade?.id) {
             query = client.from("grades").update({ ai_feedback: aiFeedback })

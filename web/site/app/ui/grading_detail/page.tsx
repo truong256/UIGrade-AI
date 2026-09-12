@@ -18,6 +18,7 @@ function GradingDetailContent() {
                 selectedSubmissionId={grading.selectedSubmissionId}
                 grading={grading.grading}
                 canGrade={grading.canGrade}
+                aiLocked={grading.detail?.grade?.status === "published"}
                 detailLoading={grading.detailLoading}
                 error={grading.error}
                 notice={grading.notice}
