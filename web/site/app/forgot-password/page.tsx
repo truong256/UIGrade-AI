@@ -6,6 +6,7 @@ import { LoginTopBar } from "@/components/auth/LoginTopBar";
 import { LoginFooter } from "@/components/auth/LoginFooter";
 import { topBarData, footerLinks } from "@/lib/login-data";
 import { getSupabaseBrowserClient } from "@/lib/supabase/client";
+import { mapSupabaseErrorToVietnamese } from "@/lib/supabase/errors";
 
 export default function ForgotPasswordPage() {
     const [email, setEmail] = useState("");
@@ -46,7 +47,7 @@ export default function ForgotPasswordPage() {
             });
 
             if (resetError) {
-                setError(resetError.message || "Không thể gửi email đặt lại mật khẩu. Vui lòng thử lại.");
+                setError(mapSupabaseErrorToVietnamese(resetError));
                 return;
             }
 

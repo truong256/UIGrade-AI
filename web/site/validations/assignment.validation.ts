@@ -1,4 +1,8 @@
-import { z } from "zod";
+import { z, ZodError } from "zod";
+import {
+    MAX_SUBMISSION_ATTEMPTS,
+    MAX_SUBMISSION_FILE_SIZE_MB,
+} from "@/lib/submission-limits";
 
 const isoDate = z
     .string()
@@ -11,20 +15,20 @@ const isoDate = z
 const gradingSourceSchema = z.enum(["runner", "ai", "hybrid", "manual"]);
 
 const rubricCriterionSchema = z.object({
-    code: z.string().trim().min(1, "Mỗi tiêu chí phải có mã code"),
-    title: z.string().trim().min(1, "Mỗi tiêu chí phải có tiêu đề"),
-    description: z.string().trim().default(""),
+    code: z.string().trim().min(1, "Mỗi tiêu chí phải có mã code").max(100),
+    title: z.string().trim().min(1, "Mỗi tiêu chí phải có tiêu đề").max(300),
+    description: z.string().trim().max(10_000).default(""),
     maxPoints: z.number().min(0.5, "Điểm tối đa mỗi tiêu chí phải lớn hơn 0"),
     gradingSource: gradingSourceSchema.default("manual"),
-    requiredEvidence: z.array(z.string().trim()).default([]),
+    requiredEvidence: z.array(z.string().trim().max(500)).max(50).default([]),
     passThreshold: z.number().min(0).optional().nullable(),
-    notes: z.string().trim().default(""),
+    notes: z.string().trim().max(5_000).default(""),
 });
 
 const submissionPolicySchema = z.object({
-    acceptedFileTypes: z.array(z.string().trim()).default(["zip"]),
-    maxFileSizeMb: z.number().int().min(1).default(256),
-    maxAttempts: z.number().int().min(1).default(1),
+    acceptedFileTypes: z.array(z.string().trim().min(1).max(100)).max(20).default(["zip"]),
+    maxFileSizeMb: z.number().int().min(1).max(MAX_SUBMISSION_FILE_SIZE_MB).default(MAX_SUBMISSION_FILE_SIZE_MB),
+    maxAttempts: z.number().int().min(1).max(MAX_SUBMISSION_ATTEMPTS).default(1),
     requireZip: z.boolean().default(true),
     allowGithubUrl: z.boolean().default(false),
     allowScreenshots: z.boolean().default(true),
@@ -65,7 +69,7 @@ const aiConfigSchema = z.object({
 
 const DEFAULT_SUBMISSION_POLICY = {
     acceptedFileTypes: ["zip"],
-    maxFileSizeMb: 256,
+    maxFileSizeMb: MAX_SUBMISSION_FILE_SIZE_MB,
     maxAttempts: 1,
     requireZip: true,
     allowGithubUrl: false,
@@ -93,12 +97,12 @@ const DEFAULT_AI_CONFIG = {
 } satisfies z.input<typeof aiConfigSchema>;
 
 const assignmentBaseSchema = z.object({
-    title: z.string().trim().min(3, "Tên bài tập phải có ít nhất 3 ký tự"),
-    classroomId: z.string().trim().min(1, "Vui lòng chọn lớp học"),
-    language: z.string().trim().default("kotlin"),
-    description: z.string().trim().min(3, "Mô tả bài tập quá ngắn"),
-    rubricText: z.string().trim().optional().default(""),
-    rubric: z.array(rubricCriterionSchema).min(1, "Rubric phải có ít nhất 1 tiêu chí"),
+    title: z.string().trim().min(3, "Tên bài tập phải có ít nhất 3 ký tự").max(300),
+    classroomId: z.string().trim().uuid("Mã lớp học không hợp lệ"),
+    language: z.string().trim().max(50).default("kotlin"),
+    description: z.string().trim().min(3, "Mô tả bài tập quá ngắn").max(50_000),
+    rubricText: z.string().trim().max(100_000).optional().default(""),
+    rubric: z.array(rubricCriterionSchema).min(1, "Rubric phải có ít nhất 1 tiêu chí").max(100),
     submissionPolicy: submissionPolicySchema.default(DEFAULT_SUBMISSION_POLICY),
     runnerConfig: runnerConfigSchema.default(DEFAULT_RUNNER_CONFIG),
     aiConfig: aiConfigSchema.default(DEFAULT_AI_CONFIG),
@@ -213,7 +217,12 @@ function parseJsonField<T>(
     try {
         return JSON.parse(String(value)) as T;
     } catch {
-        throw new Error(`${fieldName} không đúng định dạng JSON`);
+        throw new ZodError([{
+            code: "custom",
+            message: `${fieldName} không đúng định dạng JSON`,
+            path: [fieldName],
+            input: value,
+        }]);
     }
 }
 

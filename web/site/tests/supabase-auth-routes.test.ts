@@ -113,6 +113,13 @@ describe("real callback handler with mocked Supabase boundary", () => {
         expect(mock.exchange).not.toHaveBeenCalled();
     });
 
+    it("reports an expired recovery link without describing it as Google login", async () => {
+        const res = await callback(request("/auth/callback?type=recovery&error=access_denied"));
+        expect(res.headers.get("location")).toContain("error=recovery_failed");
+        expect(res.headers.get("location")).toContain(encodeURIComponent("Liên kết khôi phục không hợp lệ hoặc đã hết hạn"));
+        expect(res.headers.get("location")).not.toContain("Google");
+    });
+
     it("keeps an existing pending profile without inserting again", async () => {
         read(profile("pending"));
         expect((await callback(request("/auth/callback?code=code"))).headers.get("location"))
@@ -148,6 +155,13 @@ describe("real callback handler with mocked Supabase boundary", () => {
         read(profile("student", "banned"));
         const res = await callback(request("/auth/callback?code=code"));
         expect(res.headers.get("location")).toBe(`${origin}/login?error=account_inactive`);
+    });
+
+    it("routes a password-recovery exchange to the password form, not a dashboard", async () => {
+        read(profile("student"));
+        const res = await callback(request("/auth/callback?code=recovery-code&type=recovery"));
+        expect(res.headers.get("location")).toBe(`${origin}/reset-password`);
+        expect(res.cookies.get(AUTH_ENTRY_COOKIE)?.httpOnly).toBe(true);
     });
 });
 

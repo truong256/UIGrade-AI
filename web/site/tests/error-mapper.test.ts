@@ -34,6 +34,12 @@ describe("Supabase Error Mapper Tests", () => {
 
   it("should handle generic unknown error gracefully", () => {
     const error = "An unexpected error occurred";
-    expect(mapSupabaseErrorToVietnamese(error)).toBe("An unexpected error occurred");
+    expect(mapSupabaseErrorToVietnamese(error)).toBe("Đã xảy ra lỗi khi xử lý yêu cầu. Vui lòng thử lại sau.");
+  });
+
+  it("does not expose unknown provider or database details", () => {
+    const error = { message: "private table_name violated internal constraint secret_value" };
+    expect(mapSupabaseErrorToVietnamese(error)).not.toContain("private");
+    expect(mapSupabaseErrorToVietnamese(error)).not.toContain("table_name");
   });
 });

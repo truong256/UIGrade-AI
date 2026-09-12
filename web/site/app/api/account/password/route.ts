@@ -3,6 +3,7 @@ import { requireActiveRequestActor } from "@/lib/current-user";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { webMvpErrorResponse } from "@/lib/web-mvp-route";
 import { WebMvpError } from "@/services/supabase/web-mvp.supabase";
+import { mapSupabaseErrorToVietnamese } from "@/lib/supabase/errors";
 
 export async function PATCH(request: Request) {
     try {
@@ -19,7 +20,7 @@ export async function PATCH(request: Request) {
         const { error: verifyError } = await supabase.auth.signInWithPassword({ email: actor.email, password: currentPassword });
         if (verifyError) throw new WebMvpError("Mật khẩu hiện tại không đúng hoặc tài khoản dùng Google", 400);
         const { error } = await supabase.auth.updateUser({ password: newPassword });
-        if (error) throw new WebMvpError(error.message, 400);
+        if (error) throw new WebMvpError(mapSupabaseErrorToVietnamese(error), 400);
         return NextResponse.json({ message: "Đổi mật khẩu thành công" });
     } catch (error) {
         return webMvpErrorResponse(error);

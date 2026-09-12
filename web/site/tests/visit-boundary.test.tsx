@@ -6,7 +6,7 @@ let dispose: (() => void) | undefined;
 afterEach(() => { dispose?.(); window.history.replaceState(null, "", "/"); });
 
 describe("document lifecycle", () => {
-    it.each(["/ui/dashboard", "/auth/select-role"])("revokes when leaving %s", path => {
+    it.each(["/ui/dashboard", "/auth/select-role", "/reset-password"])("revokes when leaving %s", path => {
         window.history.replaceState(null, "", path);
         const revoke = vi.fn();
         dispose = installVisitBoundary(window, revoke, vi.fn());

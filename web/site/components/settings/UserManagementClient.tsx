@@ -184,8 +184,6 @@ export function UserManagementClient() {
                     limit: "5",
                 });
 
-                console.log("fetch page =", page, params.toString());
-
                 const response = await fetch(`/api/settings/users?${params.toString()}`, {
                     cache: "no-store",
                 });
@@ -311,8 +309,6 @@ export function UserManagementClient() {
     // hàm chuyển trang
     const totalPages = Number(responseData.pagination.totalPages || 1);
     const handlePageChange = (nextPage: number) => {
-        console.log("clicked nextPage =", nextPage, "current =", page, "totalPages =", totalPages, "loading =", loading);
-
         if(loading) return;
         const safePage = Math.max(1,Math.min(nextPage, totalPages));
 

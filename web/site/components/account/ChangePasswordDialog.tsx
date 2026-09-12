@@ -37,8 +37,8 @@ function ChangePasswordDialogForm({
             return;
         }
 
-        if (form.newPassword.length < 6) {
-            setError("Mật khẩu mới phải có ít nhất 6 ký tự");
+        if (form.newPassword.length < 8) {
+            setError("Mật khẩu mới phải có ít nhất 8 ký tự");
             return;
         }
 
@@ -85,6 +85,7 @@ function ChangePasswordDialogForm({
                         <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Mật khẩu hiện tại</label>
                         <input
                             type="password"
+                            autoComplete="current-password"
                             value={form.currentPassword}
                             onChange={(e) => setForm((prev) => ({ ...prev, currentPassword: e.target.value }))}
                             className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -96,10 +97,12 @@ function ChangePasswordDialogForm({
                         <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Mật khẩu mới</label>
                         <input
                             type="password"
+                            autoComplete="new-password"
+                            minLength={8}
                             value={form.newPassword}
                             onChange={(e) => setForm((prev) => ({ ...prev, newPassword: e.target.value }))}
                             className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                            placeholder="Tối thiểu 6 ký tự"
+                            placeholder="Tối thiểu 8 ký tự"
                         />
                     </div>
 
@@ -107,6 +110,8 @@ function ChangePasswordDialogForm({
                         <label className="text-xs font-bold uppercase tracking-wider text-slate-700">Xác nhận mật khẩu mới</label>
                         <input
                             type="password"
+                            autoComplete="new-password"
+                            minLength={8}
                             value={form.confirmPassword}
                             onChange={(e) => setForm((prev) => ({ ...prev, confirmPassword: e.target.value }))}
                             className="h-10 w-full rounded-xl border border-slate-200 px-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"

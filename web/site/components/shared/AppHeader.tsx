@@ -50,7 +50,11 @@ export function AppHeader({ children }: { children: ReactNode }) {
                     setNotifications(list);
                     setUnreadCount(list.filter((n: NotificationItem) => !n.is_read).length);
                 }
-            } catch {}
+            } catch {
+                // Notifications are optional; keep the header usable during an outage.
+                setNotifications([]);
+                setUnreadCount(0);
+            }
         };
 
         void loadMe();

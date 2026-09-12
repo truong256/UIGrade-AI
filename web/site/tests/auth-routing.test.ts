@@ -31,16 +31,19 @@ describe("Supabase authentication role routing", () => {
         expect(isRouteAllowedForRole("/ui/submit_assignment", "student")).toBe(true);
         expect(isRouteAllowedForRole("/ui/grading_detail", "student")).toBe(false);
         expect(isRouteAllowedForRole("/ui/server_config/users", "student")).toBe(false);
+        expect(isRouteAllowedForRole("/ui/create_assignment", "student")).toBe(false);
     });
 
     it("prevents lecturer access to student and admin routes", () => {
         expect(isRouteAllowedForRole("/ui/grading_detail", "lecturer")).toBe(true);
         expect(isRouteAllowedForRole("/ui/my_results", "lecturer")).toBe(false);
         expect(isRouteAllowedForRole("/ui/server_config", "lecturer")).toBe(false);
+        expect(isRouteAllowedForRole("/ui/create_assignment", "lecturer")).toBe(true);
     });
 
     it("defers advanced admin management routes while retaining grading oversight", () => {
         expect(isRouteAllowedForRole("/ui/server_config", "admin")).toBe(false);
         expect(isRouteAllowedForRole("/ui/grading_detail", "admin")).toBe(true);
+        expect(isRouteAllowedForRole("/ui/create_assignment", "admin")).toBe(false);
     });
 });

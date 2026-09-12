@@ -50,5 +50,22 @@ export function mapSupabaseErrorToVietnamese(error: unknown): string {
     return "Bạn đã gửi quá nhiều yêu cầu. Vui lòng chờ giây lát rồi thử lại.";
   }
 
-  return message || "Đã xảy ra lỗi khi xử lý yêu cầu. Vui lòng thử lại sau.";
+  const knownDatabaseMessages: Array<[RegExp, string]> = [
+    [/only an active student/i, "Chỉ sinh viên đang hoạt động mới được thực hiện thao tác này."],
+    [/assignment is unavailable/i, "Bài tập không tồn tại hoặc hiện không thể nộp."],
+    [/late submissions are not allowed/i, "Bài tập đã hết hạn và không cho phép nộp trễ."],
+    [/resubmission is not allowed/i, "Bài tập này không cho phép nộp lại."],
+    [/published grade locks|grading has started/i, "Bài nộp đã được chấm và không thể thay đổi."],
+    [/maximum submission attempts reached/i, "Bạn đã dùng hết số lần nộp cho bài tập này."],
+    [/source zip.*required/i, "Bài tập yêu cầu một tệp ZIP mã nguồn."],
+    [/file does not exist or violates assignment policy/i, "Tệp nộp không tồn tại hoặc không đúng chính sách của bài tập."],
+    [/repository url is not allowed/i, "Bài tập này không cho phép đường dẫn repository hoặc đường dẫn không an toàn."],
+    [/file or repository url is required/i, "Vui lòng tải tệp hoặc cung cấp repository trước khi nộp."],
+    [/class not found or inactive/i, "Không tìm thấy lớp học đang hoạt động với mã này."],
+    [/already (joined|requested)|membership.*active/i, "Bạn đã tham gia hoặc đã gửi yêu cầu vào lớp học này."],
+  ];
+  const known = knownDatabaseMessages.find(([pattern]) => pattern.test(message));
+  if (known) return known[1];
+
+  return "Đã xảy ra lỗi khi xử lý yêu cầu. Vui lòng thử lại sau.";
 }

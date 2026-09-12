@@ -260,23 +260,12 @@ export async function runRunnerForSubmission(
     }
 
     if (!hasArchive && hasGitUrl) {
-        console.log("[RUNTIME] repositoryUrl =", submission.repositoryUrl);
-        console.log("[RUNTIME] start runAndroidProjectRuntime from GitHub");
-
         const runtimeReport = await runAndroidProjectRuntime({
             sourceArchive: submission.sourceArchive ?? null,
             repositoryUrl: submission.repositoryUrl ?? null,
             assignmentAttachments: submission.assignmentSnapshot?.attachments ?? [],
             assignmentRunnerConfig: submission.assignmentSnapshot?.runnerConfig ?? null,
             adbSerial: process.env.ANDROID_ADB_SERIAL || undefined,
-        });
-
-        console.log("[RUNTIME] result =", {
-            runtimeStatus: runtimeReport.runtimeStatus,
-            buildPassed: runtimeReport.buildPassed,
-            testPassed: runtimeReport.testPassed,
-            screenshots: runtimeReport.screenshots?.length ?? 0,
-            logs: runtimeReport.logs?.length ?? 0,
         });
 
         return {
@@ -560,12 +549,7 @@ export async function runRunnerForSubmission(
 
         let runtimeReport: RunnerReportInput | null = null;
 
-        console.log("[RUNTIME] sourceArchive =", submission.sourceArchive);
-        console.log("[RUNTIME] repositoryUrl =", submission.repositoryUrl);
-
         if (submission.sourceArchive?.url || submission.repositoryUrl) {
-            console.log("[RUNTIME] start runAndroidProjectRuntime");
-
             runtimeReport = await runAndroidProjectRuntime({
                 sourceArchive: submission.sourceArchive ?? null,
                 repositoryUrl: submission.repositoryUrl ?? null,
@@ -574,15 +558,6 @@ export async function runRunnerForSubmission(
                 adbSerial: process.env.ANDROID_ADB_SERIAL || undefined,
             });
 
-            console.log("[RUNTIME] result =", {
-                runtimeStatus: runtimeReport.runtimeStatus,
-                buildPassed: runtimeReport.buildPassed,
-                testPassed: runtimeReport.testPassed,
-                screenshots: runtimeReport.screenshots?.length ?? 0,
-                logs: runtimeReport.logs?.length ?? 0,
-            });
-        } else {
-            console.log("[RUNTIME] skipped because sourceArchive.url and repositoryUrl are missing");
         }
 
         const runtimeChecks = runtimeReport?.checks ?? [];

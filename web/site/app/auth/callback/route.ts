@@ -7,18 +7,24 @@ export async function GET(request: Request) {
     const { searchParams, origin } = new URL(request.url);
     const code = searchParams.get("code");
     const errorParam = searchParams.get("error");
+    const isPasswordRecovery = searchParams.get("type") === "recovery";
 
     // Handle OAuth provider error (e.g., user cancelled)
     if (errorParam) {
-        const errorDesc = errorParam === "access_denied" ? "Đăng nhập Google đã bị hủy" : "Không thể đăng nhập Google";
+        const errorDesc = isPasswordRecovery
+            ? "Liên kết khôi phục không hợp lệ hoặc đã hết hạn"
+            : errorParam === "access_denied" ? "Đăng nhập Google đã bị hủy" : "Không thể đăng nhập Google";
         return NextResponse.redirect(
-            `${origin}/login?error=oauth_failed&message=${encodeURIComponent(errorDesc)}`
+            `${origin}/login?error=${isPasswordRecovery ? "recovery_failed" : "oauth_failed"}&message=${encodeURIComponent(errorDesc)}`
         );
     }
 
     if (!code) {
+        const errorDesc = isPasswordRecovery
+            ? "Liên kết khôi phục không hợp lệ hoặc đã hết hạn"
+            : "Không nhận được mã xác thực từ Google";
         return NextResponse.redirect(
-            `${origin}/login?error=oauth_failed&message=${encodeURIComponent("Không nhận được mã xác thực từ Google")}`
+            `${origin}/login?error=${isPasswordRecovery ? "recovery_failed" : "oauth_failed"}&message=${encodeURIComponent(errorDesc)}`
         );
     }
 
@@ -49,6 +55,15 @@ export async function GET(request: Request) {
 
         if (profile && profile.status !== "active") {
             return NextResponse.redirect(`${origin}/login?error=account_inactive`);
+        }
+
+        // Password recovery requires the exchanged session only long enough to
+        // set a new password. Do not route this flow into onboarding/dashboard.
+        if (isPasswordRecovery) {
+            return allowOAuthArrival(
+                NextResponse.redirect(`${origin}/reset-password`),
+                "/reset-password"
+            );
         }
 
         // Profile exists with a real (non-pending) role → go directly to dashboard

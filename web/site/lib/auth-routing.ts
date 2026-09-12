@@ -4,6 +4,7 @@ export type AuthenticatedRole = (typeof AUTHENTICATED_ROLES)[number];
 
 const ADMIN_ONLY_PATHS = ["/ui/server_config"];
 const LECTURER_ONLY_PATHS = ["/ui/assignment_library", "/ui/grading_detail"];
+const LECTURER_MUTATION_PATHS = ["/ui/create_assignment"];
 const STUDENT_ONLY_PATHS = ["/ui/submit_assignment", "/ui/my_results"];
 
 function matchesPath(pathname: string, paths: readonly string[]): boolean {
@@ -32,6 +33,7 @@ export function isRouteAllowedForRole(
     role: AuthenticatedRole
 ): boolean {
     if (matchesPath(pathname, ADMIN_ONLY_PATHS)) return false;
+    if (matchesPath(pathname, LECTURER_MUTATION_PATHS)) return role === "lecturer";
     if (matchesPath(pathname, LECTURER_ONLY_PATHS)) {
         return role === "lecturer" || role === "admin";
     }

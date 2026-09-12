@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requireActiveRequestActor } from "@/lib/current-user";
 import { AuthorizationError, ROLES } from "@/lib/authorization";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { mapSupabaseErrorToVietnamese } from "@/lib/supabase/errors";
 
 export async function POST(request: NextRequest) {
     try {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
             const forbidden = /active student|not active|not allowed/i.test(error.message);
             const notFound = /not found|inactive/i.test(error.message);
             return NextResponse.json(
-                { success: false, message: error.message },
+                { success: false, message: mapSupabaseErrorToVietnamese(error) },
                 { status: forbidden ? 403 : notFound ? 404 : 400 }
             );
         }

@@ -41,7 +41,7 @@ export const AssignmentListHeader: FC<AssignmentListHeaderProps> = ({
                     </button>
                 ) : (
                     <Link
-                        href="/ui/server_config/create_assignment"
+                        href="/ui/create_assignment"
                         className="inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-xs sm:text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 active:scale-98 shrink-0"
                     >
                         <span className="material-symbols-outlined text-[18px]">add</span>

@@ -2,6 +2,11 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import type { CurrentUserPayload } from "@/lib/current-user";
 import type { Json } from "@/types/database.types";
+import { mapSupabaseErrorToVietnamese } from "@/lib/supabase/errors";
+import {
+    MAX_SUBMISSION_FILES,
+    MAX_SUBMISSION_FILE_SIZE_MB,
+} from "@/lib/submission-limits";
 
 type AnyRecord = Record<string, any>;
 
@@ -21,8 +26,9 @@ function rows(value: unknown): AnyRecord[] {
 }
 
 function fail(error: unknown, fallback: string): never {
-    const message = record(error).message;
-    throw new WebMvpError(typeof message === "string" && message ? message : fallback, 400);
+    const message = mapSupabaseErrorToVietnamese(error);
+    const generic = "Đã xảy ra lỗi khi xử lý yêu cầu. Vui lòng thử lại sau.";
+    throw new WebMvpError(message === generic ? fallback : message, message === generic ? 500 : 400);
 }
 
 async function client(): Promise<SupabaseClient<any>> {
@@ -45,6 +51,55 @@ function normalizeAttachment(value: unknown) {
         originalName: String(item.originalName || item.original_name || "Tệp đính kèm"),
         kind: String(item.kind || "resource"),
     };
+}
+
+function normalizedExtension(fileName: string): string {
+    const lastDot = fileName.lastIndexOf(".");
+    return lastDot >= 0 ? fileName.slice(lastDot + 1).trim().toLowerCase() : "";
+}
+
+function validateSubmissionAssets(
+    payload: AnyRecord,
+    files: File[],
+    assignment: AnyRecord
+): void {
+    const policy = record(assignment.submission_policy);
+    const configuredMaxMb = Number(policy.maxFileSizeMb);
+    const maxFileSizeMb = Number.isFinite(configuredMaxMb)
+        ? Math.min(MAX_SUBMISSION_FILE_SIZE_MB, Math.max(1, configuredMaxMb))
+        : MAX_SUBMISSION_FILE_SIZE_MB;
+    const maxBytes = maxFileSizeMb * 1024 * 1024;
+    const accepted = Array.isArray(policy.acceptedFileTypes)
+        ? policy.acceptedFileTypes.map((value: unknown) => String(value).trim().toLowerCase()).filter(Boolean)
+        : ["zip", "apk"];
+    const repositoryUrl = String(payload.repositoryUrl || "").trim();
+    const allowRepository = policy.allowGithubUrl === true;
+    const requireZip = policy.requireZip === true;
+
+    if (files.length > MAX_SUBMISSION_FILES) {
+        throw new WebMvpError(`Mỗi bài nộp chỉ được chứa tối đa ${MAX_SUBMISSION_FILES} tệp`, 413);
+    }
+    for (const file of files) {
+        if (file.size > maxBytes) {
+            throw new WebMvpError(`Tệp ${file.name} vượt quá giới hạn ${maxFileSizeMb} MB`, 413);
+        }
+        const extension = normalizedExtension(file.name);
+        const allowed = accepted.some((item: string) =>
+            item === extension || item === `.${extension}` || item === file.type.toLowerCase()
+        );
+        if (accepted.length && !allowed) {
+            throw new WebMvpError(`Định dạng tệp ${file.name} không được bài tập này chấp nhận`, 415);
+        }
+    }
+    if (repositoryUrl && !allowRepository) {
+        throw new WebMvpError("Bài tập này không cho phép nộp bằng đường dẫn repository", 400);
+    }
+    if (payload.action === "submit" && requireZip && !files.some((file) => normalizedExtension(file.name) === "zip")) {
+        throw new WebMvpError("Bài tập yêu cầu một tệp ZIP mã nguồn", 400);
+    }
+    if (payload.action === "submit" && !files.length && !repositoryUrl) {
+        throw new WebMvpError("Vui lòng tải tệp hoặc cung cấp repository trước khi nộp chính thức", 400);
+    }
 }
 
 function classDto(row: AnyRecord, lecturer: AnyRecord | null, memberCount: number, assignmentCount: number) {
@@ -84,6 +139,7 @@ async function enrichClasses(db: SupabaseClient<any>, classRows: AnyRecord[]) {
     ]);
     if (membersResult.error) fail(membersResult.error, "Không thể tải thành viên lớp");
     if (assignmentsResult.error) fail(assignmentsResult.error, "Không thể tải bài tập lớp");
+    if (profilesResult.error) fail(profilesResult.error, "Không thể tải hồ sơ giảng viên");
 
     const profiles = new Map(rows(profilesResult.data).map((item) => [item.id, item]));
     return classRows.map((item) => classDto(
@@ -172,8 +228,9 @@ export const SupabaseWebClassService = {
     async members(actor: CurrentUserPayload, classId: string, status: "active" | "pending") {
         requireRole(actor, "lecturer");
         const db = await client();
-        const { data: classroom } = await db.from("classes").select("id").eq("id", classId)
+        const { data: classroom, error: classError } = await db.from("classes").select("id").eq("id", classId)
             .eq("lecturer_id", actor.userId).maybeSingle();
+        if (classError) fail(classError, "Không thể kiểm tra quyền quản lý lớp");
         if (!classroom) throw new WebMvpError("Bạn không phải chủ lớp", 403);
         const { data, error } = await db.from("class_members").select("id,student_id,status,joined_at")
             .eq("class_id", classId).eq("status", status).order("joined_at", { ascending: false });
@@ -229,15 +286,12 @@ export const SupabaseWebClassService = {
 
 const ASSIGNMENT_SELECT = "id,class_id,lecturer_id,title,description,instructions,due_at,max_score,status,rubric,is_active,allow_late_submission,late_penalty_percent,language,rubric_text,submission_policy,runner_config,ai_config,attachments,start_at,allow_resubmit,created_at,updated_at";
 
-async function assignmentDto(db: SupabaseClient<any>, item: AnyRecord, actor: CurrentUserPayload) {
-    const [{ data: classroom }, { data: lecturer }, { data: submission }] = await Promise.all([
-        db.from("classes").select("id,name,class_code").eq("id", item.class_id).maybeSingle(),
-        db.from("profiles").select("id,full_name,email").eq("id", item.lecturer_id).maybeSingle(),
-        actor.role === "student"
-            ? db.from("submissions").select("id,status,submitted_at,repository_url,files,attempt_no,is_late")
-                .eq("assignment_id", item.id).eq("student_id", actor.userId).eq("is_current", true).maybeSingle()
-            : Promise.resolve({ data: null }),
-    ]);
+function assignmentDtoFromRelations(
+    item: AnyRecord,
+    classroom: AnyRecord | null,
+    lecturer: AnyRecord | null,
+    submission: AnyRecord | null
+) {
     const sub = record(submission);
     const attachmentRows = rows(item.attachments).map(normalizeAttachment);
     const submissionFiles = rows(sub.files).map((file, index) => ({
@@ -273,26 +327,112 @@ async function assignmentDto(db: SupabaseClient<any>, item: AnyRecord, actor: Cu
             status: sub.status === "draft" ? "draft" : sub.is_late ? "late" : "submitted",
             submittedAt: sub.submitted_at,
             repositoryUrl: sub.repository_url || "",
-            note: "",
+            note: String(sub.content || ""),
             files: submissionFiles,
         } : null,
     };
 }
 
-async function uploadAssignmentFiles(db: SupabaseClient<any>, actor: CurrentUserPayload, files: File[], kind: string) {
-    const uploaded = [];
+async function assignmentDtos(
+    db: SupabaseClient<any>,
+    items: AnyRecord[],
+    actor: CurrentUserPayload
+) {
+    if (!items.length) return [];
+    const classIds = [...new Set(items.map((item) => item.class_id).filter(Boolean))];
+    const lecturerIds = [...new Set(items.map((item) => item.lecturer_id).filter(Boolean))];
+    const assignmentIds = items.map((item) => item.id).filter(Boolean);
+    const [classesResult, lecturersResult, submissionsResult] = await Promise.all([
+        classIds.length
+            ? db.from("classes").select("id,name,class_code").in("id", classIds)
+            : Promise.resolve({ data: [], error: null }),
+        lecturerIds.length
+            ? db.from("profiles").select("id,full_name,email").in("id", lecturerIds)
+            : Promise.resolve({ data: [], error: null }),
+        actor.role === "student" && assignmentIds.length
+            ? db.from("submissions")
+                .select("id,assignment_id,status,submitted_at,repository_url,content,files,attempt_no,is_late")
+                .in("assignment_id", assignmentIds)
+                .eq("student_id", actor.userId)
+                .eq("is_current", true)
+            : Promise.resolve({ data: [], error: null }),
+    ]);
+    if (classesResult.error) fail(classesResult.error, "Không thể tải lớp của bài tập");
+    if (lecturersResult.error) fail(lecturersResult.error, "Không thể tải giảng viên của bài tập");
+    if (submissionsResult.error) fail(submissionsResult.error, "Không thể tải trạng thái bài nộp");
+
+    const classroomMap = new Map(rows(classesResult.data).map((item) => [item.id, item]));
+    const lecturerMap = new Map(rows(lecturersResult.data).map((item) => [item.id, item]));
+    const submissionMap = new Map(rows(submissionsResult.data).map((item) => [item.assignment_id, item]));
+    return items.map((item) => assignmentDtoFromRelations(
+        item,
+        classroomMap.get(item.class_id) || null,
+        lecturerMap.get(item.lecturer_id) || null,
+        submissionMap.get(item.id) || null
+    ));
+}
+
+type UploadedAssignmentFile = {
+    url: string;
+    path: string;
+    originalName: string;
+    kind: string;
+};
+
+const ASSIGNMENT_FILE_LIMIT = 20;
+const ASSIGNMENT_FILE_SIZE_LIMIT = 50 * 1024 * 1024;
+const ASSIGNMENT_MIME_BY_EXTENSION: Record<string, string> = {
+    apk: "application/vnd.android.package-archive",
+    jpeg: "image/jpeg",
+    jpg: "image/jpeg",
+    pdf: "application/pdf",
+    png: "image/png",
+    zip: "application/zip",
+};
+
+function validateAssignmentFileGroups(
+    fileGroups: Array<{ files: File[]; kind: string }>,
+    retainedFileCount = 0
+) {
+    const files = fileGroups.flatMap((group) => group.files);
+    if (retainedFileCount + files.length > ASSIGNMENT_FILE_LIMIT) {
+        throw new WebMvpError(`Mỗi bài tập chỉ được đính kèm tối đa ${ASSIGNMENT_FILE_LIMIT} tệp`, 413);
+    }
+    for (const file of files) {
+        const extension = normalizedExtension(file.name);
+        if (!ASSIGNMENT_MIME_BY_EXTENSION[extension]) {
+            throw new WebMvpError(`Định dạng tệp ${file.name} không được hỗ trợ`, 415);
+        }
+        if (file.size > ASSIGNMENT_FILE_SIZE_LIMIT) {
+            throw new WebMvpError(`Tệp ${file.name} vượt quá giới hạn 50 MB`, 413);
+        }
+    }
+}
+
+async function uploadAssignmentFiles(
+    db: SupabaseClient<any>,
+    actor: CurrentUserPayload,
+    files: File[],
+    kind: string,
+    uploaded: UploadedAssignmentFile[]
+) {
     for (const file of files) {
         const safeName = file.name.replace(/[^a-zA-Z0-9._-]/g, "_");
         const path = `${actor.userId}/${crypto.randomUUID()}-${safeName}`;
         const { error } = await db.storage.from("assignments").upload(path, Buffer.from(await file.arrayBuffer()), {
-            contentType: file.type || "application/octet-stream",
+            contentType: ASSIGNMENT_MIME_BY_EXTENSION[normalizedExtension(file.name)],
             upsert: false,
         });
         if (error) fail(error, `Không thể tải lên ${file.name}`);
         const { data } = db.storage.from("assignments").getPublicUrl(path);
-        uploaded.push({ url: data.publicUrl, originalName: file.name, kind });
+        uploaded.push({ url: data.publicUrl, path, originalName: file.name, kind });
     }
-    return uploaded;
+}
+
+async function cleanAssignmentUploads(db: SupabaseClient<any>, uploaded: UploadedAssignmentFile[]) {
+    if (uploaded.length) {
+        await db.storage.from("assignments").remove(uploaded.map((file) => file.path));
+    }
 }
 
 export const SupabaseWebAssignmentService = {
@@ -303,7 +443,7 @@ export const SupabaseWebAssignmentService = {
         if (actor.role === "student") query = query.eq("status", "published").eq("is_active", true);
         const { data, error } = await query.order("created_at", { ascending: false });
         if (error) fail(error, "Không thể tải danh sách bài tập");
-        return Promise.all(rows(data).map((item) => assignmentDto(db, item, actor)));
+        return assignmentDtos(db, rows(data), actor);
     },
 
     async detail(actor: CurrentUserPayload, assignmentId: string) {
@@ -311,50 +451,70 @@ export const SupabaseWebAssignmentService = {
         const { data, error } = await db.from("assignments").select(ASSIGNMENT_SELECT).eq("id", assignmentId).maybeSingle();
         if (error) fail(error, "Không thể tải bài tập");
         if (!data) throw new WebMvpError("Không tìm thấy bài tập hoặc bạn không có quyền truy cập", 404);
-        return assignmentDto(db, record(data), actor);
+        return (await assignmentDtos(db, [record(data)], actor))[0];
     },
 
     async create(actor: CurrentUserPayload, payload: AnyRecord, fileGroups: Array<{ files: File[]; kind: string }>) {
         requireRole(actor, "lecturer");
+        validateAssignmentFileGroups(fileGroups);
         const db = await client();
-        const { data: classroom } = await db.from("classes").select("id").eq("id", payload.classroomId)
+        const { data: classroom, error: classError } = await db.from("classes").select("id").eq("id", payload.classroomId)
             .eq("lecturer_id", actor.userId).eq("status", "active").maybeSingle();
+        if (classError) fail(classError, "Không thể kiểm tra quyền sở hữu lớp");
         if (!classroom) throw new WebMvpError("Bạn chỉ có thể tạo bài tập trong lớp đang hoạt động do mình quản lý", 403);
-        const attachments = (await Promise.all(fileGroups.map((group) => uploadAssignmentFiles(db, actor, group.files, group.kind)))).flat();
-        const { data, error } = await db.from("assignments").insert({
-            class_id: payload.classroomId,
-            lecturer_id: actor.userId,
-            title: payload.title,
-            description: payload.description || null,
-            instructions: payload.description || null,
-            due_at: payload.dueAt,
-            start_at: payload.startAt,
-            max_score: payload.maxScore,
-            status: payload.status,
-            rubric: payload.rubric as Json,
-            rubric_text: payload.rubricText || null,
-            language: payload.language,
-            submission_policy: payload.submissionPolicy as Json,
-            runner_config: payload.runnerConfig as Json,
-            ai_config: payload.aiConfig as Json,
-            attachments: attachments as Json,
-            allow_late_submission: payload.allowLateSubmit,
-            allow_resubmit: payload.allowResubmit,
-            late_penalty_percent: payload.latePenaltyPercent,
-            is_active: true,
-        }).select(ASSIGNMENT_SELECT).single();
-        if (error) fail(error, "Không thể tạo bài tập");
-        return assignmentDto(db, record(data), actor);
+        const attachments: UploadedAssignmentFile[] = [];
+        let created: AnyRecord;
+        try {
+            for (const group of fileGroups) {
+                await uploadAssignmentFiles(db, actor, group.files, group.kind, attachments);
+            }
+            const { data, error } = await db.from("assignments").insert({
+                class_id: payload.classroomId,
+                lecturer_id: actor.userId,
+                title: payload.title,
+                description: payload.description || null,
+                instructions: payload.description || null,
+                due_at: payload.dueAt,
+                start_at: payload.startAt,
+                max_score: payload.maxScore,
+                status: payload.status,
+                rubric: payload.rubric as Json,
+                rubric_text: payload.rubricText || null,
+                language: payload.language,
+                submission_policy: payload.submissionPolicy as Json,
+                runner_config: payload.runnerConfig as Json,
+                ai_config: payload.aiConfig as Json,
+                attachments: attachments as Json,
+                allow_late_submission: payload.allowLateSubmit,
+                allow_resubmit: payload.allowResubmit,
+                late_penalty_percent: payload.latePenaltyPercent,
+                is_active: true,
+            }).select(ASSIGNMENT_SELECT).single();
+            if (error) fail(error, "Không thể tạo bài tập");
+            created = record(data);
+        } catch (error) {
+            await cleanAssignmentUploads(db, attachments);
+            throw error;
+        }
+        return (await assignmentDtos(db, [created], actor))[0];
     },
 
     async update(actor: CurrentUserPayload, assignmentId: string, payload: AnyRecord, keptUrls: string[], fileGroups: Array<{ files: File[]; kind: string }>) {
         requireRole(actor, "lecturer");
         const db = await client();
-        const { data: existing } = await db.from("assignments").select(ASSIGNMENT_SELECT).eq("id", assignmentId)
+        const { data: existing, error: existingError } = await db.from("assignments").select(ASSIGNMENT_SELECT).eq("id", assignmentId)
             .eq("lecturer_id", actor.userId).maybeSingle();
+        if (existingError) fail(existingError, "Không thể tải bài tập cần cập nhật");
         if (!existing) throw new WebMvpError("Không tìm thấy bài tập hoặc bạn không phải chủ bài tập", 404);
-        const oldAttachments = rows(existing.attachments).map(normalizeAttachment);
-        const newAttachments = (await Promise.all(fileGroups.map((group) => uploadAssignmentFiles(db, actor, group.files, group.kind)))).flat();
+        const oldAttachments = rows(existing.attachments).map((value) => {
+            const item = record(value);
+            const attachment = normalizeAttachment(item);
+            return typeof item.path === "string" && item.path
+                ? { ...attachment, path: item.path }
+                : attachment;
+        });
+        const retainedAttachments = oldAttachments.filter((item) => keptUrls.includes(item.url));
+        validateAssignmentFileGroups(fileGroups, retainedAttachments.length);
         const update: AnyRecord = {};
         const fields: Record<string, string> = {
             classroomId: "class_id", title: "title", description: "description", dueAt: "due_at", startAt: "start_at",
@@ -364,17 +524,29 @@ export const SupabaseWebAssignmentService = {
         };
         for (const [source, target] of Object.entries(fields)) if (payload[source] !== undefined) update[target] = payload[source];
         update.instructions = payload.description ?? existing.instructions;
-        update.attachments = [...oldAttachments.filter((item) => keptUrls.includes(item.url)), ...newAttachments];
         if (update.class_id) {
-            const { data: ownedClass } = await db.from("classes").select("id").eq("id", update.class_id)
+            const { data: ownedClass, error: ownedClassError } = await db.from("classes").select("id").eq("id", update.class_id)
                 .eq("lecturer_id", actor.userId).maybeSingle();
+            if (ownedClassError) fail(ownedClassError, "Không thể kiểm tra lớp đích");
             if (!ownedClass) throw new WebMvpError("Không thể chuyển bài tập sang lớp của giảng viên khác", 403);
         }
-        const { data, error } = await db.from("assignments").update(update).eq("id", assignmentId)
-            .eq("lecturer_id", actor.userId).select(ASSIGNMENT_SELECT).maybeSingle();
-        if (error) fail(error, "Không thể cập nhật bài tập");
-        if (!data) throw new WebMvpError("Không tìm thấy bài tập", 404);
-        return assignmentDto(db, record(data), actor);
+        const newAttachments: UploadedAssignmentFile[] = [];
+        let data: AnyRecord | null = null;
+        try {
+            for (const group of fileGroups) {
+                await uploadAssignmentFiles(db, actor, group.files, group.kind, newAttachments);
+            }
+            update.attachments = [...retainedAttachments, ...newAttachments];
+            const result = await db.from("assignments").update(update).eq("id", assignmentId)
+                .eq("lecturer_id", actor.userId).select(ASSIGNMENT_SELECT).maybeSingle();
+            if (result.error) fail(result.error, "Không thể cập nhật bài tập");
+            if (!result.data) throw new WebMvpError("Không tìm thấy bài tập", 404);
+            data = record(result.data);
+        } catch (error) {
+            await cleanAssignmentUploads(db, newAttachments);
+            throw error;
+        }
+        return (await assignmentDtos(db, [record(data)], actor))[0];
     },
 
     async remove(actor: CurrentUserPayload, assignmentId: string) {
@@ -405,17 +577,21 @@ async function submissionDtos(db: SupabaseClient<any>, submissionRows: AnyRecord
     const studentIds = [...new Set(submissionRows.map((item) => item.student_id))];
     const submissionIds = submissionRows.map((item) => item.id);
     const [assignmentsResult, studentsResult, gradesResult] = await Promise.all([
-        assignmentIds.length ? db.from("assignments").select("id,class_id,title,max_score,due_at").in("id", assignmentIds) : Promise.resolve({ data: [] }),
-        studentIds.length ? db.from("profiles").select("id,full_name,email,student_code").in("id", studentIds) : Promise.resolve({ data: [] }),
-        submissionIds.length ? db.from("grades").select("submission_id,status,score,max_score,feedback,published_at").in("submission_id", submissionIds) : Promise.resolve({ data: [] }),
+        assignmentIds.length ? db.from("assignments").select("id,class_id,title,max_score,due_at").in("id", assignmentIds) : Promise.resolve({ data: [], error: null }),
+        studentIds.length ? db.from("profiles").select("id,full_name,email,student_code").in("id", studentIds) : Promise.resolve({ data: [], error: null }),
+        submissionIds.length ? db.from("grades").select("submission_id,status,score,max_score,feedback,published_at").in("submission_id", submissionIds) : Promise.resolve({ data: [], error: null }),
     ]);
+    if (assignmentsResult.error) fail(assignmentsResult.error, "Không thể tải bài tập của bài nộp");
+    if (studentsResult.error) fail(studentsResult.error, "Không thể tải sinh viên của bài nộp");
+    if (gradesResult.error) fail(gradesResult.error, "Không thể tải kết quả bài nộp");
     const assignmentMap = new Map(rows(assignmentsResult.data).map((item) => [item.id, item]));
     const studentMap = new Map(rows(studentsResult.data).map((item) => [item.id, item]));
     const gradeMap = new Map(rows(gradesResult.data).map((item) => [item.submission_id, item]));
     const classIds = [...new Set([...assignmentMap.values()].map((item) => item.class_id))];
-    const { data: classes } = classIds.length
+    const { data: classes, error: classesError } = classIds.length
         ? await db.from("classes").select("id,name,class_code").in("id", classIds)
-        : { data: [] };
+        : { data: [], error: null };
+    if (classesError) fail(classesError, "Không thể tải lớp của bài nộp");
     const classMap = new Map(rows(classes).map((item) => [item.id, item]));
 
     return submissionRows.map((item) => {
@@ -455,9 +631,10 @@ export const SupabaseWebSubmissionService = {
         let submissionRows = rows(data);
         if (filters.classId) {
             const assignmentIds = [...new Set(submissionRows.map((item) => item.assignment_id))];
-            const { data: assignments } = assignmentIds.length
+            const { data: assignments, error: assignmentsError } = assignmentIds.length
                 ? await db.from("assignments").select("id").in("id", assignmentIds).eq("class_id", filters.classId)
-                : { data: [] };
+                : { data: [], error: null };
+            if (assignmentsError) fail(assignmentsError, "Không thể lọc bài nộp theo lớp");
             const allowed = new Set(rows(assignments).map((item) => item.id));
             submissionRows = submissionRows.filter((item) => allowed.has(item.assignment_id));
         }
@@ -467,10 +644,15 @@ export const SupabaseWebSubmissionService = {
     async save(actor: CurrentUserPayload, payload: AnyRecord, files: File[]) {
         requireRole(actor, "student");
         const db = await client();
-        const maxBytes = 100 * 1024 * 1024;
-        for (const file of files) {
-            if (file.size > maxBytes) throw new WebMvpError(`Tệp ${file.name} vượt quá giới hạn 100 MB`, 413);
-        }
+        const { data: assignment, error: assignmentError } = await db.from("assignments")
+            .select("id,submission_policy")
+            .eq("id", payload.assignmentId)
+            .eq("status", "published")
+            .eq("is_active", true)
+            .maybeSingle();
+        if (assignmentError) fail(assignmentError, "Không thể kiểm tra chính sách bài nộp");
+        if (!assignment) throw new WebMvpError("Bài tập không tồn tại hoặc hiện không thể nộp", 404);
+        validateSubmissionAssets(payload, files, record(assignment));
         const uploaded: Array<{ path: string; originalName: string; size: number; mimeType: string }> = [];
         try {
             for (const file of files) {
@@ -483,7 +665,7 @@ export const SupabaseWebSubmissionService = {
                 if (error) fail(error, `Không thể tải lên ${file.name}`);
                 uploaded.push({ path, originalName: file.name, size: file.size, mimeType: file.type || "application/octet-stream" });
             }
-            const sourceZip = uploaded.find((file) => /\.zip$/i.test(file.originalName))?.path || uploaded[0]?.path || null;
+            const sourceZip = uploaded.find((file) => /\.zip$/i.test(file.originalName))?.path || null;
             const { data, error } = await db.rpc("save_student_submission", {
                 input_assignment_id: payload.assignmentId,
                 input_content: payload.note || "",

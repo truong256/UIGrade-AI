@@ -10,9 +10,7 @@ export function webMvpErrorResponse(error: unknown) {
     if (error instanceof ZodError) {
         return errorResponse(error.issues[0]?.message || "Dữ liệu không hợp lệ", 400);
     }
-    const statusCode = typeof (error as { statusCode?: unknown })?.statusCode === "number"
-        ? Number((error as { statusCode: number }).statusCode)
-        : 500;
-    const message = error instanceof Error ? error.message : "Không thể xử lý yêu cầu";
-    return errorResponse(message, statusCode);
+    // Unknown/provider/database errors may contain SQL, schema or internal path
+    // details. Only explicitly classified application errors are safe to return.
+    return errorResponse("Không thể xử lý yêu cầu. Vui lòng thử lại sau.", 500);
 }

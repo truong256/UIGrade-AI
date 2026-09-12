@@ -4,7 +4,12 @@ import { NextRequest, NextResponse } from "next/server";
 // Supabase identity, profile and role checks still run before granting access.
 export const AUTH_ENTRY_COOKIE = "uigrade-auth-entry";
 const HANDOFF_MS = 30_000;
-const AUTH_DESTINATIONS = new Set(["/ui/dashboard", "/ui/server_config", "/auth/select-role"]);
+const AUTH_DESTINATIONS = new Set([
+    "/ui/dashboard",
+    "/ui/server_config",
+    "/auth/select-role",
+    "/reset-password",
+]);
 
 export function isDocumentEntry(request: NextRequest): boolean {
     if (request.headers.get("sec-fetch-dest") === "document") return true;

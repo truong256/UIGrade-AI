@@ -13,6 +13,7 @@ const PUBLIC_PATHS = [
     "/login",
     "/register",
     "/forgot-password",
+    "/reset-password",
     "/contact",
     "/help",
     "/privacy",
@@ -156,6 +157,6 @@ export async function proxy(request: NextRequest) {
 
 export const config = {
     // /auth/callback must exchange the PKCE code before its first protected arrival.
-    matcher: ["/", "/login", "/register", "/forgot-password", "/contact", "/help",
+    matcher: ["/", "/login", "/register", "/forgot-password", "/reset-password", "/contact", "/help",
         "/privacy", "/terms", "/auth/select-role", "/ui/:path*"],
 };

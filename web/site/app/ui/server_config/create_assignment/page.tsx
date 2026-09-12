@@ -3,6 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchCurrentUserClient } from "@/lib/auth-client";
+import {
+    MAX_SUBMISSION_ATTEMPTS,
+    MAX_SUBMISSION_FILE_SIZE_MB,
+} from "@/lib/submission-limits";
 import UiScenarioEditor from "@/components/grading_detail/UiScenarioEditor";
 import {
     DEFAULT_ANDROID_UI_RUNNER_CONFIG,
@@ -458,8 +462,8 @@ export default function CreateAssignmentPage() {
 
             const submissionPolicy = {
                 acceptedFileTypes: ["zip"],
-                maxFileSizeMb: 256,
-                maxAttempts: form.allowResubmit ? 999999 : 1,
+                maxFileSizeMb: MAX_SUBMISSION_FILE_SIZE_MB,
+                maxAttempts: form.allowResubmit ? MAX_SUBMISSION_ATTEMPTS : 1,
                 requireZip: true,
                 allowGithubUrl: true,
                 allowScreenshots: true,

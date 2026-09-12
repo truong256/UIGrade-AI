@@ -7,7 +7,7 @@ export function successResponse(data: unknown, message = "Thành công", status 
             message,
             data,
         },
-        { status }
+        { status, headers: { "Cache-Control": "no-store" } }
     );
 }
 
@@ -17,6 +17,6 @@ export function errorResponse(message = "Lỗi server", status = 500) {
             success: false,
             message,
         },
-        { status }
+        { status, headers: { "Cache-Control": "no-store" } }
     );
 }

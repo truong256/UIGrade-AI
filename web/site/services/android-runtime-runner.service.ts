@@ -134,8 +134,6 @@ function runTextLive(
     timeoutMs = 120_000
 ): Promise<{ ok: boolean; stdout: string; stderr: string }> {
     return new Promise((resolve) => {
-        console.log("[RUN-LIVE] start", { cmd, args, cwd, timeoutMs });
-
         const child = spawn(cmd, args, {
             cwd,
             env: process.env,
@@ -163,13 +161,11 @@ function runTextLive(
         child.stdout.on("data", (data) => {
             const text = data.toString();
             stdout += text;
-            console.log("[RUN-LIVE][stdout]", text);
         });
 
         child.stderr.on("data", (data) => {
             const text = data.toString();
             stderr += text;
-            console.log("[RUN-LIVE][stderr]", text);
         });
 
         child.on("error", (error) => {
@@ -190,8 +186,6 @@ function runTextLive(
 
             finished = true;
             clearTimeout(timer);
-
-            console.log("[RUN-LIVE] close", { code });
 
             resolve({
                 ok: code === 0,
@@ -641,9 +635,6 @@ async function actuallyStartEmulator(input: {
 
     const avdList = await runText(emulatorCmd, ["-list-avds"], undefined, 30_000);
 
-    console.log("[RUNTIME-EMULATOR] available AVDs =", avdList.stdout);
-    console.log("[RUNTIME-EMULATOR] selected AVD =", avdName);
-
     if (
         !avdList.ok ||
         !avdList.stdout
@@ -674,11 +665,6 @@ async function actuallyStartEmulator(input: {
         "swiftshader_indirect",
     ];
 
-    console.log("[RUNTIME-EMULATOR] starting emulator", {
-        emulatorCmd,
-        emulatorArgs,
-    });
-
     const child = spawn(
         "cmd.exe",
         [
@@ -706,18 +692,15 @@ async function actuallyStartEmulator(input: {
     child.stdout?.on("data", (data) => {
         const text = data.toString();
         emulatorStdout += text;
-        console.log("[RUNTIME-EMULATOR][stdout]", text);
     });
 
     child.stderr?.on("data", (data) => {
         const text = data.toString();
         emulatorStderr += text;
-        console.log("[RUNTIME-EMULATOR][stderr]", text);
     });
 
     child.on("error", (error) => {
         emulatorStderr += error.message;
-        console.log("[RUNTIME-EMULATOR] spawn error", error.message);
     });
 
     child.unref();
@@ -747,11 +730,6 @@ async function actuallyStartEmulator(input: {
                 };
             }
 
-            console.log("[RUNTIME-EMULATOR] device found, waiting boot_completed...", {
-                boot: boot.stdout.trim(),
-            });
-        } else {
-            console.log("[RUNTIME-EMULATOR] waiting emulator device...");
         }
     }
 

@@ -12,7 +12,11 @@ export function installVisitBoundary(
         // Also hide BFCache snapshots so Back cannot briefly expose old user data.
         target.document.documentElement.style.visibility = "hidden";
         const path = target.location.pathname;
-        if (path.startsWith("/ui/") || path === "/auth/select-role") revoke();
+        if (
+            path.startsWith("/ui/") ||
+            path === "/auth/select-role" ||
+            path === "/reset-password"
+        ) revoke();
     };
     const onShow = (event: PageTransitionEvent) => {
         if (event.persisted) reenter();
