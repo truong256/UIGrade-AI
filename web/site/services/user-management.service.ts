@@ -1,466 +1,248 @@
-/**
- * services/user-management.service.ts
- *
- * User management business logic with proper server-side authorization.
- *
- * SECURITY DESIGN:
- *  - The actor (caller) must be an AuthenticatedActor with a server-verified role.
- *  - Target users are ALWAYS loaded from the database before any authorization check.
- *    The role in the request body is NEVER used to determine target permissions.
- *  - All authorization is delegated to lib/authorization.ts — no duplicated logic.
- *  - Payload validation uses strict field allowlists — unknown fields are rejected.
- *  - Role normalization is applied both on input and output.
- *
- * AUTHORIZATION MATRIX:
- *  Action                        Admin  Lecturer  Student
- *  ─────────────────────────────────────────────────────
- *  List all users                YES    NO        NO
- *  Create user (any role)        YES    NO        NO
- *  Create admin user             YES    NO        NO
- *  Update non-admin user         YES    NO        NO
- *  Update admin user             YES    NO        NO
- *  Lock non-admin user           YES    NO        NO
- *  Lock admin (if not last)      YES    NO        NO
- *  Lock last active admin        NO     NO        NO
- *  Delete non-admin user         YES    NO        NO
- *  Delete admin (if not last)    YES    NO        NO
- *  Delete last active admin      NO     NO        NO
- *  Change role to admin          YES    NO        NO
- *  Demote last active admin      NO     NO        NO
- */
+import type { CurrentUserPayload } from "@/lib/current-user";
+import { requireAdmin, validateRoleInput } from "@/lib/authorization";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 
-import User, { IUser } from "@/models/User.model";
-import bcrypt from "bcryptjs";
-import mongoose from "mongoose";
-import {
-    type AuthenticatedActor,
-    requireAdmin,
-    assertCanDeactivateUser,
-    assertCanDeleteUser,
-    assertCanChangeRole,
-    assertCanCreateUserWithRole,
-    validateRoleInput,
-    normalizeRole,
-    ROLES,
-} from "@/lib/authorization";
-import { withDistributedAdminLock, ADMIN_MUTATION_LOCK_KEY } from "@/lib/distributed-lock";
+type LegacyUiRole = "admin" | "teacher" | "User";
+type CanonicalRole = "admin" | "lecturer" | "student";
 
-// ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
-type UserStatusFilter = "all" | "active" | "locked";
-type RoleFilter = "all" | "admin" | "lecturer" | "student" | "teacher" | "User";
-
-type ListUsersParams = {
+type UserListInput = {
     keyword?: string;
-    roles?: RoleFilter;
-    status?: UserStatusFilter;
+    role?: string;
+    status?: string;
     page?: number;
     limit?: number;
 };
 
-/**
- * Payload for creating a new user.
- * Uses strict `role` field (canonical). "roles" alias is not accepted.
- */
-export type CreateUserPayload = {
+type UserMutationInput = {
     name?: string;
     email?: string;
     password?: string;
     studentCode?: string;
     role?: string;
-    department?: string;
-    cohort?: string;
-};
-
-/**
- * Payload for updating a user.
- * Strict allowlist — only known fields. Unknown fields cause a validation error.
- */
-type UpdateUserPayload = {
-    name?: string;
-    email?: string;
-    studentCode?: string;
-    role?: string;
+    roles?: string;
     department?: string;
     cohort?: string;
     isActive?: boolean;
-    password?: string;
 };
 
-const KNOWN_UPDATE_FIELDS: (keyof UpdateUserPayload)[] = [
-    "name", "email", "studentCode", "role", "department", "cohort", "isActive", "password",
-];
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-function normalizeText(value: unknown, fallback = ""): string {
-    if (typeof value === "string") return value.trim();
-    if (value === null || value === undefined) return fallback;
-    return String(value).trim();
+function canonicalRole(value: unknown): CanonicalRole {
+    const role = validateRoleInput(value || "student");
+    if (role === "admin") return "admin";
+    if (role === "lecturer") return "lecturer";
+    return "student";
 }
 
-function normalizeEmail(value: unknown): string {
-    return normalizeText(value).toLowerCase();
+function legacyUiRole(role: string): LegacyUiRole {
+    if (role === "admin") return "admin";
+    if (role === "lecturer") return "teacher";
+    return "User";
 }
 
-function normalizePage(value: unknown, fallback: number): number {
-    const parsed = Number(value);
-    if (!Number.isFinite(parsed) || parsed <= 0) return fallback;
-    return Math.floor(parsed);
+function normalizeStatus(isActive: boolean | undefined) {
+    return isActive === false ? "locked" : "active";
 }
 
-function isValidEmail(value: string): boolean {
-    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value);
+function isEducationEmail(value: string) {
+    const email = value.trim().toLowerCase();
+    const domain = email.split("@")[1] || "";
+    return Boolean(email && (domain === "edu.vn" || domain.endsWith(".edu.vn")));
 }
 
-function escapeRegExp(value: string): string {
-    return value.replace(/[\\^$.*+?()[\]{}|]/g, "\\$&");
+function ensureUuid(value: string) {
+    if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value)) {
+        throw new Error("ID người dùng không hợp lệ");
+    }
 }
 
-function toPublicUser(user: Partial<IUser> & Record<string, any>) {
+function toUserItem(row: Record<string, any>) {
     return {
-        _id: String(user._id ?? ""),
-        name: user.name ?? "",
-        email: user.email ?? "",
-        studentCode: user.studentCode ?? "",
-        // Always return canonical role to the client
-        role: normalizeRole(user.role),
-        department: user.department ?? "",
-        cohort: user.cohort ?? "",
-        isVerified: Boolean(user.isVerified),
-        isActive: user.isActive !== false,
-        lastLoginAt: user.lastLoginAt ?? null,
-        createdAt: user.createdAt ?? null,
-        updatedAt: user.updatedAt ?? null,
+        _id: String(row.id),
+        name: String(row.full_name || "Người dùng"),
+        email: String(row.email || ""),
+        studentCode: row.student_code || "",
+        role: legacyUiRole(String(row.role || "student")),
+        department: row.department || "",
+        cohort: row.cohort || "",
+        isVerified: true,
+        isActive: row.status === "active",
+        lastLoginAt: row.last_sign_in_at || null,
+        createdAt: row.created_at || null,
+        updatedAt: row.updated_at || null,
     };
 }
 
-/**
- * Count the number of active admin accounts in the DB.
- * Used to enforce last-admin protection.
- */
-async function countActiveAdmins(): Promise<number> {
-    // Query both canonical and legacy role values
-    return User.countDocuments({
-        role: { $in: ["admin"] },
-        isActive: { $ne: false },
-    });
+function safePage(value: unknown, fallback: number) {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : fallback;
 }
 
-/**
- * In-process asynchronous mutex for serializing privileged mutations.
- * Prevents TOCTOU race conditions when locking, deleting, or demoting admins.
- */
-export class AsyncMutex {
-    private mutex = Promise.resolve();
-
-    async runExclusive<T>(callback: () => Promise<T>): Promise<T> {
-        let release: () => void;
-        const waitPromise = new Promise<void>((resolve) => {
-            release = resolve;
-        });
-        const currentLock = this.mutex;
-        this.mutex = currentLock.then(() => waitPromise);
-        await currentLock;
-        try {
-            return await callback();
-        } finally {
-            release!();
-        }
-    }
+async function attachLastSignIn(users: Array<Record<string, any>>) {
+    if (!users.length) return users;
+    const admin = createSupabaseAdminClient();
+    const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
+    if (error) return users;
+    const byId = new Map(data.users.map((user) => [user.id, user.last_sign_in_at || null]));
+    return users.map((row) => ({ ...row, last_sign_in_at: byId.get(String(row.id)) || null }));
 }
-
-export const privilegedMutationMutex = new AsyncMutex();
-
-/**
- * Validate that the incoming payload does not have unknown fields.
- * This prevents typo fields (e.g. "rolee") from being silently ignored.
- */
-function rejectUnknownFields(body: Record<string, unknown>, allowed: string[]): void {
-    const unknown = Object.keys(body).filter((k) => !allowed.includes(k));
-    if (unknown.length > 0) {
-        throw new Error(`Trường không hợp lệ: ${unknown.join(", ")}`);
-    }
-}
-
-// ---------------------------------------------------------------------------
-// Service
-// ---------------------------------------------------------------------------
 
 export const userManagementService = {
-    /**
-     * List users with filtering, pagination, and stats.
-     * Requires actor to be an admin.
-     */
-    async listUsers(params: ListUsersParams = {}, actor: AuthenticatedActor) {
+    async listUsers(actor: CurrentUserPayload | null, input: UserListInput = {}) {
         requireAdmin(actor);
+        const admin = createSupabaseAdminClient();
+        const keyword = String(input.keyword || "").trim();
+        const roleInput = String(input.role || "all");
+        const statusInput = String(input.status || "all");
+        const page = safePage(input.page, 1);
+        const limit = Math.min(safePage(input.limit, 10), 100);
+        const from = (page - 1) * limit;
+        const to = from + limit - 1;
 
-        const keyword = normalizeText(params.keyword);
-        const roleFilter = (params.roles ?? "all") as RoleFilter;
-        const status = (params.status ?? "all") as UserStatusFilter;
-        const page = normalizePage(params.page, 1);
-        const limit = Math.min(20, Math.max(1, normalizePage(params.limit, 10)));
-
-        const query: Record<string, any> = {};
-
-        if (roleFilter !== "all") {
-            // Handle canonical + legacy aliases
-            if (roleFilter === "lecturer") {
-                query.role = { $in: ["lecturer", "teacher"] };
-            } else if (roleFilter === "student") {
-                query.role = { $in: ["student", "User"] };
-            } else {
-                query.role = roleFilter;
-            }
-        }
-
-        if (status === "active") {
-            query.isActive = { $ne: false };
-        } else if (status === "locked") {
-            query.isActive = false;
-        }
+        let query = admin
+            .from("profiles")
+            .select("id,full_name,email,role,status,student_code,department,cohort,created_at,updated_at", { count: "exact" });
 
         if (keyword) {
-            const regex = new RegExp(escapeRegExp(keyword), "i");
-            query.$or = [
-                { name: regex },
-                { email: regex },
-                { studentCode: regex },
-                { department: regex },
-                { cohort: regex },
-            ];
+            const escaped = keyword.replace(/[%_,()]/g, " ").trim();
+            query = query.or(`full_name.ilike.%${escaped}%,email.ilike.%${escaped}%,student_code.ilike.%${escaped}%`);
         }
+        if (roleInput !== "all") query = query.eq("role", canonicalRole(roleInput));
+        if (statusInput === "active") query = query.eq("status", "active");
+        if (statusInput === "locked") query = query.neq("status", "active");
 
-        const skip = (page - 1) * limit;
+        const { data, error, count } = await query.order("created_at", { ascending: false }).range(from, to);
+        if (error) throw new Error(`Không thể tải danh sách người dùng: ${error.message}`);
 
-        const [users, total, totalUsers, activeUsers, lockedUsers] = await Promise.all([
-            User.find(query)
-                .select("name email studentCode role department cohort isVerified isActive lastLoginAt createdAt updatedAt")
-                .sort({ createdAt: -1, _id: -1 })
-                .skip(skip)
-                .limit(limit)
-                .lean(),
-            User.countDocuments(query),
-            User.countDocuments(),
-            User.countDocuments({ isActive: { $ne: false } }),
-            User.countDocuments({ isActive: false }),
+        const [{ count: totalCount, error: totalError }, { count: activeCount, error: activeError }] = await Promise.all([
+            admin.from("profiles").select("id", { count: "exact", head: true }),
+            admin.from("profiles").select("id", { count: "exact", head: true }).eq("status", "active"),
         ]);
+        if (totalError || activeError) throw new Error("Không thể tải thống kê người dùng");
 
+        const enriched = await attachLastSignIn((data || []) as Array<Record<string, any>>);
+        const total = count || 0;
+        const allTotal = totalCount || 0;
+        const active = activeCount || 0;
         return {
-            stats: {
-                total: totalUsers,
-                active: activeUsers,
-                locked: lockedUsers,
-            },
-            filters: { keyword, role: roleFilter, status, page, limit },
-            pagination: {
-                page,
-                limit,
-                total,
-                totalPages: Math.max(1, Math.ceil(total / limit)),
-            },
-            users: users.map((user) => toPublicUser(user as any)),
+            stats: { total: allTotal, active, locked: Math.max(0, allTotal - active) },
+            filters: { keyword, role: roleInput, status: statusInput, page, limit },
+            pagination: { page, limit, total, totalPages: Math.max(1, Math.ceil(total / limit)) },
+            users: enriched.map(toUserItem),
         };
     },
 
-    /**
-     * Create a new user.
-     * Requires actor to be an admin.
-     * Only admin can create admin accounts.
-     */
-    async createUser(payload: Record<string, unknown>, actor: AuthenticatedActor) {
+    async createUser(actor: CurrentUserPayload | null, input: UserMutationInput) {
         requireAdmin(actor);
+        const admin = createSupabaseAdminClient();
+        const name = String(input.name || "").trim();
+        const email = String(input.email || "").trim().toLowerCase();
+        const password = String(input.password || "");
+        const role = canonicalRole(input.role || "student");
 
-        // Reject unknown fields
-        const allowedFields = ["name", "email", "password", "studentCode", "role", "department", "cohort"];
-        rejectUnknownFields(payload, allowedFields);
-
-        const name = normalizeText(payload.name);
-        const email = normalizeEmail(payload.email);
-        const password = normalizeText(payload.password);
-        const canonicalRole = validateRoleInput(payload.role !== undefined ? payload.role : "student");
-        const studentCode = normalizeText(payload.studentCode).toUpperCase();
-        const department = normalizeText(payload.department);
-        const cohort = normalizeText(payload.cohort);
-
-        // Authorization: can actor create a user with this role?
-        assertCanCreateUserWithRole(actor, canonicalRole);
-
-        // Validation
-        if (!name) throw new Error("Tên người dùng không được để trống");
-        if (!email || !isValidEmail(email)) throw new Error("Email không hợp lệ");
-        if (password.length < 6) throw new Error("Mật khẩu phải có ít nhất 6 ký tự");
-        if (canonicalRole === ROLES.STUDENT && !studentCode) {
+        if (name.length < 2) throw new Error("Tên người dùng phải có ít nhất 2 ký tự");
+        if (!isEducationEmail(email)) throw new Error("Tài khoản mới phải sử dụng email giáo dục .edu.vn");
+        if (password.length < 8) throw new Error("Mật khẩu phải có ít nhất 8 ký tự");
+        if (role === "student" && !String(input.studentCode || "").trim()) {
             throw new Error("Mã sinh viên là bắt buộc với tài khoản sinh viên");
         }
 
-        const existedEmail = await User.findOne({ email }).lean();
-        if (existedEmail) throw new Error("Email đã tồn tại");
-
-        if (studentCode) {
-            const existedCode = await User.findOne({ studentCode }).lean();
-            if (existedCode) throw new Error("Mã sinh viên đã tồn tại");
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 12);
-
-        // Store canonical role (or keep legacy if DB still uses teacher/User)
-        // We store the canonical role value going forward
-        const dbRole = canonicalRole === ROLES.LECTURER ? "lecturer"
-            : canonicalRole === ROLES.STUDENT ? "student"
-            : "admin";
-
-        const created = await User.create({
-            name,
+        const { data: created, error: createError } = await admin.auth.admin.createUser({
             email,
-            password: hashedPassword,
-            studentCode: studentCode || undefined,
-            role: dbRole,
-            department,
-            cohort,
-            isActive: true,
-            isVerified: true,
+            password,
+            email_confirm: true,
+            user_metadata: {
+                full_name: name,
+                role: role === "admin" ? "pending" : role,
+                student_code: role === "student" ? String(input.studentCode || "").trim() : undefined,
+            },
         });
+        if (createError || !created.user) throw new Error(createError?.message || "Không thể tạo tài khoản Auth");
 
-        return toPublicUser(created.toObject() as any);
-    },
-
-    /**
-     * Update a user's profile, role, or status.
-     * Requires actor to be an admin.
-     * Guarded by dual-layer synchronization:
-     *   1. AsyncMutex (local process optimization)
-     *   2. withDistributedAdminLock (cross-instance MongoDB CAS lock)
-     * Enforces strict Last-Admin invariant across any number of server/container instances.
-     */
-    async updateUser(id: string, payload: Record<string, unknown>, actor: AuthenticatedActor) {
-        requireAdmin(actor);
-
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw new Error("ID người dùng không hợp lệ");
+        const profileUpdate = {
+            full_name: name,
+            email,
+            role,
+            status: "active",
+            student_code: role === "student" ? String(input.studentCode || "").trim() || null : null,
+            department: String(input.department || "").trim() || null,
+            cohort: String(input.cohort || "").trim() || null,
+        };
+        const { data: profile, error: profileError } = await admin
+            .from("profiles")
+            .update(profileUpdate)
+            .eq("id", created.user.id)
+            .select("id,full_name,email,role,status,student_code,department,cohort,created_at,updated_at")
+            .single();
+        if (profileError) {
+            await admin.auth.admin.deleteUser(created.user.id).catch(() => undefined);
+            throw new Error(`Không thể hoàn thiện hồ sơ người dùng: ${profileError.message}`);
         }
 
-        // Reject unknown fields to prevent silent data corruption
-        rejectUnknownFields(payload, [...KNOWN_UPDATE_FIELDS]);
-
-        return privilegedMutationMutex.runExclusive(async () => {
-            return withDistributedAdminLock(ADMIN_MUTATION_LOCK_KEY, async () => {
-                // Load the target user from DB INSIDE distributed lock — do NOT trust payload for role info
-                const targetUser = await User.findById(id).lean();
-                if (!targetUser) {
-                    throw new Error("Không tìm thấy người dùng");
-                }
-
-                const nextIsActive = typeof payload.isActive === "boolean" ? payload.isActive : undefined;
-
-                // Authorization checks based on DB-loaded target
-                if (nextIsActive === false) {
-                    const activeAdminCount = await countActiveAdmins();
-                    assertCanDeactivateUser(actor, targetUser as any, activeAdminCount);
-                }
-
-                let dbRole: string | undefined;
-                if (payload.role !== undefined) {
-                    const canonicalRole = validateRoleInput(payload.role);
-                    const activeAdminCount = await countActiveAdmins();
-                    assertCanChangeRole(actor, targetUser as any, canonicalRole, activeAdminCount);
-                    dbRole = canonicalRole;
-                }
-
-                // Field-level extraction & validation
-                const name = payload.name !== undefined ? normalizeText(payload.name) : undefined;
-                const email = payload.email !== undefined ? normalizeEmail(payload.email) : undefined;
-                const studentCode = payload.studentCode !== undefined
-                    ? normalizeText(payload.studentCode).toUpperCase()
-                    : undefined;
-                const department = payload.department !== undefined ? normalizeText(payload.department) : undefined;
-                const cohort = payload.cohort !== undefined ? String(payload.cohort) : undefined;
-                const password = payload.password !== undefined ? normalizeText(payload.password) : undefined;
-
-                if (name !== undefined && !name) throw new Error("Tên không được để trống");
-
-                if (email !== undefined) {
-                    if (!email || !isValidEmail(email)) throw new Error("Email không hợp lệ");
-                    const existed = await User.findOne({ email, _id: { $ne: id } }).lean();
-                    if (existed) throw new Error("Email đã tồn tại");
-                }
-
-                if (studentCode !== undefined && studentCode) {
-                    if (studentCode.length < 3) throw new Error("Mã sinh viên không hợp lệ");
-                    const existed = await User.findOne({ studentCode, _id: { $ne: id } }).lean();
-                    if (existed) throw new Error("Mã sinh viên đã tồn tại");
-                }
-
-                const finalRole = dbRole ?? normalizeRole((targetUser as any).role);
-                const finalStudentCode =
-                    studentCode !== undefined ? (studentCode || undefined) : (targetUser as any).studentCode;
-
-                if (finalRole === ROLES.STUDENT && !finalStudentCode) {
-                    throw new Error("Mã sinh viên là bắt buộc với tài khoản sinh viên");
-                }
-
-                // Build update object
-                const updateData: Record<string, unknown> = {};
-                if (name !== undefined) updateData.name = name;
-                if (email !== undefined) updateData.email = email;
-                if (dbRole !== undefined) updateData.role = dbRole;
-                if (studentCode !== undefined) updateData.studentCode = studentCode || undefined;
-                if (department !== undefined) updateData.department = department;
-                if (cohort !== undefined) updateData.cohort = cohort;
-                if (typeof nextIsActive === "boolean") updateData.isActive = nextIsActive;
-
-                if (password !== undefined && password) {
-                    if (password.length < 6) throw new Error("Mật khẩu phải có ít nhất 6 ký tự");
-                    updateData.password = await bcrypt.hash(password, 12);
-                }
-
-                const updated = await User.findByIdAndUpdate(
-                    id,
-                    { $set: updateData },
-                    { new: true, runValidators: true }
-                )
-                    .select("name email studentCode role department cohort isVerified isActive lastLoginAt createdAt updatedAt")
-                    .lean();
-
-                if (!updated) throw new Error("Không tìm thấy người dùng");
-
-                return toPublicUser(updated as any);
-            });
+        await admin.auth.admin.updateUserById(created.user.id, {
+            user_metadata: { full_name: name, role },
         });
+        return toUserItem(profile as Record<string, any>);
     },
 
-    /**
-     * Delete a user permanently.
-     * Requires actor to be an admin.
-     * Guarded by dual-layer synchronization (AsyncMutex + withDistributedAdminLock).
-     * Enforces strict Last-Admin invariant across any number of server/container instances.
-     */
-    async deleteUser(id: string, actor: AuthenticatedActor) {
+    async updateUser(actor: CurrentUserPayload | null, userId: string, input: UserMutationInput) {
         requireAdmin(actor);
+        ensureUuid(userId);
+        const admin = createSupabaseAdminClient();
+        const { data: existing, error: existingError } = await admin
+            .from("profiles")
+            .select("id,full_name,email,role,status,student_code,department,cohort,created_at,updated_at")
+            .eq("id", userId)
+            .maybeSingle();
+        if (existingError) throw new Error(`Không thể tải người dùng: ${existingError.message}`);
+        if (!existing) throw new Error("Không tìm thấy người dùng");
 
-        if (!mongoose.Types.ObjectId.isValid(id)) {
-            throw new Error("ID người dùng không hợp lệ");
+        const desiredRole = input.roles !== undefined || input.role !== undefined
+            ? canonicalRole(input.roles ?? input.role)
+            : canonicalRole(existing.role);
+        const desiredStatus = input.isActive === undefined ? existing.status : normalizeStatus(input.isActive);
+        const name = input.name === undefined ? existing.full_name : String(input.name).trim();
+        const email = input.email === undefined ? existing.email : String(input.email).trim().toLowerCase();
+        if (!name) throw new Error("Tên người dùng không được để trống");
+        if (!email || !email.includes("@")) throw new Error("Email không hợp lệ");
+        if (desiredRole === "student" && !String(input.studentCode ?? existing.student_code ?? "").trim()) {
+            throw new Error("Mã sinh viên là bắt buộc với tài khoản sinh viên");
         }
 
-        return privilegedMutationMutex.runExclusive(async () => {
-            return withDistributedAdminLock(ADMIN_MUTATION_LOCK_KEY, async () => {
-                // Load target from DB inside distributed lock — never trust client-provided role
-                const targetUser = await User.findById(id).lean();
-                if (!targetUser) {
-                    throw new Error("Không tìm thấy người dùng để xóa");
-                }
+        const authUpdate: Record<string, any> = {
+            email,
+            user_metadata: { full_name: name, role: desiredRole },
+        };
+        if (input.password) {
+            if (String(input.password).length < 8) throw new Error("Mật khẩu phải có ít nhất 8 ký tự");
+            authUpdate.password = String(input.password);
+        }
+        const { error: authError } = await admin.auth.admin.updateUserById(userId, authUpdate);
+        if (authError) throw new Error(`Không thể cập nhật tài khoản Auth: ${authError.message}`);
 
-                const activeAdminCount = await countActiveAdmins();
-                assertCanDeleteUser(actor, targetUser as any, activeAdminCount);
+        const { data: updated, error: updateError } = await admin
+            .from("profiles")
+            .update({
+                full_name: name,
+                email,
+                role: desiredRole,
+                status: desiredStatus,
+                student_code: desiredRole === "student" ? String(input.studentCode ?? existing.student_code ?? "").trim() || null : null,
+                department: input.department === undefined ? existing.department : String(input.department).trim() || null,
+                cohort: input.cohort === undefined ? existing.cohort : String(input.cohort).trim() || null,
+            })
+            .eq("id", userId)
+            .select("id,full_name,email,role,status,student_code,department,cohort,created_at,updated_at")
+            .single();
+        if (updateError) throw new Error(`Không thể cập nhật hồ sơ: ${updateError.message}`);
+        return toUserItem(updated as Record<string, any>);
+    },
 
-                await User.findByIdAndDelete(id);
-
-                return { deleted: id };
-            });
-        });
+    async deleteUser(actor: CurrentUserPayload | null, userId: string) {
+        requireAdmin(actor);
+        ensureUuid(userId);
+        if (actor?.userId === userId) throw new Error("Bạn không thể xóa chính tài khoản đang đăng nhập");
+        const admin = createSupabaseAdminClient();
+        const { error } = await admin.auth.admin.deleteUser(userId);
+        if (error) throw new Error(`Không thể xóa người dùng: ${error.message}`);
+        return { deletedId: userId };
     },
 };
