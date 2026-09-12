@@ -29,6 +29,7 @@ type Props = {
     onManualScoreChange: (score: string) => void;
     onCriterionScoreChange: (code: string, score: string) => void;
     onCriterionCommentChange: (code: string, comment: string) => void;
+    onApplyAiCriterion: (code: string, score: number, feedback: string) => void;
     onTeacherCommentChange: (comment: string) => void;
     onSaveDraft: () => void;
     onPublish: () => void;
@@ -55,6 +56,7 @@ export function StudentDetailPanel({
                                        onManualScoreChange,
                                        onCriterionScoreChange,
                                        onCriterionCommentChange,
+                                       onApplyAiCriterion,
                                        onTeacherCommentChange,
                                        onSaveDraft,
                                        onPublish,
@@ -103,7 +105,11 @@ export function StudentDetailPanel({
                                 manualScore={manualScore}
                                 onManualScoreChange={onManualScoreChange}
                             />
-                            <AiFeedbackPanel detail={detail} />
+                            <AiFeedbackPanel
+                                detail={detail}
+                                canGrade={canGrade}
+                                onApplyCriterion={onApplyAiCriterion}
+                            />
                         </div>
 
                         <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">

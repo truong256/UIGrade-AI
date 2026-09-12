@@ -82,12 +82,74 @@ export interface RubricCriterion {
 
 export interface AiCriterionFeedback {
     criterionCode: string;
+    title?: string;
     awardedPoints: number;
     confidence: number;
+    confidenceLabel?: "high" | "medium" | "low";
     summary: string;
+    evidence?: AiEvidenceReference[];
+    evidenceStatus?: "verified" | "insufficient" | "missing";
     strengths: string[];
     issues: string[];
     suggestions: string[];
+    conflicts?: string[];
+    needsHumanReview?: boolean;
+}
+
+export interface AiEvidenceReference {
+    id: string;
+    source: string;
+    description: string;
+    sourceType:
+        | "submission_text"
+        | "source_file"
+        | "screenshot"
+        | "repository"
+        | "deterministic";
+    excerpt?: string;
+    lineStart?: number;
+    lineEnd?: number;
+}
+
+export interface DeterministicGradingCheck {
+    code: string;
+    label: string;
+    criterionCode?: string | null;
+    status: "passed" | "failed" | "warning" | "not_run";
+    evidence: string[];
+    score?: number | null;
+    maxScore?: number | null;
+    immutable: true;
+}
+
+export interface AiGradingConflict {
+    code: string;
+    criterionCode?: string;
+    message: string;
+}
+
+export interface AiGradingCritic {
+    verdict: "ACCEPT" | "ADJUST" | "NEEDS_HUMAN_REVIEW";
+    summary: string;
+    adjustments: Array<{
+        criterionCode: string;
+        oldScore: number;
+        newSuggestedScore: number;
+        reason: string;
+        evidence: AiEvidenceReference[];
+    }>;
+}
+
+export interface AiGradingMetadata {
+    provider: "gemini";
+    model: string;
+    promptVersion: string;
+    schemaVersion: string;
+    generatedAt: string;
+    submissionVersion: string;
+    assignmentVersion?: string;
+    contentHash: string;
+    stale?: boolean;
 }
 
 export interface AiIssue {
@@ -103,6 +165,21 @@ export interface AiFeedbackResult {
     issues: AiIssue[];
     nextSteps: string[];
     criterionFeedback: AiCriterionFeedback[];
+    suggestedTotal?: number;
+    maxScore?: number;
+    overallConfidence?: number;
+    evidenceCoverage?: {
+        verified: number;
+        missing: number;
+        insufficient: number;
+        total: number;
+    };
+    missingEvidence?: string[];
+    conflicts?: AiGradingConflict[];
+    needsHumanReview?: boolean;
+    critic?: AiGradingCritic;
+    deterministicChecks?: DeterministicGradingCheck[];
+    metadata?: AiGradingMetadata;
 }
 
 export interface CriterionBreakdown {

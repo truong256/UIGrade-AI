@@ -307,13 +307,26 @@ export function useGradingDetail() {
             const json = await requestJson(`/api/grading/submissions/${selectedSubmissionId}/ai-suggest`, {
                 method: "POST",
             });
-            await refreshSelected(json.message || "AI đã tạo gợi ý để giảng viên tham khảo");
+            setDetail((current) => current ? {
+                ...current,
+                grade: {
+                    ...asObj(current.grade),
+                    aiFeedback: asObj(json.data),
+                },
+            } : current);
+            setNotice(json.message || "AI đã tạo gợi ý để giảng viên tham khảo");
         } catch (gradeError) {
             const detail = gradeError instanceof Error ? gradeError.message : "Dịch vụ AI không phản hồi.";
             setError(`Không thể tạo gợi ý AI. Bạn vẫn có thể chấm bài thủ công. ${detail}`);
         } finally {
             setGrading(false);
         }
+    }
+
+    function applyAiCriterion(code: string, score: number, feedback: string) {
+        setCriterionScores((previous) => ({ ...previous, [code]: String(score) }));
+        if (feedback) setCriterionComments((previous) => ({ ...previous, [code]: feedback }));
+        setNotice("Đã chép gợi ý vào biểu mẫu nháp. Hãy kiểm tra và bấm Lưu nháp hoặc Công bố điểm riêng.");
     }
 
     return {
@@ -324,6 +337,6 @@ export function useGradingDetail() {
         criterionScores, setCriterionScores, criterionComments, setCriterionComments,
         teacherComment, setTeacherComment, loading, detailLoading, grading, saving, publishing,
         error, notice, maxScore, rubric, selectedFile, totalScore, loadDetail, syncUrl,
-        handleGrade, handleSaveDraft, handlePublish,
+        handleGrade, handleSaveDraft, handlePublish, applyAiCriterion,
     };
 }

@@ -11,6 +11,7 @@ type Props = {
     grading: boolean;
     canGrade: boolean;
     aiLocked: boolean;
+    hasAiSuggestion: boolean;
     detailLoading: boolean;
     error: string;
     notice: string;
@@ -26,6 +27,7 @@ export function GradingHeader({
     grading,
     canGrade,
     aiLocked,
+    hasAiSuggestion,
     detailLoading,
     error,
     notice,
@@ -82,19 +84,8 @@ export function GradingHeader({
                         title={aiLocked ? "Gợi ý AI đã khóa sau khi công bố điểm" : undefined}
                         className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-blue-600 px-5 text-xs sm:text-sm font-semibold text-white shadow-xs hover:bg-blue-700 active:scale-98 transition disabled:cursor-not-allowed disabled:opacity-60"
                     >
-                        <span className="material-symbols-outlined text-[18px]">auto_awesome</span>
-                        {grading ? "AI đang phân tích..." : aiLocked ? "AI đã khóa sau công bố" : "Tạo gợi ý AI"}
-                    </button>
-
-                    <button
-                        type="button"
-                        onClick={onGrade}
-                        disabled={!canGrade || !selectedSubmissionId || grading || detailLoading || aiLocked}
-                        title={aiLocked ? "Gợi ý AI đã khóa sau khi công bố điểm" : undefined}
-                        className="inline-flex h-10 items-center gap-1.5 rounded-xl border border-blue-200 bg-blue-50/70 px-4 text-xs sm:text-sm font-semibold text-blue-700 hover:bg-blue-100 transition active:scale-98 disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        <span className="material-symbols-outlined text-[18px]">refresh</span>
-                        {grading ? "Đang tạo lại..." : "Tạo lại gợi ý"}
+                        <span className="material-symbols-outlined text-[18px]">{hasAiSuggestion ? "refresh" : "auto_awesome"}</span>
+                        {grading ? "AI đang phân tích..." : aiLocked ? "AI đã khóa sau công bố" : hasAiSuggestion ? "Tạo lại gợi ý AI" : "Tạo gợi ý AI"}
                     </button>
                 </div>
             </div>

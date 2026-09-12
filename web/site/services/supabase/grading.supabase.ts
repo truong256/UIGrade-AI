@@ -6,8 +6,12 @@ import {
     validateGradePayload,
     type GradeCriterionInput,
 } from "@/lib/grading-workflow";
-import { generateAiFeedback } from "@/services/gemini.service";
-import { buildGradingContext } from "@/services/grading-context.service";
+import { generateAiGradingRecommendation } from "@/services/ai-grading-v2.service";
+import {
+    extractSubmissionEvidence,
+    type GradingEvidenceAsset,
+} from "@/services/grading-evidence.service";
+import { beginAiGeneration, AiGenerationRateLimitError } from "@/lib/ai-grading-rate-limit";
 import {
     assertSubmissionObjectOwnership,
     resolvePrivateSubmissionObjectPath,
@@ -20,7 +24,7 @@ type GradingActor = {
 };
 
 export class GradingAccessError extends Error {
-    constructor(message: string, readonly statusCode: 401 | 403 | 404 | 409 = 403) {
+    constructor(message: string, readonly statusCode: 401 | 403 | 404 | 409 | 429 = 403) {
         super(message);
         this.name = "GradingAccessError";
     }
@@ -115,17 +119,59 @@ function normalizeGrade(row: unknown) {
         maxScore: Number(grade.max_score || 0),
         lecturerFeedback: String(grade.feedback || ""),
         rubricBreakdown: Array.isArray(grade.rubric_breakdown) ? grade.rubric_breakdown : [],
-        aiFeedback: grade.ai_feedback || null,
+        aiFeedback: null,
         gradedAt: grade.graded_at || null,
         publishedAt: grade.published_at || null,
         updatedAt: grade.updated_at || null,
     };
 }
 
+function markStaleAiFeedback(
+    grade: ReturnType<typeof normalizeGrade>,
+    submissionUpdatedAt: unknown,
+    assignmentUpdatedAt: unknown
+) {
+    if (!grade?.aiFeedback || typeof grade.aiFeedback !== "object") return grade;
+    const feedback = object(grade.aiFeedback);
+    const metadata = object(feedback.metadata);
+    const submissionVersion = String(metadata.submissionVersion || "");
+    const currentVersion = String(submissionUpdatedAt || "");
+    const assignmentVersion = String(metadata.assignmentVersion || "");
+    const currentAssignmentVersion = String(assignmentUpdatedAt || "");
+    const submissionChanged = Boolean(submissionVersion && currentVersion && submissionVersion !== currentVersion);
+    const assignmentChanged = Boolean(assignmentVersion && currentAssignmentVersion && assignmentVersion !== currentAssignmentVersion);
+    if (!submissionChanged && !assignmentChanged) return grade;
+    return {
+        ...grade,
+        aiFeedback: {
+            ...feedback,
+            metadata: { ...metadata, stale: true },
+        },
+    };
+}
+
 function normalizeSubmission(row: AnyRecord) {
     const assignment = firstRelation(row.assignment);
     const student = firstRelation(row.student);
-    const grade = normalizeGrade(row.grade ?? row.grades);
+    const suggestion = firstRelation(row.ai_suggestion);
+    const normalizedGrade = normalizeGrade(row.grade ?? row.grades);
+    const gradeWithSuggestion = suggestion
+        ? {
+            ...(normalizedGrade || {
+                id: "",
+                status: "pending",
+                score: null,
+                maxScore: Number(assignment?.max_score || 0),
+                lecturerFeedback: "",
+                rubricBreakdown: [],
+                gradedAt: null,
+                publishedAt: null,
+                updatedAt: null,
+            }),
+            aiFeedback: suggestion.suggestion || null,
+        }
+        : normalizedGrade;
+    const grade = markStaleAiFeedback(gradeWithSuggestion, row.updated_at, assignment?.updated_at);
     const uploadedFiles = Array.isArray(row.files) ? row.files : [];
     const files = [
         row.source_zip_url ? {
@@ -185,21 +231,28 @@ function normalizeSubmission(row: AnyRecord) {
 }
 
 const ASSIGNMENT_SELECT = `
-    id, lecturer_id, class_id, title, description, instructions, due_at, max_score, rubric,
+    id, lecturer_id, class_id, title, description, instructions, due_at, max_score, rubric, updated_at,
+    rubric_text, language, allow_late_submission, late_penalty_percent, runner_config, ai_config, attachments,
     class:classes!assignments_class_id_fkey(id, name, class_code)
 `;
 
 const SUBMISSION_SELECT = `
     id, assignment_id, student_id, content, file_url, apk_file_url, apk_filename,
     source_zip_url, files, repository_url, screenshot_urls, submitted_at, status, is_late,
+    execution_logs, test_results,
     attempt_no, is_current, created_at, updated_at,
     assignment:assignments!submissions_assignment_id_fkey(
-        id, lecturer_id, class_id, title, description, instructions, due_at, max_score, rubric,
+        id, lecturer_id, class_id, title, description, instructions, due_at, max_score, rubric, updated_at,
+        rubric_text, language, allow_late_submission, late_penalty_percent, runner_config, ai_config, attachments,
         class:classes!assignments_class_id_fkey(id, name, class_code)
     ),
     student:profiles!submissions_student_id_fkey(id, full_name, email, student_code, avatar_url),
     grade:grades(id, status, score, max_score, feedback, rubric_breakdown, ai_feedback,
-        graded_at, published_at, updated_at)
+        graded_at, published_at, updated_at),
+    ai_suggestion:ai_grading_suggestions(
+        id, suggestion, prompt_version, schema_version, provider, model,
+        content_hash, submission_version, assignment_version, generated_at, updated_at
+    )
 `;
 
 async function getSubmissionRow(client: SupabaseClient<any>, submissionId: string): Promise<AnyRecord> {
@@ -211,6 +264,192 @@ async function getSubmissionRow(client: SupabaseClient<any>, submissionId: strin
     if (error) throw databaseError(error, "Không thể tải bài nộp.");
     if (!data) throw new GradingAccessError("Không tìm thấy bài nộp.", 404);
     return object(data);
+}
+
+function storageAssetCandidates(row: AnyRecord) {
+    const candidates: Array<{ raw: string; name: string; mimeType: string; kind: GradingEvidenceAsset["kind"] }> = [];
+    const seen = new Set<string>();
+    if (row.source_zip_url) {
+        candidates.push({ raw: String(row.source_zip_url), name: "source.zip", mimeType: "application/zip", kind: "source" });
+        seen.add(String(row.source_zip_url));
+    }
+    if (row.file_url) {
+        candidates.push({ raw: String(row.file_url), name: "submission-file", mimeType: "application/octet-stream", kind: "attachment" });
+    }
+    const files = Array.isArray(row.files) ? row.files : [];
+    files.forEach((raw: unknown, index: number) => {
+        const item = object(raw);
+        const storedPath = String(item.path || item.storagePath || item.storage_path || item.url || "");
+        if (!storedPath || seen.has(storedPath)) return;
+        seen.add(storedPath);
+        candidates.push({
+            raw: storedPath,
+            name: String(item.originalName || item.original_name || item.name || `attachment-${index + 1}`),
+            mimeType: String(item.mimeType || item.mime_type || "application/octet-stream"),
+            kind: String(item.mimeType || item.mime_type || "").startsWith("image/")
+                || /\.(png|jpe?g|webp|gif)$/i.test(String(item.originalName || item.original_name || item.name || ""))
+                ? "screenshot"
+                : "attachment",
+        });
+    });
+    const screenshots = Array.isArray(row.screenshot_urls) ? row.screenshot_urls : [];
+    screenshots.forEach((raw: unknown, index: number) => {
+        const item = object(raw);
+        const storedPath = typeof raw === "string"
+            ? raw
+            : String(item.path || item.storagePath || item.storage_path || item.url || "");
+        if (!storedPath) return;
+        candidates.push({
+            raw: storedPath,
+            name: String(item.originalName || item.original_name || item.name || `screenshot-${index + 1}.png`),
+            mimeType: String(item.mimeType || item.mime_type || "image/png"),
+            kind: "screenshot",
+        });
+    });
+    return candidates.slice(0, 24);
+}
+
+async function downloadEvidenceAssets(client: SupabaseClient<any>, row: AnyRecord) {
+    const assets: GradingEvidenceAsset[] = [];
+    let totalBytes = 0;
+    for (const candidate of storageAssetCandidates(row)) {
+        try {
+            const objectPath = resolvePrivateSubmissionObjectPath(
+                candidate.raw,
+                process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co"
+            );
+            assertSubmissionObjectOwnership(objectPath, row.student_id, row.assignment_id);
+            const { data, error } = await client.storage.from("submissions").download(objectPath);
+            if (error || !data || data.size > 25 * 1024 * 1024 || totalBytes + data.size > 35 * 1024 * 1024) continue;
+            totalBytes += data.size;
+            assets.push({
+                name: candidate.name,
+                mimeType: candidate.mimeType,
+                kind: candidate.kind,
+                data: Buffer.from(await data.arrayBuffer()),
+            });
+        } catch {
+            // External URLs and paths outside this submission are never fetched.
+        }
+    }
+    return assets;
+}
+
+function resolveAssignmentObjectPath(raw: string) {
+    const value = raw.trim();
+    if (!value) return "";
+    if (!/^https?:\/\//i.test(value)) {
+        const direct = value.replace(/^assignments\//, "").replace(/^\/+/, "");
+        if (direct.includes("../")) return "";
+        return direct;
+    }
+    try {
+        const url = new URL(value);
+        const project = new URL(process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder-project.supabase.co");
+        if (url.origin !== project.origin) return "";
+        const markers = ["/storage/v1/object/public/assignments/", "/storage/v1/object/sign/assignments/"];
+        const marker = markers.find((item) => url.pathname.includes(item));
+        if (!marker) return "";
+        const objectPath = decodeURIComponent(url.pathname.slice(url.pathname.indexOf(marker) + marker.length));
+        return objectPath && !objectPath.includes("../") ? objectPath : "";
+    } catch {
+        return "";
+    }
+}
+
+async function downloadAssignmentEvidenceAssets(client: SupabaseClient<any>, assignment: AnyRecord) {
+    const attachments = Array.isArray(assignment.attachments) ? assignment.attachments : [];
+    const assets: GradingEvidenceAsset[] = [];
+    let totalBytes = 0;
+    for (const raw of attachments.slice(0, 12)) {
+        const item = object(raw);
+        const objectPath = resolveAssignmentObjectPath(String(item.path || item.url || ""));
+        if (!objectPath) continue;
+        const { data, error } = await client.storage.from("assignments").download(objectPath);
+        if (error || !data || data.size > 15 * 1024 * 1024 || totalBytes + data.size > 25 * 1024 * 1024) continue;
+        totalBytes += data.size;
+        assets.push({
+            name: String(item.originalName || item.original_name || item.name || "assignment-resource"),
+            mimeType: String(item.mimeType || item.mime_type || data.type || "application/octet-stream"),
+            kind: "assignment",
+            data: Buffer.from(await data.arrayBuffer()),
+        });
+    }
+    return assets;
+}
+
+function deterministicChecksFromSubmission(row: AnyRecord) {
+    const rawTestResults = row.test_results;
+    const result = object(rawTestResults);
+    const checks: Array<{
+        code: string;
+        label: string;
+        criterionCode?: string | null;
+        status: "passed" | "failed" | "warning" | "not_run";
+        evidence: string[];
+        score?: number | null;
+        maxScore?: number | null;
+        immutable: true;
+    }> = [];
+    const providedChecks = Array.isArray(rawTestResults)
+        ? rawTestResults
+        : Array.isArray(result.checks) ? result.checks : [];
+    for (const raw of providedChecks.slice(0, 100)) {
+        const item = object(raw);
+        const rawStatus = typeof item.passed === "boolean"
+            ? item.passed ? "passed" : "failed"
+            : String(item.status || "not_run");
+        const status = ["passed", "failed", "warning", "not_run"].includes(rawStatus)
+            ? rawStatus as "passed" | "failed" | "warning" | "not_run"
+            : "not_run";
+        checks.push({
+            code: String(item.code || `test-check-${checks.length + 1}`),
+            label: String(item.label || item.name || "Automated check"),
+            criterionCode: item.criterionCode ? String(item.criterionCode) : null,
+            status,
+            evidence: Array.isArray(item.evidence)
+                ? item.evidence.map(String).slice(0, 20)
+                : [String(item.message || "Không có mô tả chi tiết.")],
+            score: numberOrNull(item.score),
+            maxScore: numberOrNull(item.maxScore),
+            immutable: true,
+        });
+    }
+    const passed = numberOrNull(result.passed);
+    const failed = numberOrNull(result.failed);
+    if (passed !== null || failed !== null) {
+        checks.push({
+            code: "tests:summary",
+            label: "Kết quả automated tests",
+            status: Number(failed || 0) > 0 ? "failed" : "passed",
+            evidence: [`Passed: ${Number(passed || 0)}, Failed: ${Number(failed || 0)}`],
+            immutable: true,
+        });
+    }
+    for (const [field, label] of [["buildPassed", "Build"], ["lintPassed", "Lint"], ["typecheckPassed", "TypeScript"]] as const) {
+        if (typeof result[field] !== "boolean") continue;
+        checks.push({
+            code: `automation:${field}`,
+            label,
+            status: result[field] ? "passed" : "failed",
+            evidence: [`${label}: ${result[field] ? "PASS" : "FAIL"}`],
+            immutable: true,
+        });
+    }
+    for (const [field, label] of [["visualSimilarity", "Visual similarity"], ["accessibilityScore", "Accessibility score"]] as const) {
+        const value = numberOrNull(result[field]);
+        if (value === null) continue;
+        checks.push({
+            code: `metric:${field}`,
+            label,
+            status: "warning",
+            evidence: [`${label}: ${value}`],
+            score: value,
+            maxScore: 100,
+            immutable: true,
+        });
+    }
+    return checks;
 }
 
 export const SupabaseGradingService = {
@@ -294,6 +533,8 @@ export const SupabaseGradingService = {
             normalized.grade = null;
             normalized.finalScore = null;
             normalized.gradeStatus = "pending";
+        } else if (actor.role === "student" && normalized.grade) {
+            normalized.grade = { ...normalized.grade, aiFeedback: null };
         }
         return normalized;
     },
@@ -431,50 +672,92 @@ export const SupabaseGradingService = {
                 409
             );
         }
+        const storedSuggestion = firstRelation(row.ai_suggestion);
+        const previousMetadata = object(object(storedSuggestion?.suggestion).metadata);
+        const previousGeneratedAt = Date.parse(String(previousMetadata.generatedAt || ""));
+        if (Number.isFinite(previousGeneratedAt) && Date.now() - previousGeneratedAt < 20_000) {
+            throw new GradingAccessError("Vui lòng chờ 20 giây trước khi tạo lại gợi ý AI.", 429);
+        }
+        const release = beginAiGeneration(`${actor.id}:${submissionId}`);
+        let successful = false;
+        try {
+            const rawRubric = Array.isArray(assignment.rubric) ? assignment.rubric : [];
+            const aiRubric = rubric.map((item, index) => {
+                const raw = object(rawRubric[index]);
+                const source = ["runner", "ai", "hybrid", "manual"].includes(String(raw.gradingSource))
+                    ? String(raw.gradingSource)
+                    : "ai";
+                return {
+                    ...item,
+                    gradingSource: source as "runner" | "ai" | "hybrid" | "manual",
+                    requiredEvidence: Array.isArray(raw.requiredEvidence) ? raw.requiredEvidence.map(String) : [],
+                    passThreshold: numberOrNull(raw.passThreshold),
+                    notes: String(raw.notes || ""),
+                };
+            });
+            const [submissionAssets, assignmentAssets] = await Promise.all([
+                downloadEvidenceAssets(client, row),
+                downloadAssignmentEvidenceAssets(client, assignment),
+            ]);
+            const assets = [...submissionAssets, ...assignmentAssets];
+            const evidence = extractSubmissionEvidence({
+                assignment: {
+                    version: String(assignment.updated_at || ""),
+                    title: String(assignment.title || "Bài tập"),
+                    description: String(assignment.description || ""),
+                    instructions: String(assignment.instructions || ""),
+                    rubricText: String(assignment.rubric_text || ""),
+                    maxScore: Number(assignment.max_score || 0),
+                    language: String(assignment.language || "vi"),
+                    requiredOutputs: [
+                        ...(Array.isArray(object(assignment.runner_config).requiredFiles) ? object(assignment.runner_config).requiredFiles.map(String) : []),
+                        ...(Array.isArray(object(assignment.runner_config).entryFiles) ? object(assignment.runner_config).entryFiles.map(String) : []),
+                    ],
+                    lateRules: {
+                        allowLateSubmission: assignment.allow_late_submission !== false,
+                        latePenaltyPercent: Number(assignment.late_penalty_percent || 0),
+                    },
+                    rubric: aiRubric,
+                },
+                submission: {
+                    anonymousId: String(row.id || submissionId),
+                    content: String(row.content || ""),
+                    repositoryUrl: String(row.repository_url || ""),
+                    submittedAt: row.submitted_at || null,
+                    updatedAt: String(row.updated_at || row.submitted_at || ""),
+                    isLate: Boolean(row.is_late),
+                },
+                assets,
+                deterministicChecks: deterministicChecksFromSubmission(row),
+            });
+            const aiConfig = object(assignment.ai_config);
+            const aiFeedback = await generateAiGradingRecommendation({
+                bundle: evidence,
+                model: String(aiConfig.model || process.env.GEMINI_MODEL || "gemini-3.8-flash"),
+                timeoutMs: numberOrNull(aiConfig.timeoutMs) || undefined,
+                maxOutputTokens: numberOrNull(aiConfig.maxOutputTokens) || undefined,
+            });
 
-        const context = await buildGradingContext({
-            assignmentId: {
-                title: assignment.title,
-                description: assignment.description || assignment.instructions,
-                rubric: rubric.map((item) => ({ ...item, gradingSource: "ai" })),
-            },
-            note: row.content,
-            repositoryUrl: row.source_zip_url || row.file_url || "",
-        });
-        const aiFeedback = await generateAiFeedback({
-            assignmentTitle: String(assignment.title || "Bài tập"),
-            gradingContextText: context.text,
-            multimodalParts: context.multimodalParts,
-            rubric: rubric.map((item) => ({
-                ...item,
-                gradingSource: "ai" as const,
-                requiredEvidence: [],
-                passThreshold: null,
-            })),
-            runnerReport: null,
-            model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
-            language: "vi",
-        });
-
-        let query;
-        if (existingGrade?.id) {
-            query = client.from("grades").update({ ai_feedback: aiFeedback })
-                .eq("id", existingGrade.id);
-        } else {
-            query = client.from("grades").insert({
+            const metadata = object(aiFeedback.metadata);
+            const { error } = await client.from("ai_grading_suggestions").upsert({
                 submission_id: submissionId,
                 lecturer_id: actor.id,
-                score: 0,
-                max_score: Number(assignment.max_score || 0),
-                feedback: "",
-                rubric_breakdown: [],
-                ai_feedback: aiFeedback,
-                status: "draft",
-            });
+                suggestion: aiFeedback,
+                prompt_version: String(metadata.promptVersion || "v2.0"),
+                schema_version: String(metadata.schemaVersion || "v2"),
+                provider: String(metadata.provider || "gemini"),
+                model: String(metadata.model || process.env.GEMINI_MODEL || "gemini-3.8-flash"),
+                content_hash: String(metadata.contentHash || ""),
+                submission_version: metadata.submissionVersion || null,
+                assignment_version: metadata.assignmentVersion || null,
+                generated_at: metadata.generatedAt || new Date().toISOString(),
+            }, { onConflict: "submission_id" });
+            if (error) throw databaseError(error, "Không thể lưu gợi ý AI.");
+            successful = true;
+            return aiFeedback;
+        } finally {
+            release(successful);
         }
-        const { error } = await query;
-        if (error) throw databaseError(error, "Không thể lưu gợi ý AI.");
-        return aiFeedback;
     },
 
     async getMyPublishedResults() {
@@ -518,7 +801,6 @@ export const SupabaseGradingService = {
                 maxScore: Number(grade.max_score || assignment.max_score || 0),
                 studentNote: String(submission.content || ""),
                 teacherComment: String(grade.feedback || ""),
-                aiFeedback: grade.ai_feedback || null,
                 criterionBreakdown: Array.isArray(grade.rubric_breakdown) ? grade.rubric_breakdown : [],
                 gradedAt: grade.graded_at || null,
                 publishedAt: grade.published_at || null,
@@ -530,6 +812,7 @@ export const SupabaseGradingService = {
 
 export function resolveGradingHttpStatus(error: unknown): number {
     if (error instanceof GradingAccessError) return error.statusCode;
+    if (error instanceof AiGenerationRateLimitError) return 429;
     const message = error instanceof Error ? error.message.toLowerCase() : "";
     if (message.includes("đăng nhập") || message.includes("jwt")) return 401;
     if (message.includes("quyền") || message.includes("lecturer")) return 403;

@@ -19,6 +19,7 @@ function GradingDetailContent() {
                 grading={grading.grading}
                 canGrade={grading.canGrade}
                 aiLocked={grading.detail?.grade?.status === "published"}
+                hasAiSuggestion={Boolean(grading.detail?.grade?.aiFeedback)}
                 detailLoading={grading.detailLoading}
                 error={grading.error}
                 notice={grading.notice}
@@ -78,6 +79,7 @@ function GradingDetailContent() {
                     onCriterionCommentChange={(code, comment) =>
                         grading.setCriterionComments((previous) => ({ ...previous, [code]: comment }))
                     }
+                    onApplyAiCriterion={grading.applyAiCriterion}
                     onTeacherCommentChange={grading.setTeacherComment}
                     onSaveDraft={() => void grading.handleSaveDraft()}
                     onPublish={() => void grading.handlePublish()}
