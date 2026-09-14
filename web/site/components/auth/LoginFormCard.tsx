@@ -1,9 +1,10 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SocialLoginButtons } from "./SocialLoginButtons";
+import { getAuthErrorMessage, type AuthAlert } from "@/lib/auth-errors";
 
 type LoginFormData = {
     emailLabel?: string;
@@ -20,9 +21,16 @@ type LoginFormData = {
 type Props = {
     data?: LoginFormData;
     initialError?: string;
+    initialErrorCode?: string;
+    initialErrorMessage?: string;
 };
 
-export function LoginFormCard({ data, initialError = "" }: Props) {
+export function LoginFormCard({
+    data,
+    initialError = "",
+    initialErrorCode,
+    initialErrorMessage,
+}: Props) {
     const router = useRouter();
     const submitting = useRef(false);
     const [showPassword, setShowPassword] = useState(false);
@@ -30,7 +38,23 @@ export function LoginFormCard({ data, initialError = "" }: Props) {
     const [password, setPassword] = useState("");
     const [emailError, setEmailError] = useState("");
     const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(initialError);
+    const [formError, setFormError] = useState<string | null>(initialError || null);
+    const [urlAlert, setUrlAlert] = useState<AuthAlert | null>(() =>
+        getAuthErrorMessage(initialErrorCode, initialErrorMessage)
+    );
+
+    useEffect(() => {
+        if (initialErrorCode) {
+            setUrlAlert(getAuthErrorMessage(initialErrorCode, initialErrorMessage));
+        } else if (typeof window !== "undefined") {
+            const params = new URLSearchParams(window.location.search);
+            const err = params.get("error");
+            const msg = params.get("message");
+            if (err) {
+                setUrlAlert(getAuthErrorMessage(err, msg));
+            }
+        }
+    }, [initialErrorCode, initialErrorMessage]);
 
     const validateEmail = (val: string): boolean => {
         const trimmed = val.trim();
@@ -50,13 +74,14 @@ export function LoginFormCard({ data, initialError = "" }: Props) {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (submitting.current) return;
-        setError("");
+        setFormError(null);
+        setUrlAlert(null);
 
         const isEmailValid = validateEmail(email);
         if (!isEmailValid) return;
 
         if (!password.trim()) {
-            setError("Vui lòng nhập mật khẩu");
+            setFormError("Vui lòng nhập mật khẩu");
             return;
         }
 
@@ -78,19 +103,23 @@ export function LoginFormCard({ data, initialError = "" }: Props) {
             const result = await res.json();
 
             if (!res.ok) {
-                setError(result.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
+                setFormError(result.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
                 return;
             }
 
             router.push(result.redirectTo || "/ui/dashboard");
             router.refresh();
         } catch {
-            setError("Có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau.");
+            setFormError("Có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau.");
         } finally {
             submitting.current = false;
             setLoading(false);
         }
     };
+
+    const activeAlert: AuthAlert | null = formError
+        ? { message: formError }
+        : urlAlert;
 
     return (
         <div className="w-full max-w-[440px] mx-auto">
@@ -171,11 +200,25 @@ export function LoginFormCard({ data, initialError = "" }: Props) {
                         </div>
                     </div>
 
-                    {/* Error Box */}
-                    {error && (
-                        <div className="rounded-xl bg-rose-50 border border-rose-200 p-3 text-xs text-rose-700 font-medium flex items-center gap-2">
-                            <span className="material-symbols-outlined text-[16px] text-rose-600 shrink-0">error</span>
-                            <span>{error}</span>
+                    {/* Error / Alert Box */}
+                    {activeAlert && (
+                        <div
+                            role="alert"
+                            className="rounded-xl bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-700 flex items-start gap-2.5 shadow-2xs transition-all"
+                        >
+                            <span className="material-symbols-outlined text-[18px] text-rose-600 shrink-0 mt-0.5 select-none">
+                                error
+                            </span>
+                            <div className="flex-1 min-w-0 space-y-0.5">
+                                {activeAlert.title && (
+                                    <h4 className="font-bold text-rose-900 text-xs tracking-tight">
+                                        {activeAlert.title}
+                                    </h4>
+                                )}
+                                <p className="leading-relaxed font-medium text-rose-700">
+                                    {activeAlert.message}
+                                </p>
+                            </div>
                         </div>
                     )}
 
@@ -210,7 +253,13 @@ export function LoginFormCard({ data, initialError = "" }: Props) {
                 </div>
 
                 {/* Google Sign-In */}
-                <SocialLoginButtons disabled={loading} onError={(msg) => setError(msg)} />
+                <SocialLoginButtons
+                    disabled={loading}
+                    onError={(msg) => {
+                        setFormError(msg);
+                        setUrlAlert(null);
+                    }}
+                />
 
                 {/* Signup Link */}
                 <div className="mt-5 pt-4 border-t border-slate-100 text-center">

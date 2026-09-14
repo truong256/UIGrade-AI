@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 const mock = vi.hoisted(() => ({
     reads: [] as Array<{ data: unknown; error: unknown }>,
     saved: { data: null, error: null } as { data: unknown; error: unknown },
-    user: { id: "auth-user-id", email: "test@example.com", user_metadata: {
+    user: { id: "auth-user-id", email: "test@school.edu.vn", user_metadata: {
         name: "Google Name", picture: "https://example.com/avatar.png",
     } },
     getUser: vi.fn(), exchange: vi.fn(), signOut: vi.fn(), signInWithPassword: vi.fn(), signUp: vi.fn(),
@@ -557,9 +557,8 @@ describe("canonical origin resolution – NEXT_PUBLIC_APP_URL priority", () => {
         expect(res.headers.get("location")).toBe("http://localhost:3000/auth/select-role");
     });
 
-    // CASE 6: gmail.com new account with no profile → callback creates pending profile
-    // and sends to select-role. The edu restriction is enforced at /auth/select-role, not here.
-    it("CASE 6 – gmail.com new account goes to select-role (edu check deferred to select-role page)", async () => {
+    // CASE 6: gmail.com new account with no profile → blocked and redirected to login with education_email_required
+    it("CASE 6 – gmail.com new account is blocked and redirected to education_email_required", async () => {
         vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
         const gmailUser = { ...mock.user, email: "user@gmail.com" };
         mock.exchange.mockResolvedValueOnce({ data: { user: gmailUser }, error: null });
@@ -567,8 +566,9 @@ describe("canonical origin resolution – NEXT_PUBLIC_APP_URL priority", () => {
         const req = callbackRequest("http://0.0.0.0:3000/auth/callback?code=test-code-6");
         const res = await callback(req);
         const location = res.headers.get("location")!;
-        expect(location).toBe("http://localhost:3000/auth/select-role");
+        expect(location).toBe("http://localhost:3000/login?error=education_email_required");
         expect(location).not.toContain("0.0.0.0");
+        expect(mock.signOut).toHaveBeenCalled();
     });
 
     // CASE 7: production URL – must use the production origin, never localhost.
