@@ -16,7 +16,7 @@ export async function GET(request: Request) {
     if (errorParam) {
         const errorDesc = isPasswordRecovery
             ? "Liên kết khôi phục không hợp lệ hoặc đã hết hạn"
-            : errorParam === "access_denied" ? "Đăng nhập Google đã bị hủy" : "Không thể đăng nhập Google";
+            : errorParam === "access_denied" ? "Đăng nhập Google đã bị hủy" : "Hãy đăng nhập tài khoản Gmail .edu.vn";
         return NextResponse.redirect(
             `${origin}/login?error=${isPasswordRecovery ? "recovery_failed" : "oauth_failed"}&message=${encodeURIComponent(errorDesc)}`
         );

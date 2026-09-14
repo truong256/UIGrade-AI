@@ -20,7 +20,7 @@ export function getAuthErrorMessage(
         case "education_email_required":
             return {
                 title: "Tài khoản không được hỗ trợ",
-                message: "UIGrade AI chỉ hỗ trợ tài khoản giáo dục. Vui lòng đăng nhập bằng email trường có đuôi .edu.vn.",
+                message: "UIGrade AI chỉ hỗ trợ tài khoản giáo dục. Hãy đăng nhập tài khoản Gmail .edu.vn.",
             };
         case "account_inactive":
             return {
@@ -28,8 +28,11 @@ export function getAuthErrorMessage(
                 message: "Tài khoản của bạn hiện đang bị khóa hoặc chưa được kích hoạt. Vui lòng liên hệ quản trị viên.",
             };
         case "oauth_failed":
+            if (customMessage && !customMessage.includes("Không thể đăng nhập Google")) {
+                return { message: customMessage };
+            }
             return {
-                message: customMessage || "Không thể đăng nhập bằng Google. Vui lòng thử lại.",
+                message: "Hãy đăng nhập tài khoản Gmail .edu.vn",
             };
         case "recovery_failed":
             return {

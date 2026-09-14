@@ -67,18 +67,22 @@ describe("Auth Error Mapping (getAuthErrorMessage)", () => {
         expect(error).not.toBeNull();
         expect(error?.title).toBe("Tài khoản không được hỗ trợ");
         expect(error?.message).toContain("UIGrade AI chỉ hỗ trợ tài khoản giáo dục");
-        expect(error?.message).toContain("Vui lòng đăng nhập bằng email trường có đuôi .edu.vn.");
+        expect(error?.message).toContain("Hãy đăng nhập tài khoản Gmail .edu.vn");
         expect(error?.message).not.toContain("education_email_required");
     });
 
-    it("maps other auth errors without exposing raw code", () => {
+    it("maps oauth_failed to Hãy đăng nhập tài khoản Gmail .edu.vn even if raw message passed", () => {
+        const oauthFailedDefault = getAuthErrorMessage("oauth_failed");
+        expect(oauthFailedDefault?.message).toBe("Hãy đăng nhập tài khoản Gmail .edu.vn");
+
+        const oauthFailedGeneric = getAuthErrorMessage("oauth_failed", "Không thể đăng nhập Google");
+        expect(oauthFailedGeneric?.message).toBe("Hãy đăng nhập tài khoản Gmail .edu.vn");
+    });
+
+    it("maps account_inactive without exposing raw code", () => {
         const accountInactive = getAuthErrorMessage("account_inactive");
         expect(accountInactive?.message).not.toContain("account_inactive");
         expect(accountInactive?.message).toContain("khóa");
-
-        const oauthFailed = getAuthErrorMessage("oauth_failed");
-        expect(oauthFailed?.message).not.toContain("oauth_failed");
-        expect(oauthFailed?.message).toContain("Không thể đăng nhập bằng Google");
     });
 });
 
@@ -93,7 +97,7 @@ describe("Login UI Education Email Required Error Display", () => {
         expect(
             screen.getByText((content) =>
                 content.includes("UIGrade AI chỉ hỗ trợ tài khoản giáo dục") &&
-                content.includes("Vui lòng đăng nhập bằng email trường có đuôi .edu.vn.")
+                content.includes("Hãy đăng nhập tài khoản Gmail .edu.vn")
             )
         ).toBeDefined();
 

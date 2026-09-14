@@ -118,7 +118,9 @@ export function LoginFormCard({
     };
 
     const activeAlert: AuthAlert | null = formError
-        ? { message: formError }
+        ? (formError.includes("Không thể đăng nhập Google")
+            ? { message: "Hãy đăng nhập tài khoản Gmail .edu.vn" }
+            : { message: formError })
         : urlAlert;
 
     return (
