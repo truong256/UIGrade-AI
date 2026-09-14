@@ -23,7 +23,7 @@ export const ROLES = {
 
 export type CanonicalRole = (typeof ROLES)[keyof typeof ROLES];
 
-// All known role aliases, including legacy values from MongoDB (teacher, User)
+// All known role aliases, including legacy values from an earlier data model
 // and Supabase types.
 type RawRole = CanonicalRole | "teacher" | "User" | string | undefined | null;
 

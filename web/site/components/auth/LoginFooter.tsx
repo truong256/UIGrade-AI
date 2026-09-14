@@ -18,9 +18,9 @@ const defaultLinks: FooterLink[] = [
 
 export function LoginFooter({ links = defaultLinks }: Props) {
     return (
-        <footer className="border-t border-blue-100 py-6 text-center text-xs text-slate-500">
+        <footer className="relative z-10 py-5 text-center text-xs text-[#59677F]">
             <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-6 sm:flex-row">
-                <p className="text-slate-500">
+                <p>
                     © 2026 <span className="font-semibold text-slate-700">UIGrade AI</span>. All rights reserved.
                 </p>
 
@@ -29,7 +29,7 @@ export function LoginFooter({ links = defaultLinks }: Props) {
                         <Link
                             key={link.label}
                             href={link.href}
-                            className="font-medium text-slate-500 transition-colors hover:text-blue-600"
+                            className="rounded-md font-medium transition-colors hover:text-blue-700"
                         >
                             {link.label}
                         </Link>

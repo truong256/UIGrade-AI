@@ -14,10 +14,10 @@ export function LoginTopBar({ data }: Props) {
     const helpLabel = data?.helpLabel || "Trợ giúp";
 
     return (
-        <header className="mx-auto flex w-full max-w-7xl items-center justify-between px-6 py-5">
+        <header className="relative z-10 mx-auto flex w-full max-w-7xl items-center justify-between px-5 py-5 sm:px-8">
             <Link
                 href="/login"
-                className="text-xl sm:text-2xl font-bold tracking-tight text-[#172033] transition hover:opacity-90"
+                className="rounded-lg text-lg font-bold tracking-[-0.03em] text-[#26334D] transition hover:-translate-y-px hover:opacity-90 sm:text-xl"
             >
                 {brand.includes("AI") ? (
                     <>
@@ -31,7 +31,7 @@ export function LoginTopBar({ data }: Props) {
 
             <Link
                 href="/help"
-                className="text-xs sm:text-sm font-semibold text-[#4A5568] transition hover:text-blue-600"
+                className="auth-text-link rounded-lg px-2 py-1 text-xs sm:text-sm"
             >
                 {helpLabel}
             </Link>

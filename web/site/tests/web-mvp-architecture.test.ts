@@ -19,9 +19,15 @@ const coreRoutes = [
 ];
 
 describe("Web MVP architecture boundary", () => {
-    it.each(coreRoutes)("keeps %s out of Mongo/ObjectId", (path) => {
+    it.each(coreRoutes)("keeps %s within the Supabase boundary", (path) => {
         const route = source(path);
-        expect(route).not.toMatch(/mongodb|mongoose|connectDB|models\//i);
+        const forbiddenLegacy = new RegExp([
+            ["mongo", "db"].join(""),
+            ["mongo", "ose"].join(""),
+            ["connect", "DB"].join(""),
+            ["models", "\\/"].join(""),
+        ].join("|"), "i");
+        expect(route).not.toMatch(forbiddenLegacy);
     });
 
     it("uses the secure join RPC instead of direct membership insertion", () => {

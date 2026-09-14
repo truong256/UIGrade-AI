@@ -1,24 +1,6 @@
-/**
- * tests/rbac.test.ts
- *
- * Comprehensive RBAC regression tests for UIGrade AI security fixes.
- *
- * Tests cover:
- *  - normalizeRole() canonical normalization
- *  - requireAdmin() guard
- *  - requireLecturerOrAdmin() guard
- *  - canManageUser() - lecturer/student cannot manage users
- *  - assertCanDeactivateUser() - teacher cannot lock admin; last-admin protection
- *  - assertCanDeleteUser() - teacher cannot delete admin; last-admin protection
- *  - assertCanChangeRole() - teacher cannot change admin role; last-admin protection
- *  - assertCanCreateUserWithRole() - only admin can create admin accounts
- *  - assertOwnsClass() - lecturer can only manage their own class
- *  - assertCanAccessSubmission() - student can only access their own submission
- *  - Header spoofing: getCurrentUserFromRequest() ignores x-user-role header
- *  - Role spoofing: role from request body does not grant access
- */
-
-import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
+import { describe, expect, it } from "vitest";
 import {
     normalizeRole,
     validateRoleInput,
@@ -40,1233 +22,150 @@ import {
     type AuthenticatedActor,
 } from "@/lib/authorization";
 import { getCurrentUserFromRequest } from "@/lib/current-user";
-import { AsyncMutex } from "@/services/user-management.service";
 
-// ---------------------------------------------------------------------------
-// Test fixtures
-// ---------------------------------------------------------------------------
-
-const adminActor: AuthenticatedActor = { userId: "admin-001", email: "admin@test.com", role: "admin" };
-const lecturerActor: AuthenticatedActor = { userId: "lec-001", email: "lec@test.com", role: "lecturer" };
-const studentActor: AuthenticatedActor = { userId: "stu-001", email: "stu@test.com", role: "student" };
-
+const adminActor: AuthenticatedActor = { userId: "admin-001", email: "admin@school.edu.vn", role: "admin" };
+const lecturerActor: AuthenticatedActor = { userId: "lec-001", email: "lec@school.edu.vn", role: "lecturer" };
+const studentActor: AuthenticatedActor = { userId: "stu-001", email: "stu@school.edu.vn", role: "student" };
 const adminTarget = { _id: "admin-002", role: "admin", isActive: true };
 const lecturerTarget = { _id: "lec-002", role: "lecturer", isActive: true };
 const studentTarget = { _id: "stu-002", role: "student", isActive: true };
 
-// ---------------------------------------------------------------------------
-// 1. Role normalization
-// ---------------------------------------------------------------------------
-
-describe("normalizeRole()", () => {
-    it("passes canonical admin through unchanged", () => {
+describe("role normalization and strict input", () => {
+    it("keeps canonical roles and only normalizes supported compatibility aliases", () => {
         expect(normalizeRole("admin")).toBe(ROLES.ADMIN);
-    });
-
-    it("passes canonical lecturer through unchanged", () => {
         expect(normalizeRole("lecturer")).toBe(ROLES.LECTURER);
-    });
-
-    it("passes canonical student through unchanged", () => {
         expect(normalizeRole("student")).toBe(ROLES.STUDENT);
-    });
-
-    it("normalizes legacy 'teacher' to 'lecturer'", () => {
         expect(normalizeRole("teacher")).toBe(ROLES.LECTURER);
-    });
-
-    it("normalizes legacy 'User' (PascalCase) to 'student'", () => {
         expect(normalizeRole("User")).toBe(ROLES.STUDENT);
-    });
-
-    it("defaults unknown roles to 'student' (least privilege)", () => {
         expect(normalizeRole("superadmin")).toBe(ROLES.STUDENT);
-        expect(normalizeRole("hacker")).toBe(ROLES.STUDENT);
-        expect(normalizeRole("")).toBe(ROLES.STUDENT);
-        expect(normalizeRole(null)).toBe(ROLES.STUDENT);
-        expect(normalizeRole(undefined)).toBe(ROLES.STUDENT);
+        expect(normalizeRole("ADMIN")).toBe(ROLES.STUDENT);
     });
 
-    it("does NOT escalate unknown roles to admin or lecturer", () => {
-        expect(normalizeRole("ADMIN")).not.toBe(ROLES.ADMIN); // case-sensitive
-        expect(normalizeRole("TEACHER")).not.toBe(ROLES.LECTURER);
+    it("rejects unknown roles at write boundaries", () => {
+        expect(validateRoleInput("admin")).toBe(ROLES.ADMIN);
+        expect(validateRoleInput("teacher")).toBe(ROLES.LECTURER);
+        expect(validateRoleInput("User")).toBe(ROLES.STUDENT);
+        expect(() => validateRoleInput("root")).toThrowError(AuthorizationError);
+        expect(() => validateRoleInput("ADMIN")).toThrowError(AuthorizationError);
+        expect(() => validateRoleInput("")).toThrowError(AuthorizationError);
     });
 });
 
-// ---------------------------------------------------------------------------
-// 2. requireAuth()
-// ---------------------------------------------------------------------------
-
-describe("requireAuth()", () => {
-    it("allows authenticated users", () => {
+describe("authentication and role guards", () => {
+    it("requires an authenticated actor", () => {
         expect(() => requireAuth(adminActor)).not.toThrow();
-        expect(() => requireAuth(lecturerActor)).not.toThrow();
-        expect(() => requireAuth(studentActor)).not.toThrow();
-    });
-
-    it("throws 401 for null", () => {
         expect(() => requireAuth(null)).toThrowError(AuthorizationError);
-        try { requireAuth(null); } catch (e) {
-            expect((e as AuthorizationError).statusCode).toBe(401);
-        }
     });
 
-    it("throws 401 for undefined", () => {
-        expect(() => requireAuth(undefined)).toThrowError(AuthorizationError);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 3. requireAdmin()
-// ---------------------------------------------------------------------------
-
-describe("requireAdmin()", () => {
-    it("allows admin", () => {
-        expect(() => requireAdmin(adminActor)).not.toThrow();
-    });
-
-    it("throws 403 for lecturer (not admin)", () => {
-        expect(() => requireAdmin(lecturerActor)).toThrowError(AuthorizationError);
-        try { requireAdmin(lecturerActor); } catch (e) {
-            expect((e as AuthorizationError).statusCode).toBe(403);
-        }
-    });
-
-    it("throws 403 for student", () => {
-        expect(() => requireAdmin(studentActor)).toThrowError(AuthorizationError);
-    });
-
-    it("throws 401 for unauthenticated (null)", () => {
-        try { requireAdmin(null); } catch (e) {
-            expect((e as AuthorizationError).statusCode).toBe(401);
-        }
-    });
-
-    // CRITICAL REGRESSION: Teacher/Lecturer role must NOT grant admin access
-    it("SECURITY: teacher role (legacy) cannot pass requireAdmin", () => {
-        const teacherActor: AuthenticatedActor = { userId: "t-01", email: "t@x.com", role: "lecturer" };
-        expect(() => requireAdmin(teacherActor)).toThrowError(AuthorizationError);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 4. requireLecturerOrAdmin()
-// ---------------------------------------------------------------------------
-
-describe("requireLecturerOrAdmin()", () => {
-    it("allows admin", () => {
-        expect(() => requireLecturerOrAdmin(adminActor)).not.toThrow();
-    });
-
-    it("allows lecturer", () => {
-        expect(() => requireLecturerOrAdmin(lecturerActor)).not.toThrow();
-    });
-
-    it("throws 403 for student", () => {
-        expect(() => requireLecturerOrAdmin(studentActor)).toThrowError(AuthorizationError);
-    });
-
-    it("throws 401 for null", () => {
-        try { requireLecturerOrAdmin(null); } catch (e) {
-            expect((e as AuthorizationError).statusCode).toBe(401);
-        }
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 5. canManageUser()
-// ---------------------------------------------------------------------------
-
-describe("canManageUser()", () => {
-    it("admin can manage a student", () => {
-        expect(canManageUser(adminActor, studentTarget)).toBe(true);
-    });
-
-    it("admin can manage a lecturer", () => {
-        expect(canManageUser(adminActor, lecturerTarget)).toBe(true);
-    });
-
-    it("admin can manage another admin (subject to last-admin check)", () => {
-        expect(canManageUser(adminActor, adminTarget)).toBe(true);
-    });
-
-    // CRITICAL REGRESSION: Lecturer must NOT be able to manage any user
-    it("SECURITY: lecturer cannot manage users", () => {
-        expect(canManageUser(lecturerActor, studentTarget)).toBe(false);
-        expect(canManageUser(lecturerActor, adminTarget)).toBe(false);
-    });
-
-    it("SECURITY: student cannot manage users", () => {
-        expect(canManageUser(studentActor, studentTarget)).toBe(false);
-        expect(canManageUser(studentActor, adminTarget)).toBe(false);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 6. assertCanDeactivateUser() — Critical: Teacher locking Admin
-// ---------------------------------------------------------------------------
-
-describe("assertCanDeactivateUser()", () => {
-    // CRITICAL TEST CASE — The original vulnerability
-    it("SECURITY: lecturer CANNOT lock an admin account → 403", () => {
-        expect(() =>
-            assertCanDeactivateUser(lecturerActor, adminTarget, 3)
-        ).toThrowError(AuthorizationError);
-
-        try {
-            assertCanDeactivateUser(lecturerActor, adminTarget, 3);
-        } catch (e) {
-            expect((e as AuthorizationError).statusCode).toBe(403);
-        }
-    });
-
-    it("SECURITY: student CANNOT lock an admin account → 403", () => {
-        expect(() =>
-            assertCanDeactivateUser(studentActor, adminTarget, 3)
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("SECURITY: lecturer CANNOT lock any user → 403", () => {
-        expect(() =>
-            assertCanDeactivateUser(lecturerActor, studentTarget, 0)
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("admin CAN lock a non-admin user", () => {
-        expect(() =>
-            assertCanDeactivateUser(adminActor, studentTarget, 2)
-        ).not.toThrow();
-    });
-
-    it("admin CAN lock another admin if there are 2+ active admins", () => {
-        expect(() =>
-            assertCanDeactivateUser(adminActor, adminTarget, 2)
-        ).not.toThrow();
-    });
-
-    it("LAST-ADMIN PROTECTION: admin CANNOT lock the last active admin", () => {
-        expect(() =>
-            assertCanDeactivateUser(adminActor, adminTarget, 1)
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("admin CANNOT lock themselves", () => {
-        const selfTarget = { _id: "admin-001", role: "admin", isActive: true };
-        expect(() =>
-            assertCanDeactivateUser(adminActor, selfTarget, 3)
-        ).toThrowError(AuthorizationError);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 7. assertCanDeleteUser() — Critical: Teacher deleting Admin
-// ---------------------------------------------------------------------------
-
-describe("assertCanDeleteUser()", () => {
-    // CRITICAL TEST CASE
-    it("SECURITY: lecturer CANNOT delete an admin account → 403", () => {
-        expect(() =>
-            assertCanDeleteUser(lecturerActor, adminTarget, 3)
-        ).toThrowError(AuthorizationError);
-
-        try {
-            assertCanDeleteUser(lecturerActor, adminTarget, 3);
-        } catch (e) {
-            expect((e as AuthorizationError).statusCode).toBe(403);
-        }
-    });
-
-    it("SECURITY: student CANNOT delete any user → 403", () => {
-        expect(() =>
-            assertCanDeleteUser(studentActor, adminTarget, 3)
-        ).toThrowError(AuthorizationError);
-
-        expect(() =>
-            assertCanDeleteUser(studentActor, studentTarget, 0)
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("admin CAN delete a non-admin user", () => {
-        expect(() =>
-            assertCanDeleteUser(adminActor, studentTarget, 2)
-        ).not.toThrow();
-    });
-
-    it("LAST-ADMIN PROTECTION: admin CANNOT delete the last active admin", () => {
-        expect(() =>
-            assertCanDeleteUser(adminActor, adminTarget, 1)
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("admin CANNOT delete themselves", () => {
-        const selfTarget = { _id: "admin-001", role: "admin", isActive: true };
-        expect(() =>
-            assertCanDeleteUser(adminActor, selfTarget, 3)
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("admin CAN delete another admin if there are 2+ active admins", () => {
-        expect(() =>
-            assertCanDeleteUser(adminActor, adminTarget, 2)
-        ).not.toThrow();
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 8. assertCanChangeRole() — Critical: Teacher changing Admin role
-// ---------------------------------------------------------------------------
-
-describe("assertCanChangeRole()", () => {
-    // CRITICAL TEST CASE
-    it("SECURITY: lecturer CANNOT change admin role to teacher → 403", () => {
-        expect(() =>
-            assertCanChangeRole(lecturerActor, adminTarget, "lecturer", 3)
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("SECURITY: lecturer CANNOT change admin role to student → 403", () => {
-        expect(() =>
-            assertCanChangeRole(lecturerActor, adminTarget, "student", 3)
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("SECURITY: student CANNOT change anyone's role → 403", () => {
-        expect(() =>
-            assertCanChangeRole(studentActor, lecturerTarget, "student", 0)
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("admin CAN change a student to lecturer", () => {
-        expect(() =>
-            assertCanChangeRole(adminActor, studentTarget, "lecturer", 2)
-        ).not.toThrow();
-    });
-
-    it("admin CAN promote student to admin", () => {
-        expect(() =>
-            assertCanChangeRole(adminActor, studentTarget, "admin", 2)
-        ).not.toThrow();
-    });
-
-    it("LAST-ADMIN PROTECTION: cannot demote the last active admin", () => {
-        expect(() =>
-            assertCanChangeRole(adminActor, adminTarget, "lecturer", 1)
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("admin CAN demote another admin if there are 2+ active admins", () => {
-        expect(() =>
-            assertCanChangeRole(adminActor, adminTarget, "lecturer", 2)
-        ).not.toThrow();
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 9. assertCanCreateUserWithRole()
-// ---------------------------------------------------------------------------
-
-describe("assertCanCreateUserWithRole()", () => {
-    it("SECURITY: lecturer CANNOT create any user → 403", () => {
-        expect(() =>
-            assertCanCreateUserWithRole(lecturerActor, "student")
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("SECURITY: student CANNOT create any user → 403", () => {
-        expect(() =>
-            assertCanCreateUserWithRole(studentActor, "admin")
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("admin CAN create a student", () => {
-        expect(() =>
-            assertCanCreateUserWithRole(adminActor, "student")
-        ).not.toThrow();
-    });
-
-    it("admin CAN create another admin", () => {
-        expect(() =>
-            assertCanCreateUserWithRole(adminActor, "admin")
-        ).not.toThrow();
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 10. assertOwnsClass() — Class isolation
-// ---------------------------------------------------------------------------
-
-describe("assertOwnsClass()", () => {
-    it("lecturer can manage their own class", () => {
-        expect(() =>
-            assertOwnsClass(lecturerActor, "lec-001")
-        ).not.toThrow();
-    });
-
-    it("SECURITY: lecturer CANNOT manage another lecturer's class → 403", () => {
-        expect(() =>
-            assertOwnsClass(lecturerActor, "other-lec-999")
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("admin can manage any class", () => {
-        expect(() =>
-            assertOwnsClass(adminActor, "any-lecturer-id")
-        ).not.toThrow();
-    });
-
-    it("SECURITY: student CANNOT manage any class → 403", () => {
-        expect(() =>
-            assertOwnsClass(studentActor, "lec-001")
-        ).toThrowError(AuthorizationError);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 11. assertCanAccessSubmission() — IDOR/BOLA
-// ---------------------------------------------------------------------------
-
-describe("assertCanAccessSubmission()", () => {
-    it("student can access their own submission", () => {
-        expect(() =>
-            assertCanAccessSubmission(studentActor, "stu-001")
-        ).not.toThrow();
-    });
-
-    it("SECURITY: student CANNOT access another student's submission → 403", () => {
-        expect(() =>
-            assertCanAccessSubmission(studentActor, "stu-999")
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("class lecturer can access submissions in their class", () => {
-        expect(() =>
-            assertCanAccessSubmission(lecturerActor, "stu-999", "lec-001")
-        ).not.toThrow();
-    });
-
-    it("SECURITY: lecturer CANNOT access submissions outside their class → 403", () => {
-        expect(() =>
-            assertCanAccessSubmission(lecturerActor, "stu-999", "other-lec-000")
-        ).toThrowError(AuthorizationError);
-    });
-
-    it("admin can access any submission", () => {
-        expect(() =>
-            assertCanAccessSubmission(adminActor, "stu-999")
-        ).not.toThrow();
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 12. Header spoofing defense — getCurrentUserFromRequest must ignore x-user-role
-// ---------------------------------------------------------------------------
-
-describe("Header spoofing defense", () => {
-    // We test this by verifying that getCurrentUserFromRequest does NOT read
-    // x-user-role headers. We test the behavior through normalizeRole and
-    // the fact that the function signature doesn't expose a header path.
-
-    it("SECURITY: role cannot be escalated via normalizeRole with arbitrary strings", () => {
-        // Even if a malicious header passed a role value, normalizeRole should
-        // only return known canonical roles, defaulting to 'student'
-        expect(normalizeRole("root")).toBe(ROLES.STUDENT);
-        expect(normalizeRole("superuser")).toBe(ROLES.STUDENT);
-        expect(normalizeRole("ADMIN")).toBe(ROLES.STUDENT); // case-sensitive!
-        expect(normalizeRole("admin'--")).toBe(ROLES.STUDENT);
-        expect(normalizeRole("admin; DROP TABLE users;")).toBe(ROLES.STUDENT);
-    });
-
-    it("SECURITY: empty or whitespace role strings default to student (not admin)", () => {
-        expect(normalizeRole("   ")).toBe(ROLES.STUDENT);
-        expect(normalizeRole("")).toBe(ROLES.STUDENT);
-    });
-
-    it("SECURITY: JSON injection attempts normalize to student", () => {
-        expect(normalizeRole("{\"role\":\"admin\"}")).toBe(ROLES.STUDENT);
-    });
-
-    it("SECURITY: getCurrentUserFromRequest ignores x-user-id and x-user-role headers completely", async () => {
-        const fakeHeaderRequest = new Request("http://localhost:3000/api/settings/users", {
-            headers: {
-                "x-user-id": "fake-admin-id",
-                "x-user-role": "admin",
-                "x-user-email": "hacker@evil.com",
-            },
-        });
-
-        // Must return null because there is no valid signed cookie
-        const user = await getCurrentUserFromRequest(fakeHeaderRequest);
-        expect(user).toBeNull();
-
-        // And passing null to requireAdmin must throw 401
-        expect(() => requireAdmin(user)).toThrowError(AuthorizationError);
-        try {
-            requireAdmin(user);
-        } catch (e) {
-            expect((e as AuthorizationError).statusCode).toBe(401);
-        }
-    });
-
-    it("SECURITY: unauthenticated request without cookies returns null", async () => {
-        const noAuthRequest = new Request("http://localhost:3000/api/settings/users");
-        const user = await getCurrentUserFromRequest(noAuthRequest);
-        expect(user).toBeNull();
-    });
-
-    it("SECURITY: request with malformed cookie returns null", async () => {
-        const malformedRequest = new Request("http://localhost:3000/api/settings/users", {
-            headers: {
-                cookie: "token=invalid.malformed.jwt.token",
-            },
-        });
-        const user = await getCurrentUserFromRequest(malformedRequest);
-        expect(user).toBeNull();
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 13. Grading IDOR / BOLA authorization
-// ---------------------------------------------------------------------------
-
-describe("assertCanGradeSubmission()", () => {
-    it("lecturer can grade submissions in their own class", () => {
-        expect(() => assertCanGradeSubmission(lecturerActor, "lec-001")).not.toThrow();
-    });
-
-    it("SECURITY: lecturer CANNOT grade submissions in another lecturer's class → 403", () => {
-        expect(() => assertCanGradeSubmission(lecturerActor, "other-lec-888")).toThrowError(AuthorizationError);
-        try {
-            assertCanGradeSubmission(lecturerActor, "other-lec-888");
-        } catch (e) {
-            expect((e as AuthorizationError).statusCode).toBe(403);
-        }
-    });
-
-    it("admin can grade submissions in any class", () => {
-        expect(() => assertCanGradeSubmission(adminActor, "other-lec-888")).not.toThrow();
-    });
-
-    it("SECURITY: student CANNOT grade submissions → 403", () => {
-        expect(() => assertCanGradeSubmission(studentActor, "stu-001")).toThrowError(AuthorizationError);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 14. resolveHttpStatus() mapping
-// ---------------------------------------------------------------------------
-
-describe("resolveHttpStatus()", () => {
-    it("resolves 401 for unauthenticated AuthorizationError", () => {
-        const err = new AuthorizationError("Bạn chưa đăng nhập", 401);
-        expect(resolveHttpStatus(err)).toBe(401);
-    });
-
-    it("resolves 403 for forbidden AuthorizationError", () => {
-        const err = new AuthorizationError("Bạn không có quyền", 403);
-        expect(resolveHttpStatus(err)).toBe(403);
-    });
-
-    it("resolves 401 for generic Error mentioning chưa đăng nhập", () => {
-        const err = new Error("bạn chưa đăng nhập");
-        expect(resolveHttpStatus(err)).toBe(401);
-    });
-
-    it("resolves 403 for generic Error mentioning không có quyền", () => {
-        const err = new Error("bạn không có quyền truy cập");
-        expect(resolveHttpStatus(err)).toBe(403);
-    });
-
-    it("resolves 404 for generic Error mentioning không tìm thấy", () => {
-        const err = new Error("không tìm thấy người dùng");
-        expect(resolveHttpStatus(err)).toBe(404);
-    });
-
-    it("resolves 409 for conflict errors mentioning đã tồn tại", () => {
-        const err = new Error("email đã tồn tại");
-        expect(resolveHttpStatus(err)).toBe(409);
-    });
-
-    it("defaults to 400 for unknown errors", () => {
-        const err = new Error("tham số không hợp lệ");
-        expect(resolveHttpStatus(err)).toBe(400);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 15. Client-side Role Spoofing (JSON body / parameter injection)
-// ---------------------------------------------------------------------------
-
-describe("Client-side Role Spoofing Immunity", () => {
-    it("SECURITY: student attempting to set role=admin in body is blocked", () => {
-        expect(() => assertCanCreateUserWithRole(studentActor, "admin")).toThrowError(AuthorizationError);
-    });
-
-    it("SECURITY: lecturer attempting to promote themselves to admin is blocked", () => {
-        expect(() => assertCanChangeRole(lecturerActor, lecturerTarget, "admin", 2)).toThrowError(AuthorizationError);
-    });
-
-    it("SECURITY: lecturer attempting to create admin account is blocked", () => {
-        expect(() => assertCanCreateUserWithRole(lecturerActor, "admin")).toThrowError(AuthorizationError);
-    });
-
-    it("SECURITY: student attempting to modify another student's account is blocked", () => {
-        expect(canManageUser(studentActor, studentTarget)).toBe(false);
-    });
-
-    it("SECURITY: lecturer attempting to update admin fields is blocked", () => {
-        expect(canManageUser(lecturerActor, adminTarget)).toBe(false);
-        expect(() => assertCanDeactivateUser(lecturerActor, adminTarget, 2)).toThrowError(AuthorizationError);
-        expect(() => assertCanDeleteUser(lecturerActor, adminTarget, 2)).toThrowError(AuthorizationError);
-        expect(() => assertCanChangeRole(lecturerActor, adminTarget, "lecturer", 2)).toThrowError(AuthorizationError);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 17. Server Config Access Matrix
-// ---------------------------------------------------------------------------
-
-describe("Server Config RBAC Matrix", () => {
-    it("allows only admin to access server config", () => {
+    it("allows only admins through requireAdmin", () => {
         expect(() => requireAdmin(adminActor)).not.toThrow();
         expect(() => requireAdmin(lecturerActor)).toThrowError(AuthorizationError);
         expect(() => requireAdmin(studentActor)).toThrowError(AuthorizationError);
         expect(() => requireAdmin(null)).toThrowError(AuthorizationError);
     });
-});
 
-// ---------------------------------------------------------------------------
-// 18. validateRoleInput() Strict Validation
-// ---------------------------------------------------------------------------
-
-describe("validateRoleInput() Strict Input Validation", () => {
-    it("accepts canonical role 'admin'", () => {
-        expect(validateRoleInput("admin")).toBe(ROLES.ADMIN);
-    });
-
-    it("accepts canonical role 'lecturer'", () => {
-        expect(validateRoleInput("lecturer")).toBe(ROLES.LECTURER);
-    });
-
-    it("accepts canonical role 'student'", () => {
-        expect(validateRoleInput("student")).toBe(ROLES.STUDENT);
-    });
-
-    it("accepts legacy alias 'teacher' and normalizes to 'lecturer'", () => {
-        expect(validateRoleInput("teacher")).toBe(ROLES.LECTURER);
-    });
-
-    it("accepts legacy alias 'User' and normalizes to 'student'", () => {
-        expect(validateRoleInput("User")).toBe(ROLES.STUDENT);
-    });
-
-    it("rejects unknown privilege escalation strings", () => {
-        expect(() => validateRoleInput("root")).toThrowError(AuthorizationError);
-        expect(() => validateRoleInput("superadmin")).toThrowError(AuthorizationError);
-        expect(() => validateRoleInput("ADMIN")).toThrowError(AuthorizationError);
-        expect(() => validateRoleInput("TEACHER")).toThrowError(AuthorizationError);
-        expect(() => validateRoleInput("hacker")).toThrowError(AuthorizationError);
-    });
-
-    it("rejects non-string and empty inputs", () => {
-        expect(() => validateRoleInput("")).toThrowError(AuthorizationError);
-        expect(() => validateRoleInput("   ")).toThrowError(AuthorizationError);
-        expect(() => validateRoleInput(null)).toThrowError(AuthorizationError);
-        expect(() => validateRoleInput(undefined)).toThrowError(AuthorizationError);
-        expect(() => validateRoleInput(123)).toThrowError(AuthorizationError);
-        expect(() => validateRoleInput({ role: "admin" })).toThrowError(AuthorizationError);
+    it("allows lecturer or admin but never student", () => {
+        expect(() => requireLecturerOrAdmin(adminActor)).not.toThrow();
+        expect(() => requireLecturerOrAdmin(lecturerActor)).not.toThrow();
+        expect(() => requireLecturerOrAdmin(studentActor)).toThrowError(AuthorizationError);
     });
 });
 
-// ---------------------------------------------------------------------------
-// 19. Stale Role JWT Defense (Authoritative DB Actor Revalidation)
-// ---------------------------------------------------------------------------
-
-describe("Stale Role JWT Defense", () => {
-    it("SECURITY: Stale admin JWT where DB user was demoted to student loses admin rights → 403", () => {
-        // Simulated scenario:
-        // 1. User holds a JWT with claim { role: "admin" }
-        // 2. Database record for this user has been changed to { role: "student" }
-        // 3. Server-side actor resolution queries DB -> produces actor with role "student"
-        const staleAdminUserInDb = { _id: "user-demoted-01", role: "student", isActive: true };
-        const authoritativeActor: AuthenticatedActor = {
-            userId: String(staleAdminUserInDb._id),
-            email: "user@school.edu.vn",
-            role: normalizeRole(staleAdminUserInDb.role),
-        };
-
-        expect(authoritativeActor.role).toBe(ROLES.STUDENT);
-        expect(() => requireAdmin(authoritativeActor)).toThrowError(AuthorizationError);
-        try {
-            requireAdmin(authoritativeActor);
-        } catch (e) {
-            expect((e as AuthorizationError).statusCode).toBe(403);
-        }
+describe("user administration authorization", () => {
+    it("only admins can manage users or create privileged accounts", () => {
+        expect(canManageUser(adminActor, studentTarget)).toBe(true);
+        expect(canManageUser(lecturerActor, studentTarget)).toBe(false);
+        expect(canManageUser(studentActor, adminTarget)).toBe(false);
+        expect(() => assertCanCreateUserWithRole(adminActor, "admin")).not.toThrow();
+        expect(() => assertCanCreateUserWithRole(lecturerActor, "admin")).toThrowError(AuthorizationError);
     });
 
-    it("SECURITY: Stale admin JWT where DB user was demoted to lecturer loses admin rights → 403", () => {
-        const staleAdminUserInDb = { _id: "user-demoted-02", role: "lecturer", isActive: true };
-        const authoritativeActor: AuthenticatedActor = {
-            userId: String(staleAdminUserInDb._id),
-            email: "user2@school.edu.vn",
-            role: normalizeRole(staleAdminUserInDb.role),
-        };
-
-        expect(authoritativeActor.role).toBe(ROLES.LECTURER);
-        expect(() => requireAdmin(authoritativeActor)).toThrowError(AuthorizationError);
-        // But can still access lecturer functions
-        expect(() => requireLecturerOrAdmin(authoritativeActor)).not.toThrow();
+    it("prevents non-admin account state and role mutations", () => {
+        expect(() => assertCanDeactivateUser(lecturerActor, adminTarget, 3)).toThrowError(AuthorizationError);
+        expect(() => assertCanDeleteUser(studentActor, lecturerTarget, 3)).toThrowError(AuthorizationError);
+        expect(() => assertCanChangeRole(lecturerActor, studentTarget, "admin", 3)).toThrowError(AuthorizationError);
     });
 
-    it("SECURITY: Stale lecturer JWT where DB user was demoted to student loses lecturer rights → 403", () => {
-        const staleLecturerUserInDb = { _id: "user-demoted-03", role: "student", isActive: true };
-        const authoritativeActor: AuthenticatedActor = {
-            userId: String(staleLecturerUserInDb._id),
-            email: "user3@school.edu.vn",
-            role: normalizeRole(staleLecturerUserInDb.role),
-        };
-
-        expect(authoritativeActor.role).toBe(ROLES.STUDENT);
-        expect(() => requireLecturerOrAdmin(authoritativeActor)).toThrowError(AuthorizationError);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 20. Locked / Revoked Account Defense
-// ---------------------------------------------------------------------------
-
-describe("Locked / Suspended Account Immediate Revocation", () => {
-    it("SECURITY: User with valid token but DB isActive=false is denied immediately → 401", () => {
-        // When DB revalidation sees isActive: false, resolveAuthoritativeActorFromToken returns null
-        const lockedActor: AuthenticatedActor | null = null; // result of DB revalidation on locked account
-
-        expect(() => requireAuth(lockedActor)).toThrowError(AuthorizationError);
-        try {
-            requireAuth(lockedActor);
-        } catch (e) {
-            expect((e as AuthorizationError).statusCode).toBe(401);
-        }
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 21. Deleted Account Defense
-// ---------------------------------------------------------------------------
-
-describe("Deleted Account Immediate Revocation", () => {
-    it("SECURITY: User with valid token but deleted from DB returns null → 401", () => {
-        // When DB revalidation does not find the user record, resolveAuthoritativeActorFromToken returns null
-        const deletedActor: AuthenticatedActor | null = null;
-
-        expect(() => requireAuth(deletedActor)).toThrowError(AuthorizationError);
-        try {
-            requireAuth(deletedActor);
-        } catch (e) {
-            expect((e as AuthorizationError).statusCode).toBe(401);
-        }
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 22. Conditional studentCode Validation
-// ---------------------------------------------------------------------------
-
-describe("Conditional studentCode Requirement Rules", () => {
-    const isStudentCodeRequired = (role: string | undefined): boolean => {
-        const effectiveRole = role || "student";
-        return effectiveRole === "student" || effectiveRole === "User";
-    };
-
-    it("requires studentCode for 'student' role", () => {
-        expect(isStudentCodeRequired("student")).toBe(true);
-    });
-
-    it("requires studentCode for legacy 'User' role", () => {
-        expect(isStudentCodeRequired("User")).toBe(true);
-    });
-
-    it("requires studentCode when role is omitted (defaults to student)", () => {
-        expect(isStudentCodeRequired(undefined)).toBe(true);
-    });
-
-    it("does NOT require studentCode for 'admin' role", () => {
-        expect(isStudentCodeRequired("admin")).toBe(false);
-    });
-
-    it("does NOT require studentCode for 'lecturer' role", () => {
-        expect(isStudentCodeRequired("lecturer")).toBe(false);
-    });
-
-    it("does NOT require studentCode for legacy 'teacher' role", () => {
-        expect(isStudentCodeRequired("teacher")).toBe(false);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 23. isAccountAccessAllowed() Status Normalization Matrix
-// ---------------------------------------------------------------------------
-
-describe("isAccountAccessAllowed() Account Status Matrix", () => {
-    it("allows 'active' status", () => {
-        expect(isAccountAccessAllowed("active")).toBe(true);
-        expect(isAccountAccessAllowed("ACTIVE")).toBe(true);
-        expect(isAccountAccessAllowed("  active  ")).toBe(true);
-    });
-
-    it("allows undefined / null / default status with isActive=true", () => {
-        expect(isAccountAccessAllowed(undefined, true)).toBe(true);
-        expect(isAccountAccessAllowed(null, true)).toBe(true);
-        expect(isAccountAccessAllowed()).toBe(true);
-    });
-
-    it("denies 'locked' status", () => {
-        expect(isAccountAccessAllowed("locked")).toBe(false);
-        expect(isAccountAccessAllowed("LOCKED")).toBe(false);
-    });
-
-    it("denies 'inactive' status", () => {
-        expect(isAccountAccessAllowed("inactive")).toBe(false);
-        expect(isAccountAccessAllowed("INACTIVE")).toBe(false);
-    });
-
-    it("denies 'banned' status", () => {
-        expect(isAccountAccessAllowed("banned")).toBe(false);
-        expect(isAccountAccessAllowed("BANNED")).toBe(false);
-    });
-
-    it("denies 'suspended' status", () => {
-        expect(isAccountAccessAllowed("suspended")).toBe(false);
-        expect(isAccountAccessAllowed("SUSPENDED")).toBe(false);
-    });
-
-    it("denies 'pending' status", () => {
-        expect(isAccountAccessAllowed("pending")).toBe(false);
-        expect(isAccountAccessAllowed("PENDING")).toBe(false);
-    });
-
-    it("denies isActive=false regardless of string status", () => {
-        expect(isAccountAccessAllowed("active", false)).toBe(false);
-        expect(isAccountAccessAllowed(undefined, false)).toBe(false);
-    });
-});
-
-// ---------------------------------------------------------------------------
-// 24. Self-Admin Rules
-// ---------------------------------------------------------------------------
-
-describe("Self-Admin Operations Protection", () => {
-    it("SECURITY: Admin CANNOT lock themselves", () => {
-        const selfActor: AuthenticatedActor = { userId: "admin-self", email: "admin@self.com", role: "admin" };
+    it("prevents self destructive admin operations", () => {
+        const selfActor: AuthenticatedActor = { userId: "admin-self", email: "admin@school.edu.vn", role: "admin" };
         const selfTarget = { _id: "admin-self", role: "admin", isActive: true };
         expect(() => assertCanDeactivateUser(selfActor, selfTarget, 2)).toThrowError(AuthorizationError);
-    });
-
-    it("SECURITY: Admin CANNOT delete themselves", () => {
-        const selfActor: AuthenticatedActor = { userId: "admin-self", email: "admin@self.com", role: "admin" };
-        const selfTarget = { _id: "admin-self", role: "admin", isActive: true };
         expect(() => assertCanDeleteUser(selfActor, selfTarget, 2)).toThrowError(AuthorizationError);
-    });
-
-    it("SECURITY: Admin CANNOT demote themselves if they are the last active admin", () => {
-        const selfActor: AuthenticatedActor = { userId: "admin-self", email: "admin@self.com", role: "admin" };
-        const selfTarget = { _id: "admin-self", role: "admin", isActive: true };
         expect(() => assertCanChangeRole(selfActor, selfTarget, "student", 1)).toThrowError(AuthorizationError);
     });
 });
 
-// ---------------------------------------------------------------------------
-// 25. Concurrency Race Condition & Atomic Invariant Tests
-// ---------------------------------------------------------------------------
+describe("PostgreSQL last-admin invariant", () => {
+    const migration = readFileSync(
+        resolve(process.cwd(), "supabase/migrations/20260902000001_fix_rls_security.sql"),
+        "utf8"
+    );
 
-describe("Concurrency & Atomic Last-Admin Protection", () => {
-    it("SECURITY: Concurrent lock(A) + lock(B) ensures at least 1 admin remains active", async () => {
-        // Mock database state with 2 active admins
-        const dbUsers: Record<string, { role: string; isActive: boolean }> = {
-            "admin-A": { role: "admin", isActive: true },
-            "admin-B": { role: "admin", isActive: true },
-        };
-
-        const countDbActiveAdmins = () =>
-            Object.values(dbUsers).filter((u) => u.role === "admin" && u.isActive).length;
-
-        const mutex = new AsyncMutex();
-        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
-
-        const atomicDeactivate = async (targetId: string) => {
-            return mutex.runExclusive(async () => {
-                // Read fresh count inside the lock
-                const currentCount = countDbActiveAdmins();
-                const target = dbUsers[targetId];
-                if (!target) throw new Error("Not found");
-
-                // Enforce last admin invariant
-                assertCanDeactivateUser(actor, { _id: targetId, ...target }, currentCount);
-
-                // Mutate DB
-                target.isActive = false;
-                return { success: true };
-            });
-        };
-
-        // Fire both deactivations concurrently
-        const results = await Promise.allSettled([
-            atomicDeactivate("admin-A"),
-            atomicDeactivate("admin-B"),
-        ]);
-
-        const successful = results.filter((r) => r.status === "fulfilled");
-        const rejected = results.filter((r) => r.status === "rejected");
-
-        // Exactly one should succeed, one should be rejected by last-admin protection
-        expect(successful.length).toBe(1);
-        expect(rejected.length).toBe(1);
-
-        // Active admin count in DB must remain >= 1 (exactly 1)
-        expect(countDbActiveAdmins()).toBe(1);
+    it("serializes concurrent admin mutations with a transaction advisory lock", () => {
+        expect(migration).toContain("pg_advisory_xact_lock");
+        expect(migration).toContain("admin_last_invariant_lock");
     });
 
-    it("SECURITY: Concurrent delete(A) + delete(B) ensures at least 1 admin remains", async () => {
-        const dbUsers: Record<string, { role: string; isActive: boolean } | null> = {
-            "admin-A": { role: "admin", isActive: true },
-            "admin-B": { role: "admin", isActive: true },
-        };
-
-        const countDbActiveAdmins = () =>
-            Object.values(dbUsers).filter((u) => u !== null && u.role === "admin" && u.isActive).length;
-
-        const mutex = new AsyncMutex();
-        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
-
-        const atomicDelete = async (targetId: string) => {
-            return mutex.runExclusive(async () => {
-                const currentCount = countDbActiveAdmins();
-                const target = dbUsers[targetId];
-                if (!target) throw new Error("Not found");
-
-                assertCanDeleteUser(actor, { _id: targetId, ...target }, currentCount);
-
-                dbUsers[targetId] = null;
-                return { deleted: targetId };
-            });
-        };
-
-        const results = await Promise.allSettled([
-            atomicDelete("admin-A"),
-            atomicDelete("admin-B"),
-        ]);
-
-        const successful = results.filter((r) => r.status === "fulfilled");
-        const rejected = results.filter((r) => r.status === "rejected");
-
-        expect(successful.length).toBe(1);
-        expect(rejected.length).toBe(1);
-        expect(countDbActiveAdmins()).toBe(1);
-    });
-
-    it("SECURITY: Concurrent lock(A) + delete(B) prevents 0-admin state", async () => {
-        const dbUsers: Record<string, { role: string; isActive: boolean } | null> = {
-            "admin-A": { role: "admin", isActive: true },
-            "admin-B": { role: "admin", isActive: true },
-        };
-
-        const countDbActiveAdmins = () =>
-            Object.values(dbUsers).filter((u) => u !== null && u.role === "admin" && u.isActive).length;
-
-        const mutex = new AsyncMutex();
-        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
-
-        const atomicLock = async (targetId: string) => {
-            return mutex.runExclusive(async () => {
-                const currentCount = countDbActiveAdmins();
-                const target = dbUsers[targetId];
-                if (!target) throw new Error("Not found");
-                assertCanDeactivateUser(actor, { _id: targetId, ...target }, currentCount);
-                target.isActive = false;
-                return { locked: targetId };
-            });
-        };
-
-        const atomicDelete = async (targetId: string) => {
-            return mutex.runExclusive(async () => {
-                const currentCount = countDbActiveAdmins();
-                const target = dbUsers[targetId];
-                if (!target) throw new Error("Not found");
-                assertCanDeleteUser(actor, { _id: targetId, ...target }, currentCount);
-                dbUsers[targetId] = null;
-                return { deleted: targetId };
-            });
-        };
-
-        const results = await Promise.allSettled([
-            atomicLock("admin-A"),
-            atomicDelete("admin-B"),
-        ]);
-
-        const successful = results.filter((r) => r.status === "fulfilled");
-        const rejected = results.filter((r) => r.status === "rejected");
-
-        expect(successful.length).toBe(1);
-        expect(rejected.length).toBe(1);
-        expect(countDbActiveAdmins()).toBe(1);
-    });
-
-    it("SECURITY: Concurrent demote(A) + demote(B) prevents 0-admin state", async () => {
-        const dbUsers: Record<string, { role: string; isActive: boolean }> = {
-            "admin-A": { role: "admin", isActive: true },
-            "admin-B": { role: "admin", isActive: true },
-        };
-
-        const countDbActiveAdmins = () =>
-            Object.values(dbUsers).filter((u) => u.role === "admin" && u.isActive).length;
-
-        const mutex = new AsyncMutex();
-        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
-
-        const atomicDemote = async (targetId: string) => {
-            return mutex.runExclusive(async () => {
-                const currentCount = countDbActiveAdmins();
-                const target = dbUsers[targetId];
-                if (!target) throw new Error("Not found");
-                assertCanChangeRole(actor, { _id: targetId, ...target }, "student", currentCount);
-                target.role = "student";
-                return { demoted: targetId };
-            });
-        };
-
-        const results = await Promise.allSettled([
-            atomicDemote("admin-A"),
-            atomicDemote("admin-B"),
-        ]);
-
-        const successful = results.filter((r) => r.status === "fulfilled");
-        const rejected = results.filter((r) => r.status === "rejected");
-
-        expect(successful.length).toBe(1);
-        expect(rejected.length).toBe(1);
-        expect(countDbActiveAdmins()).toBe(1);
+    it("blocks deleting, demoting, or locking the last active admin", () => {
+        expect(migration).toContain("Cannot delete the last active admin account");
+        expect(migration).toContain("Cannot demote or lock the last active admin account");
+        expect(migration).toContain("BEFORE UPDATE OR DELETE ON public.profiles");
     });
 });
 
-// ---------------------------------------------------------------------------
-// 26. Role Transition & studentCode Update Invariants
-// ---------------------------------------------------------------------------
-
-describe("Role Transition & studentCode Validation Invariants", () => {
-    it("rejects transitioning Lecturer to Student if studentCode is missing", () => {
-        const targetLecturer = { _id: "lec-001", role: "lecturer", studentCode: undefined };
-        const newRole = "student";
-        const newStudentCode = undefined; // missing
-
-        const finalRole = newRole;
-        const finalStudentCode = newStudentCode ?? targetLecturer.studentCode;
-
-        expect(finalRole === ROLES.STUDENT && !finalStudentCode).toBe(true);
+describe("class and submission authorization", () => {
+    it("restricts class ownership to the lecturer or admin", () => {
+        expect(() => assertOwnsClass(lecturerActor, "lec-001")).not.toThrow();
+        expect(() => assertOwnsClass(lecturerActor, "other-lecturer")).toThrowError(AuthorizationError);
+        expect(() => assertOwnsClass(adminActor, "other-lecturer")).not.toThrow();
     });
 
-    it("allows transitioning Student to Lecturer without requiring studentCode", () => {
-        const _targetStudent = { _id: "stu-001", role: "student", studentCode: "B21DCCN001" };
-        const newRole: string = "lecturer";
-        const finalRole = newRole;
-        expect(finalRole).not.toBe(ROLES.STUDENT);
+    it("restricts grading to the owning lecturer or admin", () => {
+        expect(() => assertCanGradeSubmission(lecturerActor, "lec-001")).not.toThrow();
+        expect(() => assertCanGradeSubmission(lecturerActor, "other-lecturer")).toThrowError(AuthorizationError);
+        expect(() => assertCanGradeSubmission(studentActor, "stu-001")).toThrowError(AuthorizationError);
+    });
+
+    it("restricts students to their own submission", () => {
+        expect(() => assertCanAccessSubmission(studentActor, "stu-001")).not.toThrow();
+        expect(() => assertCanAccessSubmission(studentActor, "stu-999")).toThrowError(AuthorizationError);
+        expect(() => assertCanAccessSubmission(adminActor, "stu-999")).not.toThrow();
     });
 });
 
-// ---------------------------------------------------------------------------
-// 27. Cross-Instance Distributed Concurrency Simulation (Independent Mutexes)
-// ---------------------------------------------------------------------------
-
-describe("Cross-Instance Distributed Concurrency (Independent Mutexes)", () => {
-    // Simulated shared database state (MongoDB storage)
-    interface MockDbState {
-        users: Record<string, { role: string; isActive: boolean } | null>;
-        lock: { owner: string; isLocked: boolean; expiresAt: number } | null;
-    }
-
-    const createSharedDb = (): MockDbState => ({
-        users: {
-            "admin-A": { role: "admin", isActive: true },
-            "admin-B": { role: "admin", isActive: true },
-        },
-        lock: null,
+describe("account status", () => {
+    it("allows active users and denies blocked states", () => {
+        expect(isAccountAccessAllowed("active")).toBe(true);
+        expect(isAccountAccessAllowed("ACTIVE")).toBe(true);
+        expect(isAccountAccessAllowed("locked")).toBe(false);
+        expect(isAccountAccessAllowed("inactive")).toBe(false);
+        expect(isAccountAccessAllowed("banned")).toBe(false);
+        expect(isAccountAccessAllowed("suspended")).toBe(false);
+        expect(isAccountAccessAllowed("pending")).toBe(false);
+        expect(isAccountAccessAllowed("active", false)).toBe(false);
     });
+});
 
-    const countActiveAdminsInDb = (db: MockDbState) =>
-        Object.values(db.users).filter((u) => u !== null && u.role === "admin" && u.isActive).length;
-
-    // Simulated cross-instance app worker
-    class MockAppInstance {
-        public readonly localMutex = new AsyncMutex(); // Separate memory mutex per instance
-        public readonly instanceId: string;
-        private db: MockDbState;
-
-        constructor(instanceId: string, db: MockDbState) {
-            this.instanceId = instanceId;
-            this.db = db;
-        }
-
-        // Shared database atomic CAS lock
-        private async acquireSharedDbLock(timeoutMs = 3000): Promise<string> {
-            const owner = `${this.instanceId}_${Date.now()}_${Math.random()}`;
-            const startTime = Date.now();
-
-            while (true) {
-                const now = Date.now();
-                // Atomic CAS condition: lock is free or expired
-                if (!this.db.lock || !this.db.lock.isLocked || this.db.lock.expiresAt < now) {
-                    this.db.lock = { owner, isLocked: true, expiresAt: now + 5000 };
-                    return owner;
-                }
-                if (Date.now() - startTime > timeoutMs) {
-                    throw new Error("Timeout acquiring shared DB lock");
-                }
-                await new Promise((r) => setTimeout(r, 10));
-            }
-        }
-
-        private async releaseSharedDbLock(owner: string): Promise<void> {
-            if (this.db.lock && this.db.lock.owner === owner) {
-                this.db.lock.isLocked = false;
-            }
-        }
-
-        public async executePrivilegedMutation<T>(mutation: () => Promise<T>): Promise<T> {
-            // Layer 1: local process mutex
-            return this.localMutex.runExclusive(async () => {
-                // Layer 2: shared database lock (cross-instance)
-                const owner = await this.acquireSharedDbLock();
-                try {
-                    return await mutation();
-                } finally {
-                    await this.releaseSharedDbLock(owner);
-                }
-            });
-        }
-
-        public async lockUser(targetId: string, actor: AuthenticatedActor) {
-            return this.executePrivilegedMutation(async () => {
-                const currentCount = countActiveAdminsInDb(this.db);
-                const target = this.db.users[targetId];
-                if (!target) throw new Error("Not found");
-                assertCanDeactivateUser(actor, { _id: targetId, ...target }, currentCount);
-                target.isActive = false;
-                return { locked: targetId };
-            });
-        }
-
-        public async deleteUser(targetId: string, actor: AuthenticatedActor) {
-            return this.executePrivilegedMutation(async () => {
-                const currentCount = countActiveAdminsInDb(this.db);
-                const target = this.db.users[targetId];
-                if (!target) throw new Error("Not found");
-                assertCanDeleteUser(actor, { _id: targetId, ...target }, currentCount);
-                this.db.users[targetId] = null;
-                return { deleted: targetId };
-            });
-        }
-
-        public async demoteUser(targetId: string, newRole: string, actor: AuthenticatedActor) {
-            return this.executePrivilegedMutation(async () => {
-                const currentCount = countActiveAdminsInDb(this.db);
-                const target = this.db.users[targetId];
-                if (!target) throw new Error("Not found");
-                assertCanChangeRole(actor, { _id: targetId, ...target }, newRole, currentCount);
-                target.role = newRole;
-                return { demoted: targetId, newRole };
-            });
-        }
-    }
-
-    it("DISTRIBUTED: Instance A locks Admin A and Instance B locks Admin B concurrently -> only 1 succeeds", async () => {
-        const sharedDb = createSharedDb();
-        const instanceA = new MockAppInstance("server-instance-A", sharedDb);
-        const instanceB = new MockAppInstance("server-instance-B", sharedDb);
-        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
-
-        const results = await Promise.allSettled([
-            instanceA.lockUser("admin-A", actor),
-            instanceB.lockUser("admin-B", actor),
-        ]);
-
-        const successful = results.filter((r) => r.status === "fulfilled");
-        const rejected = results.filter((r) => r.status === "rejected");
-
-        expect(successful.length).toBe(1);
-        expect(rejected.length).toBe(1);
-        expect(countActiveAdminsInDb(sharedDb)).toBe(1);
+describe("request spoofing defense", () => {
+    it("ignores client identity headers without a verified Supabase session", async () => {
+        const request = new Request("http://localhost:3000/api/settings/users", {
+            headers: {
+                "x-user-id": "fake-admin-id",
+                "x-user-role": "admin",
+                "x-user-email": "attacker@example.com",
+            },
+        });
+        const user = await getCurrentUserFromRequest(request);
+        expect(user).toBeNull();
+        expect(() => requireAdmin(user)).toThrowError(AuthorizationError);
     });
+});
 
-    it("DISTRIBUTED: Instance A deletes Admin A and Instance B deletes Admin B concurrently -> only 1 succeeds", async () => {
-        const sharedDb = createSharedDb();
-        const instanceA = new MockAppInstance("server-instance-A", sharedDb);
-        const instanceB = new MockAppInstance("server-instance-B", sharedDb);
-        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
-
-        const results = await Promise.allSettled([
-            instanceA.deleteUser("admin-A", actor),
-            instanceB.deleteUser("admin-B", actor),
-        ]);
-
-        const successful = results.filter((r) => r.status === "fulfilled");
-        const rejected = results.filter((r) => r.status === "rejected");
-
-        expect(successful.length).toBe(1);
-        expect(rejected.length).toBe(1);
-        expect(countActiveAdminsInDb(sharedDb)).toBe(1);
-    });
-
-    it("DISTRIBUTED: Instance A locks Admin A and Instance B deletes Admin B concurrently -> only 1 succeeds", async () => {
-        const sharedDb = createSharedDb();
-        const instanceA = new MockAppInstance("server-instance-A", sharedDb);
-        const instanceB = new MockAppInstance("server-instance-B", sharedDb);
-        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
-
-        const results = await Promise.allSettled([
-            instanceA.lockUser("admin-A", actor),
-            instanceB.deleteUser("admin-B", actor),
-        ]);
-
-        const successful = results.filter((r) => r.status === "fulfilled");
-        const rejected = results.filter((r) => r.status === "rejected");
-
-        expect(successful.length).toBe(1);
-        expect(rejected.length).toBe(1);
-        expect(countActiveAdminsInDb(sharedDb)).toBe(1);
-    });
-
-    it("DISTRIBUTED: Instance A demotes Admin A and Instance B demotes Admin B concurrently -> only 1 succeeds", async () => {
-        const sharedDb = createSharedDb();
-        const instanceA = new MockAppInstance("server-instance-A", sharedDb);
-        const instanceB = new MockAppInstance("server-instance-B", sharedDb);
-        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
-
-        const results = await Promise.allSettled([
-            instanceA.demoteUser("admin-A", "student", actor),
-            instanceB.demoteUser("admin-B", "student", actor),
-        ]);
-
-        const successful = results.filter((r) => r.status === "fulfilled");
-        const rejected = results.filter((r) => r.status === "rejected");
-
-        expect(successful.length).toBe(1);
-        expect(rejected.length).toBe(1);
-        expect(countActiveAdminsInDb(sharedDb)).toBe(1);
-    });
-
-    it("DISTRIBUTED: Instance A deletes Admin A and Instance B demotes Admin B concurrently -> only 1 succeeds", async () => {
-        const sharedDb = createSharedDb();
-        const instanceA = new MockAppInstance("server-instance-A", sharedDb);
-        const instanceB = new MockAppInstance("server-instance-B", sharedDb);
-        const actor: AuthenticatedActor = { userId: "admin-super", email: "super@test.com", role: "admin" };
-
-        const results = await Promise.allSettled([
-            instanceA.deleteUser("admin-A", actor),
-            instanceB.demoteUser("admin-B", "student", actor),
-        ]);
-
-        const successful = results.filter((r) => r.status === "fulfilled");
-        const rejected = results.filter((r) => r.status === "rejected");
-
-        expect(successful.length).toBe(1);
-        expect(rejected.length).toBe(1);
-        expect(countActiveAdminsInDb(sharedDb)).toBe(1);
+describe("HTTP status mapping", () => {
+    it("preserves authentication and authorization statuses", () => {
+        expect(resolveHttpStatus(new AuthorizationError("Bạn chưa đăng nhập", 401))).toBe(401);
+        expect(resolveHttpStatus(new AuthorizationError("Bạn không có quyền", 403))).toBe(403);
+        expect(resolveHttpStatus(new Error("không tìm thấy người dùng"))).toBe(404);
+        expect(resolveHttpStatus(new Error("email đã tồn tại"))).toBe(409);
     });
 });

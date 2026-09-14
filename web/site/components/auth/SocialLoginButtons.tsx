@@ -6,9 +6,10 @@ import { getSupabaseBrowserClient } from "@/lib/supabase/client";
 type Props = {
     disabled?: boolean;
     onError?: (message: string) => void;
+    onLoadingChange?: (loading: boolean) => void;
 };
 
-export function SocialLoginButtons({ disabled = false, onError }: Props) {
+export function SocialLoginButtons({ disabled = false, onError, onLoadingChange }: Props) {
     const [loadingGoogle, setLoadingGoogle] = useState(false);
     const signingIn = useRef(false);
 
@@ -17,6 +18,7 @@ export function SocialLoginButtons({ disabled = false, onError }: Props) {
         signingIn.current = true;
         try {
             setLoadingGoogle(true);
+            onLoadingChange?.(true);
             const supabase = getSupabaseBrowserClient();
             const redirectTo = `${window.location.origin}/auth/callback`;
 
@@ -30,11 +32,13 @@ export function SocialLoginButtons({ disabled = false, onError }: Props) {
             if (error) {
                 signingIn.current = false;
                 setLoadingGoogle(false);
+                onLoadingChange?.(false);
                 onError?.("Không thể khởi động đăng nhập với Google. Vui lòng thử lại.");
             }
         } catch {
             signingIn.current = false;
             setLoadingGoogle(false);
+            onLoadingChange?.(false);
             onError?.("Đã xảy ra lỗi khi kết nối với Google. Vui lòng thử lại sau.");
         }
     };
@@ -45,18 +49,16 @@ export function SocialLoginButtons({ disabled = false, onError }: Props) {
                 type="button"
                 onClick={handleGoogleSignIn}
                 disabled={disabled || loadingGoogle}
-                className="flex w-full items-center justify-center gap-2.5 rounded-xl border border-blue-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-700 shadow-2xs transition hover:bg-blue-50/70 hover:border-blue-300 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-100 disabled:cursor-not-allowed disabled:opacity-60"
+                className="auth-secondary-button"
             >
                 {loadingGoogle ? (
                     <>
-                        <span className="material-symbols-outlined animate-spin text-[18px] text-blue-600">
-                            progress_activity
-                        </span>
+                        <span className="auth-spinner auth-spinner-blue" aria-hidden="true" />
                         <span>Đang chuyển hướng Google...</span>
                     </>
                 ) : (
                     <>
-                        <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
+                        <svg aria-hidden="true" className="h-4 w-4 shrink-0" viewBox="0 0 24 24">
                             <path
                                 fill="#4285F4"
                                 d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"

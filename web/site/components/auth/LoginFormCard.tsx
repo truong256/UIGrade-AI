@@ -3,10 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import {
+    AuthAlert,
+    AuthCard,
+    AuthCardHeader,
+    AuthDivider,
+    AuthInput,
+    AuthPasswordInput,
+    AuthSubmitButton,
+} from "./AuthPrimitives";
 import { SocialLoginButtons } from "./SocialLoginButtons";
-import { getAuthErrorMessage, type AuthAlert } from "@/lib/auth-errors";
+import { getAuthErrorMessage, type AuthAlert as AuthErrorAlert } from "@/lib/auth-errors";
 
 type LoginFormData = {
+    title?: string;
+    description?: string;
     emailLabel?: string;
     emailPlaceholder?: string;
     passwordLabel?: string;
@@ -33,37 +44,38 @@ export function LoginFormCard({
 }: Props) {
     const router = useRouter();
     const submitting = useRef(false);
-    const [showPassword, setShowPassword] = useState(false);
+    const oauthStarting = useRef(false);
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [emailError, setEmailError] = useState("");
+    const [passwordError, setPasswordError] = useState("");
     const [loading, setLoading] = useState(false);
+    const [socialLoading, setSocialLoading] = useState(false);
     const [formError, setFormError] = useState<string | null>(initialError || null);
-    const [urlAlert, setUrlAlert] = useState<AuthAlert | null>(() =>
+    const [urlAlert, setUrlAlert] = useState<AuthErrorAlert | null>(() =>
         getAuthErrorMessage(initialErrorCode, initialErrorMessage)
     );
 
     useEffect(() => {
         if (initialErrorCode) {
             setUrlAlert(getAuthErrorMessage(initialErrorCode, initialErrorMessage));
-        } else if (typeof window !== "undefined") {
-            const params = new URLSearchParams(window.location.search);
-            const err = params.get("error");
-            const msg = params.get("message");
-            if (err) {
-                setUrlAlert(getAuthErrorMessage(err, msg));
-            }
+            return;
+        }
+
+        const params = new URLSearchParams(window.location.search);
+        const errorCode = params.get("error");
+        if (errorCode) {
+            setUrlAlert(getAuthErrorMessage(errorCode, params.get("message")));
         }
     }, [initialErrorCode, initialErrorMessage]);
 
-    const validateEmail = (val: string): boolean => {
-        const trimmed = val.trim();
+    const validateEmail = (value: string): boolean => {
+        const trimmed = value.trim();
         if (!trimmed) {
             setEmailError("Vui lòng nhập địa chỉ email");
             return false;
         }
-        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-        if (!emailRegex.test(trimmed)) {
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) {
             setEmailError("Địa chỉ email không đúng định dạng (Ví dụ: name@university.edu.vn)");
             return false;
         }
@@ -71,38 +83,28 @@ export function LoginFormCard({
         return true;
     };
 
-    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-        e.preventDefault();
-        if (submitting.current) return;
+    const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (submitting.current || oauthStarting.current) return;
         setFormError(null);
         setUrlAlert(null);
 
-        const isEmailValid = validateEmail(email);
-        if (!isEmailValid) return;
-
-        if (!password.trim()) {
-            setFormError("Vui lòng nhập mật khẩu");
-            return;
-        }
+        const emailIsValid = validateEmail(email);
+        const passwordIsValid = Boolean(password.trim());
+        setPasswordError(passwordIsValid ? "" : "Vui lòng nhập mật khẩu");
+        if (!emailIsValid || !passwordIsValid) return;
 
         try {
             submitting.current = true;
             setLoading(true);
-
-            const res = await fetch("/api/auth/login", {
+            const response = await fetch("/api/auth/login", {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({
-                    email: email.trim(),
-                    password,
-                }),
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email: email.trim(), password }),
             });
+            const result = await response.json();
 
-            const result = await res.json();
-
-            if (!res.ok) {
+            if (!response.ok) {
                 setFormError(result.message || "Đăng nhập thất bại. Vui lòng kiểm tra lại thông tin.");
                 return;
             }
@@ -110,173 +112,100 @@ export function LoginFormCard({
             router.push(result.redirectTo || "/ui/dashboard");
             router.refresh();
         } catch {
-            setFormError("Có lỗi xảy ra trong quá trình đăng nhập. Vui lòng thử lại sau.");
+            setFormError("Không thể kết nối đến hệ thống. Vui lòng thử lại.");
         } finally {
             submitting.current = false;
             setLoading(false);
         }
     };
 
-    const activeAlert: AuthAlert | null = formError
-        ? (formError.includes("Không thể đăng nhập Google")
+    const activeAlert: AuthErrorAlert | null = formError
+        ? formError.includes("Không thể đăng nhập Google")
             ? { message: "Hãy đăng nhập tài khoản Gmail .edu.vn" }
-            : { message: formError })
+            : { message: formError }
         : urlAlert;
 
     return (
-        <div className="w-full max-w-[440px] mx-auto">
-            <div className="rounded-2xl border border-slate-200/80 bg-white p-7 sm:p-8 shadow-xs">
-                <p className="mb-5 text-xs text-slate-600">
-                    Phiên đăng nhập được xác minh lại an toàn khi bạn mở hoặc tải lại trang.
-                </p>
-                <form className="space-y-4" onSubmit={handleSubmit} noValidate>
-                    {/* Email Field */}
-                    <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
-                            {data?.emailLabel || "Email"} <span className="text-rose-500">*</span>
-                        </label>
+        <AuthCard>
+            <AuthCardHeader
+                title={data?.title || "Chào mừng trở lại"}
+                description={data?.description || "Đăng nhập để tiếp tục"}
+            />
 
-                        <input
-                            type="email"
-                            placeholder={data?.emailPlaceholder || "Nhập địa chỉ email"}
-                            value={email}
-                            onChange={(e) => {
-                                setEmail(e.target.value);
-                                if (emailError) validateEmail(e.target.value);
-                            }}
-                            onBlur={() => {
-                                if (email) validateEmail(email);
-                            }}
-                            disabled={loading}
-                            className={`h-11 w-full rounded-xl border px-3.5 text-sm outline-none transition focus:ring-2 disabled:bg-slate-50 ${
-                                emailError
-                                    ? "border-rose-300 bg-rose-50/30 text-slate-900 focus:border-rose-500 focus:ring-rose-100"
-                                    : "border-slate-200 bg-white text-slate-900 focus:border-blue-500 focus:ring-blue-100"
-                            }`}
-                            required
-                        />
-
-                        {emailError && (
-                            <p className="mt-1 text-[11px] font-medium text-rose-600">
-                                {emailError}
-                            </p>
-                        )}
-                    </div>
-
-                    {/* Password Field */}
-                    <div>
-                        <div className="flex items-center justify-between mb-1.5">
-                            <label className="block text-xs font-semibold text-slate-700">
-                                {data?.passwordLabel || "Mật khẩu"} <span className="text-rose-500">*</span>
-                            </label>
-
-                            <Link
-                                href="/forgot-password"
-                                className="text-xs font-semibold text-blue-600 hover:text-blue-700 transition"
-                            >
-                                {data?.forgotPasswordLabel || "Quên mật khẩu?"}
-                            </Link>
-                        </div>
-
-                        <div className="relative">
-                            <input
-                                type={showPassword ? "text" : "password"}
-                                placeholder={data?.passwordPlaceholder || "Nhập mật khẩu"}
-                                value={password}
-                                onChange={(e) => setPassword(e.target.value)}
-                                disabled={loading}
-                                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3.5 pr-10 text-sm text-slate-900 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-50"
-                                required
-                            />
-
-                            <button
-                                type="button"
-                                onClick={() => setShowPassword((prev) => !prev)}
-                                aria-label={showPassword ? "Ẩn mật khẩu" : "Hiện mật khẩu"}
-                                className="absolute right-3 top-1/2 -translate-y-1/2 flex h-7 w-7 items-center justify-center rounded-lg text-slate-400 hover:text-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-200 transition"
-                            >
-                                <span className="material-symbols-outlined text-[18px]">
-                                    {showPassword ? "visibility_off" : "visibility"}
-                                </span>
-                            </button>
-                        </div>
-                    </div>
-
-                    {/* Error / Alert Box */}
-                    {activeAlert && (
-                        <div
-                            role="alert"
-                            className="rounded-xl bg-rose-50 border border-rose-200 p-3.5 text-xs text-rose-700 flex items-start gap-2.5 shadow-2xs transition-all"
-                        >
-                            <span className="material-symbols-outlined text-[18px] text-rose-600 shrink-0 mt-0.5 select-none">
-                                error
-                            </span>
-                            <div className="flex-1 min-w-0 space-y-0.5">
-                                {activeAlert.title && (
-                                    <h4 className="font-bold text-rose-900 text-xs tracking-tight">
-                                        {activeAlert.title}
-                                    </h4>
-                                )}
-                                <p className="leading-relaxed font-medium text-rose-700">
-                                    {activeAlert.message}
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Submit Button */}
-                    <button
-                        type="submit"
-                        disabled={loading}
-                        className="w-full h-11 rounded-xl bg-blue-600 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-300 disabled:cursor-not-allowed disabled:opacity-70 flex items-center justify-center gap-2"
-                    >
-                        {loading ? (
-                            <>
-                                <span className="material-symbols-outlined animate-spin text-[16px]">progress_activity</span>
-                                <span>Đang đăng nhập...</span>
-                            </>
-                        ) : (
-                            <span>{data?.submitLabel || "Đăng nhập"}</span>
-                        )}
-                    </button>
-                </form>
-
-                {/* Divider */}
-                <div className="relative my-5">
-                    <div className="absolute inset-0 flex items-center">
-                        <div className="w-full border-t border-slate-100" />
-                    </div>
-
-                    <div className="relative flex justify-center text-xs">
-                        <span className="bg-white px-3 font-medium text-slate-400 text-[11px]">
-                            {data?.dividerLabel || "Hoặc tiếp tục với"}
-                        </span>
-                    </div>
-                </div>
-
-                {/* Google Sign-In */}
-                <SocialLoginButtons
-                    disabled={loading}
-                    onError={(msg) => {
-                        setFormError(msg);
-                        setUrlAlert(null);
+            <form className="space-y-5" onSubmit={handleSubmit} noValidate>
+                <AuthInput
+                    id="login-email"
+                    type="email"
+                    icon="mail"
+                    label={data?.emailLabel || "Email"}
+                    placeholder={data?.emailPlaceholder || "Nhập địa chỉ email"}
+                    autoComplete="email"
+                    inputMode="email"
+                    value={email}
+                    onChange={(event) => {
+                        setEmail(event.target.value);
+                        if (emailError) validateEmail(event.target.value);
                     }}
+                    onBlur={() => {
+                        if (email) validateEmail(email);
+                    }}
+                    disabled={loading || socialLoading}
+                    error={emailError}
+                    required
                 />
 
-                {/* Signup Link */}
-                <div className="mt-5 pt-4 border-t border-slate-100 text-center">
-                    <p className="text-xs text-[#4A5568]">
-                        {data?.signupText || "Chưa có tài khoản?"}{" "}
-                        <Link
-                            href="/register"
-                            className="font-semibold text-blue-600 hover:text-blue-700 transition"
-                        >
-                            {data?.signupLabel || "Đăng ký ngay"}
+                <AuthPasswordInput
+                    id="login-password"
+                    label={data?.passwordLabel || "Mật khẩu"}
+                    placeholder={data?.passwordPlaceholder || "Nhập mật khẩu"}
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(event) => {
+                        setPassword(event.target.value);
+                        if (passwordError && event.target.value.trim()) setPasswordError("");
+                    }}
+                    disabled={loading || socialLoading}
+                    error={passwordError}
+                    labelAccessory={
+                        <Link href="/forgot-password" className="auth-text-link">
+                            {data?.forgotPasswordLabel || "Quên mật khẩu?"}
                         </Link>
-                    </p>
-                </div>
-            </div>
-        </div>
+                    }
+                    required
+                />
+
+                {activeAlert ? (
+                    <AuthAlert title={activeAlert.title} message={activeAlert.message} />
+                ) : null}
+
+                <AuthSubmitButton
+                    idleLabel={data?.submitLabel || "Đăng nhập"}
+                    loadingLabel="Đang đăng nhập..."
+                    loading={loading}
+                    disabled={socialLoading}
+                />
+            </form>
+
+            <AuthDivider label={data?.dividerLabel || "Hoặc"} />
+            <SocialLoginButtons
+                disabled={loading}
+                onError={(message) => {
+                    setFormError(message);
+                    setUrlAlert(null);
+                }}
+                onLoadingChange={(isLoading) => {
+                    oauthStarting.current = isLoading;
+                    setSocialLoading(isLoading);
+                }}
+            />
+
+            <p className="mt-6 text-center text-sm text-[#59677F]">
+                {data?.signupText || "Chưa có tài khoản?"}{" "}
+                <Link href="/register" className="auth-text-link text-sm">
+                    {data?.signupLabel || "Đăng ký"}
+                </Link>
+            </p>
+        </AuthCard>
     );
 }
 

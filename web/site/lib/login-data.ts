@@ -3,22 +3,18 @@ export const topBarData = {
     helpLabel: "Trợ giúp",
 };
 
-export const loginHeroData = {
-    eyebrow: "HỆ THỐNG CHẤM ĐIỂM THÔNG MINH",
-    title: "Chào mừng trở lại",
-    description: "Đăng nhập để tiếp tục học tập và quản lý công việc của bạn.",
-};
-
 export const loginFormData = {
+    title: "Chào mừng trở lại",
+    description: "Đăng nhập để tiếp tục",
     emailLabel: "Email",
     emailPlaceholder: "Nhập địa chỉ email",
     passwordLabel: "Mật khẩu",
     passwordPlaceholder: "Nhập mật khẩu",
     forgotPasswordLabel: "Quên mật khẩu?",
     submitLabel: "Đăng nhập",
-    dividerLabel: "Hoặc tiếp tục với",
+    dividerLabel: "Hoặc",
     signupText: "Chưa có tài khoản?",
-    signupLabel: "Đăng ký ngay",
+    signupLabel: "Đăng ký",
 };
 
 export const footerLinks = [

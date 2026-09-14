@@ -23,8 +23,6 @@ jobs:
       run:
         working-directory: web/site
     env:
-      JWT_SECRET: "ci-test-jwt-secret-at-least-32-chars-long"
-      MONGODB_URI: "mongodb://localhost:27017/ci_test_db"
       NEXT_PUBLIC_SUPABASE_URL: "https://placeholder-project.supabase.co"
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-anon-key"
 
@@ -35,7 +33,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: 'npm'
           cache-dependency-path: web/site/package-lock.json
 

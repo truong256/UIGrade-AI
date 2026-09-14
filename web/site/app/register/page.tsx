@@ -6,10 +6,10 @@ import { topBarData, footerLinks } from "@/lib/login-data";
 
 export default function RegisterPage() {
     return (
-        <div className="flex min-h-screen flex-col bg-blue-50/40 text-slate-900">
+        <div className="auth-page flex min-h-[100dvh] flex-col text-slate-900">
             <LoginTopBar data={topBarData} />
 
-            <main className="flex flex-1 items-center justify-center px-4 py-8 sm:px-6">
+            <main className="relative z-10 flex flex-1 items-center justify-center px-4 py-8 sm:px-6 sm:py-10">
                 <RegisterFormCard data={registerFormData} />
             </main>
 

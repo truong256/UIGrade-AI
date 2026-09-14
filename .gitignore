@@ -60,6 +60,7 @@ web/site/public/uploads/*
 # ==================================================
 # IDE and temporary files
 # ==================================================
+.worktrees/
 web/site/.idea/
 web/project-files/.idea/
 *.tmp

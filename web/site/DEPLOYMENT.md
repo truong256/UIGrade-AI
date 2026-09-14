@@ -6,25 +6,18 @@ Tài liệu này hướng dẫn chi tiết quy trình chuẩn bị, cấu hình 
 
 ## 1. Kiến Trúc Hệ Thống (Production Architecture)
 
-```
-[ Người Dùng / Trình Duyệt ]
-           │
-           ▼
-[ Vercel Edge Network / CDN ]
-           │
-           ▼
-[ Next.js 16 Serverless Functions (App Router / Turbopack) ]
-           │
- ┌─────────┼────────────────────────┬──────────────────────┐
- │         │                        │                      │
- ▼         ▼                        ▼                      ▼
-[ MongoDB  [ Supabase Auth &        [ Google Gemini API    [ Android Grading Worker ]
-  Atlas ]    Storage Buckets ]        (gemini-3.8-flash) ]   (Dedicated VM / Host)
+```mermaid
+flowchart TD
+    U[Người dùng / Trình duyệt] --> V[Vercel Edge Network]
+    V --> N[Next.js 16 App Router]
+    N --> S[Supabase PostgreSQL, Auth, Storage và RLS]
+    N --> G[Google Gemini API]
+    N --> W[Android Grading Worker chuyên dụng]
 ```
 
 - **Web Frontend & API Routes**: Chạy trên **Vercel Serverless Functions**.
-- **Cơ sở dữ liệu chính (Primary DB)**: **MongoDB Atlas** (User, Classroom, Assignment, Submission, Settings).
-- **Xác thực & Lưu trữ tập tin (Auth & File Storage)**: **Supabase** (PostgreSQL, Supabase Auth, Supabase Storage Buckets cho avatar, assignment attachments, student submissions).
+- **Dữ liệu, xác thực và phân quyền**: **Supabase PostgreSQL**, Supabase Auth và RLS cho hồ sơ, lớp học, bài tập, bài nộp, điểm số và cấu hình.
+- **Lưu trữ tập tin**: **Supabase Storage** cho avatar, tài liệu bài tập và file bài nộp; quyền truy cập được kiểm soát bằng Storage policies.
 - **AI Đánh giá giao diện**: **Google Gemini API** (`gemini-3.8-flash`).
 - **Android Runtime Runner (Grading Worker)**: Chạy trên máy chủ chuyên dụng (có Android SDK, ADB, Emulator / AVD). **Không chạy trực tiếp bên trong Vercel Serverless Functions**.
 
@@ -64,8 +57,7 @@ Các biến này chỉ được truy cập trong môi trường Server / Serverl
 
 | Tên biến | Bắt buộc | Mô tả |
 | :--- | :---: | :--- |
-| `MONGODB_URI` | **Có** | Chuỗi kết nối MongoDB Atlas (dạng `mongodb+srv://...`) |
-| `JWT_SECRET` | **Có** | Chuỗi bí mật ký JWT session (tối thiểu 32 ký tự ngẫu nhiên) |
+| `SUPABASE_SERVICE_ROLE_KEY` | **Có cho chức năng quản trị người dùng** | Chỉ đặt trong Vercel server; tuyệt đối không thêm tiền tố `NEXT_PUBLIC_`, không đưa vào client hoặc commit Git |
 | `GEMINI_API_KEY` | **Có** | API Key từ Google AI Studio / Google Cloud |
 | `GEMINI_MODEL` | Tùy chọn | Mặc định là `gemini-3.8-flash` |
 | `NOTIFICATION_CRON_TOKEN` | Tùy chọn | Token bảo vệ endpoint trigger reminder tự động |
@@ -77,10 +69,12 @@ Các biến này chỉ được truy cập trong môi trường Server / Serverl
 
 ---
 
-## 4. Cấu Hình Supabase (Auth & Storage)
+## 4. Cấu Hình Supabase (PostgreSQL, Auth, Storage và RLS)
 
-Luồng xác thực Email/Google thông thường chỉ dùng URL dự án và Anon Key công khai;
-không cần cấu hình `SUPABASE_SERVICE_ROLE_KEY`.
+Luồng xác thực Email/Google thông thường chỉ dùng URL dự án và Anon Key công khai.
+Riêng API quản trị tài khoản cần `SUPABASE_SERVICE_ROLE_KEY` ở server để gọi Supabase
+Auth Admin. Mọi route này vẫn phải xác minh session và role `admin` trước khi tạo admin
+client; khóa đặc quyền không được gửi xuống trình duyệt.
 
 ### A. Authentication URL Configuration
 Trong Supabase Dashboard: `Project Settings` → `Authentication` → `URL Configuration`:
@@ -146,13 +140,22 @@ vercel link
 Thêm các biến môi trường vào Vercel (Production và Preview):
 ```bash
 vercel env add NEXT_PUBLIC_APP_URL production
-vercel env add MONGODB_URI production
-vercel env add JWT_SECRET production
 vercel env add NEXT_PUBLIC_SUPABASE_URL production
 vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production
+vercel env add SUPABASE_SERVICE_ROLE_KEY production
 vercel env add GEMINI_API_KEY production
 vercel env add GEMINI_MODEL production
+vercel env add NOTIFICATION_CRON_TOKEN production
+vercel env add SMTP_HOST production
+vercel env add SMTP_PORT production
+vercel env add SMTP_USER production
+vercel env add SMTP_PASS production
+vercel env add SMTP_FROM production
 ```
+
+Lặp lại các biến cần thiết cho môi trường Preview nếu Preview phải kiểm thử đầy đủ.
+Không tải trực tiếp toàn bộ tệp `.env.local` lên Vercel; thêm hoặc cập nhật từng biến
+để tránh ghi đè nhầm phạm vi Production/Preview.
 
 ### Bước 4: Triển khai bản Preview (Kiểm thử)
 ```bash
