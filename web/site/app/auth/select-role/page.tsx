@@ -17,7 +17,7 @@ const ROLES: { value: Role; label: string; description: string; icon: string }[]
         value: "lecturer",
         label: "Giảng viên",
         description: "Tạo lớp học, ra đề bài, cấu hình rubric và chấm điểm sinh viên",
-        icon: "person_chalkboard",
+        icon: "co_present",
     },
 ];
 

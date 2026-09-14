@@ -1,4 +1,6 @@
 import { describe, it, expect } from "vitest";
+import { readFileSync } from "node:fs";
+import { resolve } from "node:path";
 import { getNavItemsForRole, adminNavItems, lecturerNavItems, studentNavItems } from "@/lib/navigation";
 
 describe("Layout & Navigation Regression Tests", () => {
@@ -71,6 +73,18 @@ describe("Layout & Navigation Regression Tests", () => {
             expect(result.length).toBe(4);
             expect(result.filter((r) => r.href === "/ui/account").length).toBe(1);
             expect(result.filter((r) => r.label === "Tài khoản").length).toBe(1);
+        });
+    });
+
+    describe("Select-role page icons regression", () => {
+        it("uses valid Material Symbols icons and does not use unsupported glyphs like person_chalkboard", () => {
+            const pageContent = readFileSync(resolve(process.cwd(), "app/auth/select-role/page.tsx"), "utf8");
+            expect(pageContent).not.toContain("person_chalkboard");
+            expect(pageContent).toContain("co_present");
+            expect(pageContent).toContain("school");
+            expect(pageContent).toContain("manage_accounts");
+            expect(pageContent).toContain("check_circle");
+            expect(pageContent).toContain("progress_activity");
         });
     });
 });
