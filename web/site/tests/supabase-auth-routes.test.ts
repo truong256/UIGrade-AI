@@ -491,3 +491,128 @@ describe("education email registration boundary", () => {
         }
     );
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// CASE 1–8: canonical origin resolution (bug fix verification)
+// These tests prove that the callback route NEVER redirects to 0.0.0.0.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Build a minimal Request (not NextRequest) simulating what Next.js Route
+ *  Handlers receive. Accepts optional extra headers (e.g. forwarded headers). */
+function callbackRequest(url: string, extraHeaders: Record<string, string> = {}): Request {
+    return new Request(url, { headers: extraHeaders });
+}
+
+describe("canonical origin resolution – NEXT_PUBLIC_APP_URL priority", () => {
+    // CASE 1: request comes in with 0.0.0.0 host but APP_URL is set correctly.
+    it("CASE 1 – 0.0.0.0 host is replaced by NEXT_PUBLIC_APP_URL", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
+        read(null); // no profile → will insert pending and redirect to select-role
+        const req = callbackRequest("http://0.0.0.0:3000/auth/callback?code=test-code-1");
+        const res = await callback(req);
+        const location = res.headers.get("location")!;
+        expect(location).toBe("http://localhost:3000/auth/select-role");
+        expect(location).not.toContain("0.0.0.0");
+    });
+
+    // CASE 2: normal localhost request – should work as before.
+    it("CASE 2 – localhost request resolves correctly", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
+        read(null);
+        const req = callbackRequest("http://localhost:3000/auth/callback?code=test-code-2");
+        const res = await callback(req);
+        expect(res.headers.get("location")).toBe("http://localhost:3000/auth/select-role");
+    });
+
+    // CASE 3: existing student → dashboard.
+    it("CASE 3 – existing student goes to dashboard, not select-role", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
+        read(profile("student"));
+        const req = callbackRequest("http://0.0.0.0:3000/auth/callback?code=test-code-3");
+        const res = await callback(req);
+        const location = res.headers.get("location")!;
+        expect(location).toBe("http://localhost:3000/ui/dashboard");
+        expect(location).not.toContain("0.0.0.0");
+    });
+
+    // CASE 4: existing lecturer → dashboard.
+    it("CASE 4 – existing lecturer goes to dashboard, not select-role", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
+        read(profile("lecturer"));
+        const req = callbackRequest("http://0.0.0.0:3000/auth/callback?code=test-code-4");
+        const res = await callback(req);
+        const location = res.headers.get("location")!;
+        expect(location).toBe("http://localhost:3000/ui/dashboard");
+        expect(location).not.toContain("0.0.0.0");
+    });
+
+    // CASE 5: pending education account → select-role.
+    it("CASE 5 – pending profile goes to select-role (edu.vn email)", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
+        const eduUser = { ...mock.user, email: "user@school.edu.vn" };
+        mock.exchange.mockResolvedValueOnce({ data: { user: eduUser }, error: null });
+        read(profile("pending")); // profile already exists as pending
+        const req = callbackRequest("http://0.0.0.0:3000/auth/callback?code=test-code-5");
+        const res = await callback(req);
+        expect(res.headers.get("location")).toBe("http://localhost:3000/auth/select-role");
+    });
+
+    // CASE 6: gmail.com new account with no profile → callback creates pending profile
+    // and sends to select-role. The edu restriction is enforced at /auth/select-role, not here.
+    it("CASE 6 – gmail.com new account goes to select-role (edu check deferred to select-role page)", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
+        const gmailUser = { ...mock.user, email: "user@gmail.com" };
+        mock.exchange.mockResolvedValueOnce({ data: { user: gmailUser }, error: null });
+        read(null); // no profile
+        const req = callbackRequest("http://0.0.0.0:3000/auth/callback?code=test-code-6");
+        const res = await callback(req);
+        const location = res.headers.get("location")!;
+        expect(location).toBe("http://localhost:3000/auth/select-role");
+        expect(location).not.toContain("0.0.0.0");
+    });
+
+    // CASE 7: production URL – must use the production origin, never localhost.
+    it("CASE 7 – production APP_URL is used, not localhost", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "https://example.vercel.app");
+        read(null);
+        const req = callbackRequest("http://0.0.0.0:3000/auth/callback?code=test-code-7");
+        const res = await callback(req);
+        const location = res.headers.get("location")!;
+        expect(location).toBe("https://example.vercel.app/auth/select-role");
+        expect(location).not.toContain("localhost");
+        expect(location).not.toContain("0.0.0.0");
+    });
+
+    // CASE 8: password recovery – fix must not break reset-password redirect.
+    it("CASE 8 – password recovery redirect is not broken by origin fix", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
+        read(profile("student"));
+        const req = callbackRequest("http://0.0.0.0:3000/auth/callback?code=recovery-code&type=recovery");
+        const res = await callback(req);
+        expect(res.headers.get("location")).toBe("http://localhost:3000/reset-password");
+        expect(res.headers.get("location")).not.toContain("0.0.0.0");
+    });
+});
+
+describe("canonical origin resolution – forwarded headers fallback", () => {
+    it("uses x-forwarded-proto + x-forwarded-host when APP_URL is absent", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "");
+        read(null);
+        const req = callbackRequest("http://0.0.0.0:3000/auth/callback?code=fwd-code", {
+            "x-forwarded-proto": "https",
+            "x-forwarded-host": "staging.example.com",
+        });
+        const res = await callback(req);
+        const location = res.headers.get("location")!;
+        expect(location).toContain("https://staging.example.com");
+        expect(location).not.toContain("0.0.0.0");
+    });
+
+    it("uses request.url origin when it is a valid browser host (no APP_URL, no forwarded headers)", async () => {
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "");
+        read(null);
+        const req = callbackRequest("http://localhost:3000/auth/callback?code=fallback-code");
+        const res = await callback(req);
+        expect(res.headers.get("location")).toBe("http://localhost:3000/auth/select-role");
+    });
+});

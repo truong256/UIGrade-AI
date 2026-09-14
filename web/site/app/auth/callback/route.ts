@@ -2,10 +2,12 @@ import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { dashboardForRole, authenticatedProfileRole } from "@/lib/auth-routing";
 import { allowOAuthArrival } from "@/lib/auth-visit";
+import { getCanonicalOrigin } from "@/lib/app-url";
 import { isEducationEmail } from "@/lib/education-email";
 
 export async function GET(request: Request) {
-    const { searchParams, origin } = new URL(request.url);
+    const searchParams = new URL(request.url).searchParams;
+    const origin = getCanonicalOrigin(request);
     const code = searchParams.get("code");
     const errorParam = searchParams.get("error");
     const isPasswordRecovery = searchParams.get("type") === "recovery";
