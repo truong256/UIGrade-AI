@@ -1,17 +1,10 @@
-import SystemConfig from "@/models/SystemConfig.model";
+import { createSupabaseServerClient } from "@/lib/supabase/server";
 
 type AnyObject = Record<string, any>;
 
 type PublicConfig = {
-    judge: {
-        serverUrl: string;
-        apiKey: string;
-        hasApiKey: boolean;
-    };
-    limits: {
-        maxRuntimeMs: number;
-        maxMemoryMb: number;
-    };
+    judge: { serverUrl: string; apiKey: string; hasApiKey: boolean };
+    limits: { maxRuntimeMs: number; maxMemoryMb: number };
     email: {
         enabled: boolean;
         smtpHost: string;
@@ -28,12 +21,8 @@ type PublicConfig = {
         notifyAtDue: boolean;
         testReceiverEmail: string;
     };
-    backup: {
-        backupFrequency: string;
-        cloudProvider: string;
-    };
-    updatedAt?: Date | string;
-    createdAt?: Date | string;
+    backup: { backupFrequency: string; cloudProvider: string };
+    updatedAt?: string;
 };
 
 function asObject(value: unknown): AnyObject {
@@ -66,14 +55,12 @@ function normalizeHours(value: unknown, fallback: number[]) {
     const rawValues = Array.isArray(value)
         ? value
         : typeof value === "string"
-            ? value.split(",")
-            : [];
-
+          ? value.split(",")
+          : [];
     const next = rawValues
         .map((item) => Number(String(item).trim()))
         .filter((item) => Number.isFinite(item) && item > 0)
         .map((item) => Math.round(item));
-
     const unique = Array.from(new Set(next)).sort((a, b) => b - a);
     return unique.length ? unique : fallback;
 }
@@ -84,15 +71,8 @@ function isValidEmail(value: string) {
 
 function getDefaultConfig() {
     return {
-        key: "default",
-        judge: {
-            serverUrl: "https://judge.autograde.io/v1/api",
-            apiKey: "",
-        },
-        limits: {
-            maxRuntimeMs: 1000,
-            maxMemoryMb: 256,
-        },
+        judge: { serverUrl: "https://judge.autograde.io/v1/api", apiKey: "" },
+        limits: { maxRuntimeMs: 1000, maxMemoryMb: 256 },
         email: {
             enabled: false,
             smtpHost: "smtp.gmail.com",
@@ -108,125 +88,81 @@ function getDefaultConfig() {
             notifyAtDue: true,
             testReceiverEmail: "",
         },
-        backup: {
-            backupFrequency: "daily_0000",
-            cloudProvider: "google_drive",
-        },
+        backup: { backupFrequency: "daily_0000", cloudProvider: "google_drive" },
     };
 }
 
-function toPublicConfig(doc: AnyObject): PublicConfig {
-    const judge = asObject(doc.judge);
-    const limits = asObject(doc.limits);
-    const email = asObject(doc.email);
-    const backup = asObject(doc.backup);
-
+function normalizeInternalConfig(value: unknown, updatedAt?: string) {
+    const doc = asObject(value);
+    const defaults = getDefaultConfig();
     return {
         judge: {
-            serverUrl: toText(judge.serverUrl, "https://judge.autograde.io/v1/api"),
-            apiKey: "",
-            hasApiKey: Boolean(toText(judge.apiKey)),
+            serverUrl: toText(doc.judge?.serverUrl, defaults.judge.serverUrl),
+            apiKey: toText(doc.judge?.apiKey, defaults.judge.apiKey),
         },
         limits: {
-            maxRuntimeMs: Math.max(100, toNumberValue(limits.maxRuntimeMs, 1000)),
-            maxMemoryMb: Math.max(64, toNumberValue(limits.maxMemoryMb, 256)),
+            maxRuntimeMs: Math.max(100, toNumberValue(doc.limits?.maxRuntimeMs, defaults.limits.maxRuntimeMs)),
+            maxMemoryMb: Math.max(64, toNumberValue(doc.limits?.maxMemoryMb, defaults.limits.maxMemoryMb)),
         },
         email: {
-            enabled: toBooleanValue(email.enabled, false),
-            smtpHost: toText(email.smtpHost, "smtp.gmail.com"),
-            smtpPort: toNumberValue(email.smtpPort, 587),
-            secure: toBooleanValue(email.secure, false),
-            smtpUser: toText(email.smtpUser),
-            smtpPass: "",
-            hasSmtpPass: Boolean(toText(email.smtpPass)),
-            senderName: toText(email.senderName, "AutoGrade"),
-            senderEmail: toText(email.senderEmail).toLowerCase(),
-            notifyOnNewAssignment: toBooleanValue(email.notifyOnNewAssignment, true),
-            notifyBeforeDue: toBooleanValue(email.notifyBeforeDue, true),
-            reminderBeforeHours: normalizeHours(email.reminderBeforeHours, [24, 3]),
-            notifyAtDue: toBooleanValue(email.notifyAtDue, true),
-            testReceiverEmail: toText(email.testReceiverEmail).toLowerCase(),
+            enabled: toBooleanValue(doc.email?.enabled, defaults.email.enabled),
+            smtpHost: toText(doc.email?.smtpHost, defaults.email.smtpHost),
+            smtpPort: toNumberValue(doc.email?.smtpPort, defaults.email.smtpPort),
+            secure: toBooleanValue(doc.email?.secure, defaults.email.secure),
+            smtpUser: toText(doc.email?.smtpUser, defaults.email.smtpUser),
+            smtpPass: toText(doc.email?.smtpPass, defaults.email.smtpPass),
+            senderName: toText(doc.email?.senderName, defaults.email.senderName),
+            senderEmail: toText(doc.email?.senderEmail, defaults.email.senderEmail).toLowerCase(),
+            notifyOnNewAssignment: toBooleanValue(doc.email?.notifyOnNewAssignment, defaults.email.notifyOnNewAssignment),
+            notifyBeforeDue: toBooleanValue(doc.email?.notifyBeforeDue, defaults.email.notifyBeforeDue),
+            reminderBeforeHours: normalizeHours(doc.email?.reminderBeforeHours, defaults.email.reminderBeforeHours),
+            notifyAtDue: toBooleanValue(doc.email?.notifyAtDue, defaults.email.notifyAtDue),
+            testReceiverEmail: toText(doc.email?.testReceiverEmail, defaults.email.testReceiverEmail).toLowerCase(),
         },
         backup: {
-            backupFrequency: toText(backup.backupFrequency, "daily_0000"),
-            cloudProvider: toText(backup.cloudProvider, "google_drive"),
+            backupFrequency: toText(doc.backup?.backupFrequency, defaults.backup.backupFrequency),
+            cloudProvider: toText(doc.backup?.cloudProvider, defaults.backup.cloudProvider),
         },
-        updatedAt: doc.updatedAt,
-        createdAt: doc.createdAt,
+        updatedAt,
     };
 }
 
-async function ensureConfigDoc() {
-    let doc = await SystemConfig.findOne({ key: "default" }).lean();
+function toPublicConfig(doc: ReturnType<typeof normalizeInternalConfig>): PublicConfig {
+    return {
+        ...doc,
+        judge: { ...doc.judge, apiKey: "", hasApiKey: Boolean(doc.judge.apiKey) },
+        email: { ...doc.email, smtpPass: "", hasSmtpPass: Boolean(doc.email.smtpPass) },
+    };
+}
 
-    if (!doc) {
-        const created = await SystemConfig.create(getDefaultConfig());
-        doc = created.toObject();
-    }
+async function readConfigRow() {
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase
+        .from("system_configs")
+        .select("value, updated_at")
+        .eq("key", "default")
+        .maybeSingle();
+    if (error) throw new Error(`Không thể đọc cấu hình hệ thống: ${error.message}`);
+    if (data) return data;
 
-    return asObject(doc);
+    const defaults = getDefaultConfig();
+    const { data: created, error: createError } = await supabase
+        .from("system_configs")
+        .insert({ key: "default", value: defaults, description: "UIGrade AI Web system configuration" })
+        .select("value, updated_at")
+        .single();
+    if (createError) throw new Error(`Không thể khởi tạo cấu hình hệ thống: ${createError.message}`);
+    return created;
 }
 
 export const systemConfigService = {
     async getInternalConfig() {
-        const doc = await ensureConfigDoc();
-        const defaults = getDefaultConfig();
-
-        return {
-            key: "default",
-            judge: {
-                serverUrl: toText(doc.judge?.serverUrl, defaults.judge.serverUrl),
-                apiKey: toText(doc.judge?.apiKey, defaults.judge.apiKey),
-            },
-            limits: {
-                maxRuntimeMs: Math.max(
-                    100,
-                    toNumberValue(doc.limits?.maxRuntimeMs, defaults.limits.maxRuntimeMs)
-                ),
-                maxMemoryMb: Math.max(
-                    64,
-                    toNumberValue(doc.limits?.maxMemoryMb, defaults.limits.maxMemoryMb)
-                ),
-            },
-            email: {
-                enabled: toBooleanValue(doc.email?.enabled, defaults.email.enabled),
-                smtpHost: toText(doc.email?.smtpHost, defaults.email.smtpHost),
-                smtpPort: toNumberValue(doc.email?.smtpPort, defaults.email.smtpPort),
-                secure: toBooleanValue(doc.email?.secure, defaults.email.secure),
-                smtpUser: toText(doc.email?.smtpUser, defaults.email.smtpUser),
-                smtpPass: toText(doc.email?.smtpPass, defaults.email.smtpPass),
-                senderName: toText(doc.email?.senderName, defaults.email.senderName),
-                senderEmail: toText(doc.email?.senderEmail, defaults.email.senderEmail).toLowerCase(),
-                notifyOnNewAssignment: toBooleanValue(
-                    doc.email?.notifyOnNewAssignment,
-                    defaults.email.notifyOnNewAssignment
-                ),
-                notifyBeforeDue: toBooleanValue(
-                    doc.email?.notifyBeforeDue,
-                    defaults.email.notifyBeforeDue
-                ),
-                reminderBeforeHours: normalizeHours(
-                    doc.email?.reminderBeforeHours,
-                    defaults.email.reminderBeforeHours
-                ),
-                notifyAtDue: toBooleanValue(doc.email?.notifyAtDue, defaults.email.notifyAtDue),
-                testReceiverEmail: toText(doc.email?.testReceiverEmail, defaults.email.testReceiverEmail).toLowerCase(),
-            },
-            backup: {
-                backupFrequency: toText(
-                    doc.backup?.backupFrequency,
-                    defaults.backup.backupFrequency
-                ),
-                cloudProvider: toText(doc.backup?.cloudProvider, defaults.backup.cloudProvider),
-            },
-            updatedAt: doc.updatedAt,
-            createdAt: doc.createdAt,
-        };
+        const row = await readConfigRow();
+        return normalizeInternalConfig(row.value, row.updated_at);
     },
 
     async getPublicConfig() {
-        const doc = await ensureConfigDoc();
-        return toPublicConfig(doc);
+        return toPublicConfig(await this.getInternalConfig());
     },
 
     async updateConfig(payload: unknown) {
@@ -240,108 +176,62 @@ export const systemConfigService = {
         const next = {
             judge: {
                 serverUrl: toText(judge.serverUrl, current.judge.serverUrl),
-                apiKey: toText(judge.apiKey)
-                    ? toText(judge.apiKey)
-                    : current.judge.apiKey,
+                apiKey: toText(judge.apiKey) || current.judge.apiKey,
             },
             limits: {
-                maxRuntimeMs: Math.max(
-                    100,
-                    toNumberValue(limits.maxRuntimeMs, current.limits.maxRuntimeMs)
-                ),
-                maxMemoryMb: Math.max(
-                    64,
-                    toNumberValue(limits.maxMemoryMb, current.limits.maxMemoryMb)
-                ),
+                maxRuntimeMs: Math.max(100, toNumberValue(limits.maxRuntimeMs, current.limits.maxRuntimeMs)),
+                maxMemoryMb: Math.max(64, toNumberValue(limits.maxMemoryMb, current.limits.maxMemoryMb)),
             },
             email: {
                 enabled: toBooleanValue(email.enabled, current.email.enabled),
                 smtpHost: toText(email.smtpHost, current.email.smtpHost),
-                smtpPort: Math.min(
-                    65535,
-                    Math.max(1, toNumberValue(email.smtpPort, current.email.smtpPort))
-                ),
+                smtpPort: Math.min(65535, Math.max(1, toNumberValue(email.smtpPort, current.email.smtpPort))),
                 secure: toBooleanValue(email.secure, current.email.secure),
                 smtpUser: toText(email.smtpUser, current.email.smtpUser).toLowerCase(),
-                smtpPass: toText(email.smtpPass)
-                    ? toText(email.smtpPass)
-                    : current.email.smtpPass,
+                smtpPass: toText(email.smtpPass) || current.email.smtpPass,
                 senderName: toText(email.senderName, current.email.senderName),
                 senderEmail: toText(email.senderEmail, current.email.senderEmail).toLowerCase(),
-                notifyOnNewAssignment: toBooleanValue(
-                    email.notifyOnNewAssignment,
-                    current.email.notifyOnNewAssignment
-                ),
-                notifyBeforeDue: toBooleanValue(
-                    email.notifyBeforeDue,
-                    current.email.notifyBeforeDue
-                ),
-                reminderBeforeHours: normalizeHours(
-                    email.reminderBeforeHours,
-                    current.email.reminderBeforeHours
-                ),
-                notifyAtDue: toBooleanValue(
-                    email.notifyAtDue,
-                    current.email.notifyAtDue
-                ),
-                testReceiverEmail: toText(
-                    email.testReceiverEmail,
-                    current.email.testReceiverEmail
-                ).toLowerCase(),
+                notifyOnNewAssignment: toBooleanValue(email.notifyOnNewAssignment, current.email.notifyOnNewAssignment),
+                notifyBeforeDue: toBooleanValue(email.notifyBeforeDue, current.email.notifyBeforeDue),
+                reminderBeforeHours: normalizeHours(email.reminderBeforeHours, current.email.reminderBeforeHours),
+                notifyAtDue: toBooleanValue(email.notifyAtDue, current.email.notifyAtDue),
+                testReceiverEmail: toText(email.testReceiverEmail, current.email.testReceiverEmail).toLowerCase(),
             },
             backup: {
-                backupFrequency: toText(
-                    backup.backupFrequency,
-                    current.backup.backupFrequency
-                ),
-                cloudProvider: toText(
-                    backup.cloudProvider,
-                    current.backup.cloudProvider
-                ),
+                backupFrequency: toText(backup.backupFrequency, current.backup.backupFrequency),
+                cloudProvider: toText(backup.cloudProvider, current.backup.cloudProvider),
             },
         };
 
-        if (!next.judge.serverUrl) {
-            throw new Error("URL server chấm bài không được để trống");
-        }
-
+        if (!next.judge.serverUrl) throw new Error("URL server chấm bài không được để trống");
         if (next.email.enabled) {
-            if (!next.email.smtpHost) {
-                throw new Error("SMTP host không được để trống khi bật email");
-            }
-
-            if (!next.email.smtpUser) {
-                throw new Error("SMTP username không được để trống khi bật email");
-            }
-
-            if (!next.email.smtpPass) {
-                throw new Error("Bạn cần nhập App Password SMTP để gửi email");
-            }
-
+            if (!next.email.smtpHost) throw new Error("SMTP host không được để trống khi bật email");
+            if (!next.email.smtpUser) throw new Error("SMTP username không được để trống khi bật email");
+            if (!next.email.smtpPass) throw new Error("Bạn cần nhập App Password SMTP để gửi email");
             if (!next.email.senderEmail || !isValidEmail(next.email.senderEmail)) {
                 throw new Error("Email người gửi không hợp lệ");
             }
         }
-
         if (next.email.testReceiverEmail && !isValidEmail(next.email.testReceiverEmail)) {
             throw new Error("Email nhận thử không hợp lệ");
         }
 
-        const updated = await SystemConfig.findOneAndUpdate(
-            { key: "default" },
-            {
-                $set: {
+        const supabase = await createSupabaseServerClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        const { data, error } = await supabase
+            .from("system_configs")
+            .upsert(
+                {
                     key: "default",
-                    ...next,
+                    value: next,
+                    description: "UIGrade AI Web system configuration",
+                    updated_by: user?.id ?? null,
                 },
-            },
-            {
-                upsert: true,
-                new: true,
-                runValidators: true,
-            }
-        ).lean();
-
-        return toPublicConfig(asObject(updated));
+                { onConflict: "key" }
+            )
+            .select("value, updated_at")
+            .single();
+        if (error) throw new Error(`Không thể lưu cấu hình hệ thống: ${error.message}`);
+        return toPublicConfig(normalizeInternalConfig(data.value, data.updated_at));
     },
 };
