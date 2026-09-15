@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ClassesHeader } from "@/components/my_classes/ClassesHeader";
 import { SemesterFilters } from "@/components/my_classes/SemesterFilters";
 import { ClassesGrid } from "@/components/my_classes/ClassesGrid";
@@ -26,11 +26,18 @@ type UpdateClassPayload = {
 };
 
 type CurrentUser = AuthUser;
+type ClassMutation = {
+    kind: "create" | "update" | "delete";
+    targetId?: string;
+};
+
 export default function MyClassesPage() {
     const [classes, setClasses] = useState<Classroom[]>([]);
     const [loading, setLoading] = useState(true);
-    const [submitting, setSubmitting] = useState(false);
+    const [mutation, setMutation] = useState<ClassMutation | null>(null);
+    const mutationRef = useRef<ClassMutation | null>(null);
     const [error, setError] = useState("");
+    const [notice, setNotice] = useState("");
     const [semesterFilter, setSemesterFilter] = useState("all");
     const [search, setSearch] = useState("");
 
@@ -38,6 +45,21 @@ export default function MyClassesPage() {
     const [loadingUser, setLoadingUser] = useState(true);
 
     const canManageClassUI = currentUser?.role === "lecturer";
+
+    const beginMutation = (nextMutation: ClassMutation) => {
+        if (mutationRef.current) return false;
+
+        mutationRef.current = nextMutation;
+        setMutation(nextMutation);
+        setError("");
+        setNotice("");
+        return true;
+    };
+
+    const finishMutation = () => {
+        mutationRef.current = null;
+        setMutation(null);
+    };
 
     const fetchCurrentUser = async () => {
         try {
@@ -84,10 +106,9 @@ export default function MyClassesPage() {
     }, []);
 
     const handleCreateClass = async (payload: CreateClassPayload) => {
-        try {
-            setSubmitting(true);
-            setError("");
+        if (!beginMutation({ kind: "create" })) return false;
 
+        try {
             const res = await fetch("/api/classes", {
                 method: "POST",
                 headers: {
@@ -104,12 +125,13 @@ export default function MyClassesPage() {
             }
 
             await fetchClasses();
+            setNotice("Đã tạo lớp học thành công.");
             return true;
         } catch {
             setError("Có lỗi xảy ra khi tạo lớp");
             return false;
         } finally {
-            setSubmitting(false);
+            finishMutation();
         }
     };
 
@@ -117,9 +139,9 @@ export default function MyClassesPage() {
         id: string,
         payload: UpdateClassPayload
     ) => {
-        try {
-            setError("");
+        if (!beginMutation({ kind: "update", targetId: id })) return false;
 
+        try {
             const res = await fetch(`/api/classes/${id}`, {
                 method: "PATCH",
                 headers: {
@@ -136,20 +158,24 @@ export default function MyClassesPage() {
             }
 
             await fetchClasses();
+            setNotice("Đã cập nhật lớp học thành công.");
             return true;
         } catch {
             setError("Có lỗi xảy ra khi cập nhật lớp");
             return false;
+        } finally {
+            finishMutation();
         }
     };
 
     const handleDeleteClass = async (id: string) => {
+        if (mutationRef.current) return;
+
+        const confirmed = window.confirm("Bạn có chắc muốn xóa lớp này?");
+        if (!confirmed) return;
+        if (!beginMutation({ kind: "delete", targetId: id })) return;
+
         try {
-            const confirmed = window.confirm("Bạn có chắc muốn xóa lớp này?");
-            if (!confirmed) return;
-
-            setError("");
-
             const res = await fetch(`/api/classes/${id}`, {
                 method: "DELETE",
             });
@@ -162,8 +188,11 @@ export default function MyClassesPage() {
             }
 
             await fetchClasses();
+            setNotice("Đã xóa lớp học thành công.");
         } catch {
             setError("Có lỗi xảy ra khi xóa lớp");
+        } finally {
+            finishMutation();
         }
     };
 
@@ -200,7 +229,7 @@ export default function MyClassesPage() {
         <div className="space-y-6">
             <ClassesHeader total={filteredClasses.length}
                            onJoin={
-                               !loadingUser && currentUser && !canManageClassUI
+                               !loadingUser && currentUser?.role === "student"
                                    ? () => setOpenJoin(true)
                                    : undefined
                            }/>
@@ -211,15 +240,24 @@ export default function MyClassesPage() {
             />
 
             {error ? (
-                <div className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                <div role="alert" className="rounded-xl bg-red-50 px-4 py-3 text-sm text-red-600">
                     {error}
+                </div>
+            ) : null}
+
+            {notice ? (
+                <div
+                    role="status"
+                    className="rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700"
+                >
+                    {notice}
                 </div>
             ) : null}
 
             {!loadingUser && canManageClassUI ? (
                 <AddClassCard
                     onCreate={handleCreateClass}
-                    loading={submitting}
+                    loading={mutation?.kind === "create"}
                 />
             ) : null}
 
@@ -243,6 +281,9 @@ export default function MyClassesPage() {
                 onUpdate={handleUpdateClass}
                 onRefresh={fetchClasses}
                 canManageClassUI={canManageClassUI}
+                managementDisabled={mutation !== null}
+                updatingClassId={mutation?.kind === "update" ? mutation.targetId : undefined}
+                deletingClassId={mutation?.kind === "delete" ? mutation.targetId : undefined}
             />
             <JoinClassDialog
                 open={openJoin}

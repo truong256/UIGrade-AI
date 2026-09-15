@@ -22,6 +22,9 @@ type ClassesGridProps = {
     onUpdate: (id: string, payload: UpdateClassPayload) => Promise<boolean>;
     onRefresh: () => Promise<void>;
     canManageClassUI: boolean;
+    managementDisabled?: boolean;
+    updatingClassId?: string;
+    deletingClassId?: string;
 };
 
 export function ClassesGrid({
@@ -31,6 +34,9 @@ export function ClassesGrid({
                                 onUpdate,
                                 onRefresh,
                                 canManageClassUI,
+                                managementDisabled = false,
+                                updatingClassId,
+                                deletingClassId,
                             }: ClassesGridProps) {
     const [selectedClass, setSelectedClass] = useState<Classroom | null>(null);
     const [openDetail, setOpenDetail] = useState(false);
@@ -85,6 +91,8 @@ export function ClassesGrid({
                         onOpenDetail={handleOpenDetail}
                         onEdit={handleOpenEdit}
                         canManageClassUI={canManageClassUI}
+                        managementDisabled={managementDisabled}
+                        deleting={deletingClassId === item._id}
                     />
                 ))}
             </div>
@@ -101,6 +109,7 @@ export function ClassesGrid({
                 classroom={editingClass}
                 onClose={handleCloseEdit}
                 onSubmit={onUpdate}
+                loading={updatingClassId === editingClass?._id}
             />
         </>
     );

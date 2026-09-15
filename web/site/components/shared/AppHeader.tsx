@@ -9,6 +9,7 @@ import { AppFooter } from "@/components/shared/AppFooter";
 import { getNavItemsForRole, isActivePath } from "@/lib/navigation";
 
 import { fetchCurrentUserClient, type AuthUser } from "@/lib/auth-client";
+import { authenticatedProfileRole } from "@/lib/auth-routing";
 
 type CurrentUser = AuthUser;
 
@@ -78,7 +79,7 @@ export function AppHeader({ children }: { children: ReactNode }) {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
-    const userRole = (currentUser?.role || "student") as "admin" | "teacher" | "lecturer" | "student" | "User";
+    const userRole = authenticatedProfileRole(currentUser?.role) || "student";
 
     const visibleNavItems = useMemo(() => {
         return getNavItemsForRole(userRole);
@@ -89,10 +90,8 @@ export function AppHeader({ children }: { children: ReactNode }) {
 
     const roleBadgeText = {
         admin: "Quản trị viên",
-        teacher: "Giảng viên",
         lecturer: "Giảng viên",
         student: "Sinh viên",
-        User: "Người dùng",
     }[userRole] || "Người dùng";
 
     const searchResults = useMemo(() => {

@@ -1,6 +1,10 @@
 "use client";
 
 import type { AssignmentItem, SubmitAction } from "@/app/ui/submit_assignment/type/submit_assignment.type";
+import {
+    MAX_REPOSITORY_URL_LENGTH,
+    MAX_SUBMISSION_NOTE_LENGTH,
+} from "@/lib/submission-limits";
 import FileUploadBox from "./FileUploadBox";
 
 type SubmissionFormProps = {
@@ -103,9 +107,9 @@ export function SubmissionForm({
     return (
         <div className="space-y-4">
             <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                <p className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
                     Tải lên file APK hoặc ZIP mã nguồn *
-                </label>
+                </p>
                 <FileUploadBox
                     selectedFile={firstFile}
                     onFileSelect={(file) => {
@@ -120,7 +124,7 @@ export function SubmissionForm({
             </div>
 
             <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                <label htmlFor="submission-repository-url" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
                     Đường dẫn Repository (GitHub / GitLab)
                 </label>
                 <div className="relative">
@@ -129,24 +133,28 @@ export function SubmissionForm({
                     </span>
                     <input
                         type="url"
+                        id="submission-repository-url"
                         value={repositoryUrl}
                         onChange={(e) => onRepositoryUrlChange?.(e.target.value)}
                         disabled={disabled || submitting || !canSubmit}
                         placeholder="https://github.com/username/android-project"
+                        maxLength={MAX_REPOSITORY_URL_LENGTH}
                         className="h-10 w-full rounded-xl border border-slate-200 pl-9 pr-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                     />
                 </div>
             </div>
 
             <div>
-                <label className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
+                <label htmlFor="submission-note" className="mb-1.5 block text-xs font-bold uppercase tracking-wider text-slate-700">
                     Ghi chú nộp bài cho Giảng viên & AI
                 </label>
                 <textarea
+                    id="submission-note"
                     value={note}
                     onChange={(e) => onNoteChange?.(e.target.value)}
                     disabled={disabled || submitting || !canSubmit}
                     rows={3}
+                    maxLength={MAX_SUBMISSION_NOTE_LENGTH}
                     placeholder="Mô tả các màn hình đã hoàn thành, các testTag đặc biệt hoặc ghi chú khác..."
                     className="w-full rounded-xl border border-slate-200 p-3 text-xs outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100 disabled:bg-slate-100"
                 />

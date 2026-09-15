@@ -8,7 +8,7 @@ describe("Layout & Navigation Regression Tests", () => {
         const roles = ["admin", "lecturer", "teacher", "student", "User", null, undefined];
 
         it.each(roles)("should not have duplicate hrefs or labels for role: %s", (role) => {
-            const items = getNavItemsForRole(role as string);
+            const items = getNavItemsForRole(role as never);
             expect(items.length).toBeGreaterThan(0);
 
             const hrefs = items.map((i) => i.href);
@@ -45,6 +45,10 @@ describe("Layout & Navigation Regression Tests", () => {
 
             expect(studentHrefs).not.toContain("/ui/server_config");
             expect(studentHrefs).not.toContain("/ui/server_config/users");
+        });
+
+        it("does not grant lecturer navigation to an unnormalized legacy role", () => {
+            expect(getNavItemsForRole("teacher" as never)).toEqual(studentNavItems);
         });
     });
 

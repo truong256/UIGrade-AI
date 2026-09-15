@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type {
     Classroom,
     ClassroomUserRef,
@@ -41,7 +41,9 @@ export function ClassDetailDialog({
                                   }: ClassDetailDialogProps) {
     const [loading, setLoading] = useState(false);
     const [actionId, setActionId] = useState("");
+    const actionIdRef = useRef("");
     const [error, setError] = useState("");
+    const [notice, setNotice] = useState("");
     const [canManageMembers, setCanManageMembers] = useState(false);
     const [members, setMembers] = useState<ClassroomMemberItem[]>([]);
     const [pendingMembers, setPendingMembers] = useState<ClassroomMemberItem[]>([]);
@@ -197,6 +199,7 @@ export function ClassDetailDialog({
             setCanManageMembers(false);
             setStudentCount(null);
             setError("");
+            setNotice("");
             setLoading(false);
             return;
         }
@@ -213,11 +216,13 @@ export function ClassDetailDialog({
     };
 
     const handleApprove = async (studentId?: string) => {
-        if (!studentId) return;
+        if (!studentId || actionIdRef.current) return;
 
         try {
+            actionIdRef.current = studentId;
             setActionId(studentId);
             setError("");
+            setNotice("");
 
             const res = await fetch(`/api/classes/${classroom._id}/students/${studentId}`, {
                 method: "PATCH",
@@ -236,22 +241,29 @@ export function ClassDetailDialog({
             }
 
             await handleStudentChanged();
+            setNotice("Đã duyệt sinh viên thành công.");
         } catch {
             setError("Có lỗi xảy ra khi duyệt sinh viên");
         } finally {
+            actionIdRef.current = "";
             setActionId("");
         }
     };
 
-    const handleRemoveStudent = async (studentId?: string) => {
-        if (!studentId) return;
+    const handleRemoveStudent = async (
+        studentId: string | undefined,
+        successMessage: string
+    ) => {
+        if (!studentId || actionIdRef.current) return;
 
         const confirmed = window.confirm("Bạn có chắc muốn xóa thành viên này khỏi lớp?");
         if (!confirmed) return;
 
         try {
+            actionIdRef.current = studentId;
             setActionId(studentId);
             setError("");
+            setNotice("");
 
             const res = await fetch(`/api/classes/${classroom._id}/students/${studentId}`, {
                 method: "DELETE",
@@ -266,9 +278,11 @@ export function ClassDetailDialog({
             }
 
             await handleStudentChanged();
+            setNotice(successMessage);
         } catch {
             setError("Có lỗi xảy ra khi xóa thành viên");
         } finally {
+            actionIdRef.current = "";
             setActionId("");
         }
     };
@@ -276,10 +290,15 @@ export function ClassDetailDialog({
     return (
         <>
             <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
-                <div className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl">
+                <div
+                    role="dialog"
+                    aria-modal="true"
+                    aria-labelledby="class-detail-title"
+                    className="max-h-[90vh] w-full max-w-5xl overflow-y-auto rounded-3xl bg-white p-6 shadow-2xl"
+                >
                     <div className="flex items-start justify-between gap-4">
                         <div>
-                            <h2 className="text-2xl font-bold text-slate-900">
+                            <h2 id="class-detail-title" className="text-2xl font-bold text-slate-900">
                                 {classroom.name}
                             </h2>
                             <p className="mt-1 text-sm text-slate-500">
@@ -289,6 +308,7 @@ export function ClassDetailDialog({
 
                         <button
                             type="button"
+                            aria-label="Đóng chi tiết lớp"
                             onClick={onClose}
                             className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50"
                         >
@@ -335,8 +355,17 @@ export function ClassDetailDialog({
                     </div>
 
                     {error ? (
-                        <div className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
+                        <div role="alert" className="mt-4 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600">
                             {error}
+                        </div>
+                    ) : null}
+
+                    {notice ? (
+                        <div
+                            role="status"
+                            className="mt-4 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700"
+                        >
+                            {notice}
                         </div>
                     ) : null}
 
@@ -418,7 +447,10 @@ export function ClassDetailDialog({
                                                                         type="button"
                                                                         disabled={isBusy}
                                                                         onClick={() =>
-                                                                            handleRemoveStudent(memberId)
+                                                                            handleRemoveStudent(
+                                                                                memberId,
+                                                                                "Đã xóa sinh viên khỏi lớp."
+                                                                            )
                                                                         }
                                                                         className="rounded-xl bg-red-50 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-100 disabled:opacity-70"
                                                                     >
@@ -491,7 +523,10 @@ export function ClassDetailDialog({
                                                                     type="button"
                                                                     disabled={isBusy}
                                                                     onClick={() =>
-                                                                        handleRemoveStudent(memberId)
+                                                                        handleRemoveStudent(
+                                                                            memberId,
+                                                                            "Đã từ chối yêu cầu tham gia."
+                                                                        )
                                                                     }
                                                                     className="rounded-xl bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-600 hover:bg-red-100 disabled:opacity-70"
                                                                 >

@@ -29,8 +29,9 @@ export function ScoreEditorCard({ detail, maxScore, hasRubric, canGrade, totalSc
                 </p>
             ) : (
                 <>
-                    <label className="mt-5 block text-xs font-semibold text-slate-700">Điểm tổng thủ công</label>
+                    <label htmlFor="manual-total-score" className="mt-5 block text-xs font-semibold text-slate-700">Điểm tổng thủ công</label>
                     <input
+                        id="manual-total-score"
                         value={manualScore}
                         onChange={(e) => onManualScoreChange(e.target.value)}
                         type="number"

@@ -15,6 +15,7 @@ type AssignmentTableProps = {
     setMenuOpenId: Dispatch<SetStateAction<string>>;
     menuWrapRef: Ref<HTMLDivElement>;
     deletingId: string;
+    mutationPending?: boolean;
     onOpenDetail: (id: string) => void | Promise<void>;
     onOpenEdit: (item: AssignmentItem) => void | Promise<void>;
     onDelete: (id: string) => void | Promise<void>;
@@ -31,6 +32,7 @@ export default function AssignmentTable({
     setMenuOpenId,
     menuWrapRef,
     deletingId,
+    mutationPending = false,
     onOpenDetail,
     onOpenEdit,
     onDelete,
@@ -192,12 +194,13 @@ export default function AssignmentTable({
                                             >
                                                 <button
                                                     type="button"
+                                                    disabled={mutationPending}
                                                     onClick={() =>
                                                         setMenuOpenId((prev) =>
                                                             prev === item._id ? "" : item._id
                                                         )
                                                     }
-                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 hover:text-slate-900"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-600 transition hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-50"
                                                     aria-label="Tùy chọn bài tập"
                                                 >
                                                     <span className="material-symbols-outlined text-[18px]">
@@ -209,6 +212,7 @@ export default function AssignmentTable({
                                                     <div className="absolute right-0 top-full z-20 mt-1 w-44 overflow-hidden rounded-xl border border-slate-200 bg-white p-1.5 shadow-xl animate-in fade-in zoom-in-95 duration-100">
                                                         <button
                                                             type="button"
+                                                            disabled={mutationPending}
                                                             onClick={() => {
                                                                 setMenuOpenId("");
                                                                 void onOpenDetail(item._id);
@@ -223,6 +227,7 @@ export default function AssignmentTable({
 
                                                         <button
                                                             type="button"
+                                                            disabled={mutationPending}
                                                             onClick={() => {
                                                                 setMenuOpenId("");
                                                                 void onOpenEdit(item);
@@ -241,7 +246,7 @@ export default function AssignmentTable({
                                                                 setMenuOpenId("");
                                                                 void onDelete(item._id);
                                                             }}
-                                                            disabled={deletingId === item._id}
+                                                            disabled={mutationPending}
                                                             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-xs font-medium text-red-600 transition hover:bg-red-50 disabled:opacity-60"
                                                         >
                                                             <span className="material-symbols-outlined text-[16px]">

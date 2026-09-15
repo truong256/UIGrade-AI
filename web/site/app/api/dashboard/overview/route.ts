@@ -13,10 +13,28 @@ function trend(current: number, previous = 0) {
     return { delta, absolute: Math.abs(delta), direction: delta > 0 ? "up" : delta < 0 ? "down" : "flat" };
 }
 
+function dashboardRange(value: string | null) {
+    const parsed = Number(value || 7);
+    return Number.isFinite(parsed)
+        ? Math.max(7, Math.min(90, Math.trunc(parsed)))
+        : 7;
+}
+
+function relationId(value: unknown): string {
+    if (!value || typeof value !== "object") return "";
+    const record = value as Record<string, unknown>;
+    return String(record._id || record.id || "");
+}
+
+function isCompletedStudentAssignment(item: { latestSubmission?: { status?: string } | null }) {
+    return item.latestSubmission?.status === "submitted"
+        || item.latestSubmission?.status === "late";
+}
+
 export async function GET(request: Request) {
     try {
         const actor = await requireActiveRequestActor(request);
-        const rangeDays = Math.max(7, Math.min(90, Number(new URL(request.url).searchParams.get("range") || 7)));
+        const rangeDays = dashboardRange(new URL(request.url).searchParams.get("range"));
         const [profile, classes, assignments, submissions] = await Promise.all([
             SupabaseWebProfileService.get(actor),
             SupabaseWebClassService.list(actor),
@@ -25,11 +43,14 @@ export async function GET(request: Request) {
         ]);
         const publishedScores = submissions.map((item) => item.finalScore).filter((score) => typeof score === "number") as number[];
         const averageScore = publishedScores.length ? publishedScores.reduce((sum, score) => sum + score, 0) / publishedScores.length : 0;
+        const completedStudentAssignments = actor.role === "student"
+            ? assignments.filter(isCompletedStudentAssignment).length
+            : 0;
         const pendingAssignments = actor.role === "student"
-            ? assignments.filter((item) => !item.latestSubmission).length
+            ? assignments.length - completedStudentAssignments
             : submissions.filter((item) => item.gradeStatus === "pending").length;
         const completionRate = assignments.length
-            ? Math.round((actor.role === "student" ? assignments.filter((item) => item.latestSubmission).length : submissions.length) / assignments.length * 100)
+            ? Math.round((actor.role === "student" ? completedStudentAssignments : submissions.length) / assignments.length * 100)
             : 0;
         const now = new Date();
         const days = Array.from({ length: rangeDays }, (_, offset) => {
@@ -60,7 +81,19 @@ export async function GET(request: Request) {
             },
             charts: {
                 submissionsByDay: days,
-                averageScoreByClass: classes.map((item) => ({ label: item.name, value: 0 })),
+                averageScoreByClass: classes.map((item) => {
+                    const classId = String(item._id || "");
+                    const scores = submissions
+                        .filter((submission) => relationId(submission.classroomId) === classId)
+                        .map((submission) => submission.finalScore)
+                        .filter((score): score is number => typeof score === "number");
+                    return {
+                        label: item.name,
+                        value: scores.length
+                            ? Number((scores.reduce((sum, score) => sum + score, 0) / scores.length).toFixed(2))
+                            : 0,
+                    };
+                }),
             },
             notifications: [],
             recentActivities: submissions.slice(0, 8).map((item) => ({
@@ -72,7 +105,13 @@ export async function GET(request: Request) {
                 scoreClassName: item.finalScore === null ? "text-slate-500" : "text-emerald-600",
                 status: item.gradeStatus === "overridden" ? "Đã công bố" : "Chờ chấm",
                 submittedAt: item.submittedAt,
-                actionHref: actor.role === "student" ? "/ui/my_results" : `/ui/grading_detail?submissionId=${item._id}`,
+                actionHref: actor.role === "student"
+                    ? "/ui/my_results"
+                    : `/ui/grading_detail?${new URLSearchParams({
+                        assignmentId: relationId(item.assignmentId),
+                        studentId: relationId(item.studentId),
+                        submissionId: String(item._id || ""),
+                    }).toString()}`,
             })),
         };
         return successResponse(data, "Lấy dữ liệu dashboard thành công");

@@ -14,7 +14,7 @@ export function useMyResults() {
     const [selectedId, setSelectedId] = useState("");
 
     const isTeacherView = false;
-    const canViewResults = !currentUser?.role || ["student", "User"].includes(currentUser.role);
+    const canViewResults = currentUser?.role === "student";
 
     useEffect(() => {
         const loadData = async () => {
@@ -25,7 +25,7 @@ export function useMyResults() {
                 const user = await fetchCurrentUser();
                 setCurrentUser(user);
 
-                if (user?.role !== "student" && user?.role !== "User") {
+                if (user?.role !== "student") {
                     setItems([]);
                     setSelectedId("");
                     return;
@@ -33,7 +33,12 @@ export function useMyResults() {
 
                 const results = await fetchMyResults();
                 setItems(results);
-                setSelectedId(results[0]?._id || "");
+                const requestedSubmissionId = new URLSearchParams(window.location.search)
+                    .get("submissionId");
+                const requestedResult = requestedSubmissionId
+                    ? results.find((item) => item.submissionId === requestedSubmissionId)
+                    : null;
+                setSelectedId(requestedResult?._id || results[0]?._id || "");
             } catch (fetchError) {
                 setError(
                     fetchError instanceof Error ? fetchError.message : "Không tải được kết quả bài tập"

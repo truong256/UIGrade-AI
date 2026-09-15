@@ -770,7 +770,7 @@ export const SupabaseGradingService = {
             id, status, score, max_score, feedback, rubric_breakdown, ai_feedback,
             graded_at, published_at, updated_at,
             submission:submissions!grades_submission_id_fkey(
-                id, student_id, submitted_at, is_late, status, content, file_url,
+                id, student_id, submitted_at, is_late, status, content, repository_url, file_url,
                 assignment:assignments!submissions_assignment_id_fkey(
                     id, title, due_at, max_score,
                     class:classes!assignments_class_id_fkey(id, name, class_code)
@@ -800,7 +800,9 @@ export const SupabaseGradingService = {
                 finalScore: Number(grade.score || 0),
                 maxScore: Number(grade.max_score || assignment.max_score || 0),
                 studentNote: String(submission.content || ""),
+                repositoryUrl: String(submission.repository_url || ""),
                 teacherComment: String(grade.feedback || ""),
+                aiFeedback: grade.ai_feedback || null,
                 criterionBreakdown: Array.isArray(grade.rubric_breakdown) ? grade.rubric_breakdown : [],
                 gradedAt: grade.graded_at || null,
                 publishedAt: grade.published_at || null,

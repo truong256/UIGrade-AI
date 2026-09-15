@@ -16,7 +16,7 @@ const service = readFileSync(
     "utf8"
 );
 const assignmentEditor = readFileSync(
-    resolve(process.cwd(), "app/ui/server_config/create_assignment/page.tsx"),
+    resolve(process.cwd(), "components/assignments/AssignmentFormPage.tsx"),
     "utf8"
 );
 

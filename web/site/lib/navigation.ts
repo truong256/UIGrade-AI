@@ -49,12 +49,13 @@ export const studentNavItems: NavItem[] = [
  * Get the appropriate nav items for a given role.
  * Unknown roles default to the most restrictive (student) set.
  */
-export function getNavItemsForRole(role: string | undefined | null): NavItem[] {
+export function getNavItemsForRole(role: AuthenticatedRole | undefined | null): NavItem[] {
     if (role === "admin") return adminNavItems;
-    if (role === "lecturer" || role === "teacher") return lecturerNavItems;
+    if (role === "lecturer") return lecturerNavItems;
     return studentNavItems; // safe default
 }
 
 export function isActivePath(pathname: string, href: string): boolean {
     return pathname === href || pathname.startsWith(`${href}/`);
 }
+import type { AuthenticatedRole } from "@/lib/auth-routing";

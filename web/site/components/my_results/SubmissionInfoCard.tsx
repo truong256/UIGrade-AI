@@ -1,9 +1,14 @@
 import type { ResultItem } from "@/app/ui/my_results/type/my_results.type";
-import { formatDateTime } from "@/app/ui/my_results/type/my_results.utils";
+import {
+    formatDateTime,
+    safeRepositoryUrl,
+} from "@/app/ui/my_results/type/my_results.utils";
 
 type SubmissionInfoCardProps = { item: ResultItem };
 
 export function SubmissionInfoCard({ item }: SubmissionInfoCardProps) {
+    const repositoryUrl = safeRepositoryUrl(item.repositoryUrl);
+
     return (
         <div className="rounded-2xl border border-blue-100 bg-white p-3.5 shadow-2xs">
             <p className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Thông tin bài nộp</p>
@@ -16,9 +21,9 @@ export function SubmissionInfoCard({ item }: SubmissionInfoCardProps) {
                 </p>
                 <p className="break-all">
                     <span className="font-semibold text-slate-800">Repository / File:</span>{" "}
-                    {item.repositoryUrl ? (
-                        <a href={item.repositoryUrl} target="_blank" rel="noreferrer" className="text-blue-600 hover:underline">
-                            {item.repositoryUrl}
+                    {repositoryUrl ? (
+                        <a href={repositoryUrl} target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">
+                            {repositoryUrl}
                         </a>
                     ) : (
                         "Không có"

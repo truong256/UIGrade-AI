@@ -1,7 +1,10 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { fetchAvailableAssignments, saveSubmission } from "../type/submit_assignment.api";
 import type { AssignmentItem, SubmitAction } from "../type/submit_assignment.type";
-import { canSubmitAssignment } from "../type/submit_assignment.utils";
+import {
+    canSubmitAssignment,
+    getSubmissionValidationError,
+} from "../type/submit_assignment.utils";
 
 export function useSubmitAssignment() {
     const [assignments, setAssignments] = useState<AssignmentItem[]>([]);
@@ -13,6 +16,7 @@ export function useSubmitAssignment() {
     const [submitting, setSubmitting] = useState(false);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    const submissionInFlightRef = useRef(false);
 
     const selectedAssignment = useMemo(
         () => assignments.find((item) => item._id === selectedId) || null,
@@ -32,9 +36,18 @@ export function useSubmitAssignment() {
             const items = await fetchAvailableAssignments();
             setAssignments(items);
 
-            if (items.length) {
-                setSelectedId((prev) => prev || items[0]._id);
-            }
+            setSelectedId((previousId) => {
+                if (previousId && items.some((item) => item._id === previousId)) {
+                    return previousId;
+                }
+
+                const requestedId = new URLSearchParams(window.location.search).get("assignmentId");
+                if (requestedId && items.some((item) => item._id === requestedId)) {
+                    return requestedId;
+                }
+
+                return items[0]?._id || "";
+            });
         } catch (fetchError) {
             setError(
                 fetchError instanceof Error
@@ -71,9 +84,28 @@ export function useSubmitAssignment() {
     };
 
     const submitAssignment = async (action: SubmitAction) => {
-        if (!selectedAssignment) return;
+        if (!selectedAssignment || submissionInFlightRef.current) return;
+
+        if (!canSubmitAssignment(selectedAssignment)) {
+            setError("Bài tập này hiện không thể nhận bài nộp.");
+            return;
+        }
+
+        const validationError = getSubmissionValidationError({
+            action,
+            files,
+            repositoryUrl,
+            existingFiles: selectedAssignment.latestSubmission?.status === "draft"
+                ? selectedAssignment.latestSubmission.files
+                : [],
+        });
+        if (validationError) {
+            setError(validationError);
+            return;
+        }
 
         try {
+            submissionInFlightRef.current = true;
             setSubmitting(true);
             setError("");
             setSuccess("");
@@ -101,6 +133,7 @@ export function useSubmitAssignment() {
                     : "Không thể nộp bài"
             );
         } finally {
+            submissionInFlightRef.current = false;
             setSubmitting(false);
         }
     };

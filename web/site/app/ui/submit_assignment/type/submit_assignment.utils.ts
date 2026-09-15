@@ -1,4 +1,43 @@
-import type { AssignmentItem, LatestSubmission } from "./submit_assignment.type";
+import { MAX_SUBMISSION_FILE_SIZE_MB } from "@/lib/submission-limits";
+import type { AssignmentItem, LatestSubmission, SubmitAction } from "./submit_assignment.type";
+
+export const MAX_STUDENT_SUBMISSION_BYTES = MAX_SUBMISSION_FILE_SIZE_MB * 1024 * 1024;
+
+type SubmissionValidationInput = {
+    action: SubmitAction;
+    files: File[];
+    repositoryUrl: string;
+    existingFiles: LatestSubmission["files"];
+};
+
+export function getSubmissionValidationError(input: SubmissionValidationInput) {
+    const repositoryUrl = input.repositoryUrl.trim();
+
+    for (const file of input.files) {
+        if (file.size > MAX_STUDENT_SUBMISSION_BYTES) {
+            return `Tệp ${file.name} vượt quá giới hạn ${MAX_SUBMISSION_FILE_SIZE_MB} MB.`;
+        }
+
+        if (!/\.(apk|zip)$/i.test(file.name)) {
+            return "Chỉ chấp nhận tệp APK hoặc ZIP.";
+        }
+    }
+
+    if (repositoryUrl && !/^https:\/\//i.test(repositoryUrl)) {
+        return "Đường dẫn repository phải sử dụng HTTPS.";
+    }
+
+    if (
+        input.action === "submit"
+        && input.files.length === 0
+        && input.existingFiles.length === 0
+        && !repositoryUrl
+    ) {
+        return "Vui lòng tải tệp hoặc cung cấp repository trước khi nộp chính thức.";
+    }
+
+    return "";
+}
 
 export function formatDateTime(value?: string) {
     if (!value) return "--";

@@ -36,6 +36,7 @@ export default function AssignmentListPage() {
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [deletingId, setDeletingId] = useState("");
+    const mutationRef = useRef<"update" | "delete" | null>(null);
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
     const [keyword, setKeyword] = useState("");
@@ -306,9 +307,10 @@ export default function AssignmentListPage() {
         };
 
     const handleUpdate = async () => {
-        if (!editItem) return;
+        if (!editItem || mutationRef.current) return;
 
         try {
+            mutationRef.current = "update";
             setSaving(true);
             setError("");
             setSuccess("");
@@ -385,15 +387,19 @@ export default function AssignmentListPage() {
                 err instanceof Error ? err.message : "Cập nhật bài tập thất bại"
             );
         } finally {
+            mutationRef.current = null;
             setSaving(false);
         }
     };
 
     const handleDelete = async (id: string) => {
+        if (mutationRef.current) return;
+
         const ok = window.confirm("Bạn có chắc muốn xóa bài tập này?");
         if (!ok) return;
 
         try {
+            mutationRef.current = "delete";
             setDeletingId(id);
             setError("");
             setSuccess("");
@@ -418,6 +424,7 @@ export default function AssignmentListPage() {
         } catch (err) {
             setError(err instanceof Error ? err.message : "Xóa bài tập thất bại");
         } finally {
+            mutationRef.current = null;
             setDeletingId("");
         }
     };
@@ -455,6 +462,7 @@ export default function AssignmentListPage() {
                 setMenuOpenId={setMenuOpenId}
                 menuWrapRef={menuWrapRef}
                 deletingId={deletingId}
+                mutationPending={saving || Boolean(deletingId)}
                 onOpenDetail={openDetail}
                 onOpenEdit={openEdit}
                 onDelete={handleDelete}

@@ -6,6 +6,7 @@ import { getNavItemsForRole, isActivePath } from "@/lib/navigation";
 import { useMemo, useState } from "react";
 import { getSupabaseBrowserClient, isSupabaseConfigured } from "@/lib/supabase/client";
 import { clearCurrentUserCache } from "@/lib/auth-client";
+import type { AuthenticatedRole } from "@/lib/auth-routing";
 
 type AppSidebarProps = {
     collapsed: boolean;
@@ -13,7 +14,7 @@ type AppSidebarProps = {
     onCloseMobile: () => void;
     onMouseEnter?: () => void;
     onMouseLeave?: () => void;
-    currentUserRole?: "admin" | "teacher" | "lecturer" | "student" | "User";
+    currentUserRole?: AuthenticatedRole;
 };
 
 export function AppSidebar({

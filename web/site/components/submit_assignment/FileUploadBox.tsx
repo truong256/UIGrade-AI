@@ -31,6 +31,7 @@ export default function FileUploadBox({
                 </span>
                 <input
                     type="file"
+                    aria-label="Tệp APK hoặc ZIP"
                     accept=".apk,.zip,application/vnd.android.package-archive,application/zip"
                     disabled={disabled}
                     onChange={(e) => {

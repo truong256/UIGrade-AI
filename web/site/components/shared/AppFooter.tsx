@@ -1,8 +1,9 @@
 import Link from "next/link";
 import { getNavItemsForRole, type NavItem } from "@/lib/navigation";
+import type { AuthenticatedRole } from "@/lib/auth-routing";
 
 type AppFooterProps = {
-    userRole?: "admin" | "teacher" | "lecturer" | "student" | "User" | string;
+    userRole?: AuthenticatedRole;
 };
 
 export function AppFooter({ userRole = "student" }: AppFooterProps) {

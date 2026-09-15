@@ -57,6 +57,7 @@ export function TeacherFeedbackPanel({
             </div>
 
             <textarea
+                aria-label="Nhận xét của giảng viên"
                 value={teacherComment}
                 onChange={(e) => onTeacherCommentChange(e.target.value)}
                 disabled={!canGrade || busy}

@@ -9,6 +9,8 @@ type ClassCardProps = {
     onOpenDetail: (classroom: Classroom) => void;
     onEdit: (classroom: Classroom) => void;
     canManageClassUI: boolean;
+    managementDisabled?: boolean;
+    deleting?: boolean;
 };
 
 type ClassStatsResponse = {
@@ -23,6 +25,8 @@ export function ClassCard({
     onOpenDetail,
     onEdit,
     canManageClassUI,
+    managementDisabled = false,
+    deleting = false,
 }: ClassCardProps) {
     const fallbackStudentCount =
         classroom.approvedStudentCount ??
@@ -146,8 +150,9 @@ export function ClassCard({
                                 <button
                                     type="button"
                                     aria-label="Mở menu quản lý lớp"
+                                    disabled={managementDisabled}
                                     onClick={() => setOpenMenu((prev) => !prev)}
-                                    className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-100 hover:text-slate-800"
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     <span className="material-symbols-outlined text-[18px]">more_vert</span>
                                 </button>
@@ -156,6 +161,7 @@ export function ClassCard({
                                     <div className="absolute right-0 top-9 z-20 w-40 overflow-hidden rounded-xl border border-slate-200 bg-white py-1 shadow-xl animate-in fade-in zoom-in-95 duration-100">
                                         <button
                                             type="button"
+                                            disabled={managementDisabled}
                                             onClick={() => {
                                                 setOpenMenu(false);
                                                 onEdit(classroom);
@@ -168,6 +174,7 @@ export function ClassCard({
 
                                         <button
                                             type="button"
+                                            disabled={managementDisabled}
                                             onClick={() => {
                                                 setOpenMenu(false);
                                                 onDelete(classroom._id);
@@ -175,7 +182,7 @@ export function ClassCard({
                                             className="flex w-full items-center gap-2 px-3.5 py-2 text-left text-xs font-medium text-red-600 transition hover:bg-red-50"
                                         >
                                             <span className="material-symbols-outlined text-[16px] text-red-500">delete</span>
-                                            Xóa lớp
+                                            {deleting ? "Đang xóa..." : "Xóa lớp"}
                                         </button>
                                     </div>
                                 ) : null}

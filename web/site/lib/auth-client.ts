@@ -9,13 +9,18 @@
  * MUST independently verify JWT/session cookies on every request.
  */
 
+import {
+    authenticatedProfileRole,
+    type AuthenticatedRole,
+} from "@/lib/auth-routing";
+
 export type AuthUser = {
     id?: string;
     _id?: string;
     name?: string;
     full_name?: string;
     email?: string;
-    role?: "admin" | "teacher" | "lecturer" | "student" | "User";
+    role?: AuthenticatedRole;
     studentCode?: string;
     department?: string;
     avatarUrl?: string;
@@ -43,7 +48,18 @@ export async function fetchCurrentUserClient(forceRefresh = false): Promise<Auth
             }
             const json = await res.json();
             if (generation !== cacheGeneration) return null;
-            cachedUser = json.user || json.data || null;
+            const rawUser = (json.user || json.data || null) as
+                | (Omit<AuthUser, "role"> & { role?: unknown })
+                | null;
+            if (!rawUser) {
+                cachedUser = null;
+                return null;
+            }
+            const role = authenticatedProfileRole(rawUser.role);
+            cachedUser = {
+                ...rawUser,
+                role: role || undefined,
+            };
             return cachedUser;
         } catch {
             return null;

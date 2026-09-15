@@ -38,7 +38,7 @@ export function isRouteAllowedForRole(
         return role === "lecturer" || role === "admin";
     }
     if (matchesPath(pathname, STUDENT_ONLY_PATHS)) {
-        return role === "student" || role === "admin";
+        return role === "student";
     }
     return true;
 }

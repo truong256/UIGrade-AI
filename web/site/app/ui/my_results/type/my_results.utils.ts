@@ -71,6 +71,15 @@ export function isItemGraded(item: ResultItem) {
     return item.gradeStatus === "published" && item.finalScore !== null;
 }
 
+export function safeRepositoryUrl(value: string) {
+    try {
+        const url = new URL(value);
+        return url.protocol === "https:" ? url.toString() : "";
+    } catch {
+        return "";
+    }
+}
+
 export function normalizeResult(raw: unknown): ResultItem {
     const item = asObject(raw);
     const isPublished = item.gradeStatus === "published";
@@ -78,6 +87,7 @@ export function normalizeResult(raw: unknown): ResultItem {
     if (item.assignmentTitle !== undefined) {
         return {
             _id: toText(item._id),
+            submissionId: toText(item.submissionId),
             assignmentId: toText(item.assignmentId),
             assignmentTitle: toText(item.assignmentTitle, "Bài tập chưa đặt tên"),
             classroomName: toText(item.classroomName, "Chưa có lớp"),
@@ -121,6 +131,7 @@ export function normalizeResult(raw: unknown): ResultItem {
     const legacyPublished = item.gradeStatus === "published";
     return {
         _id: toText(item._id),
+        submissionId: toText(item.submissionId || item._id),
         assignmentId: toText(assignment._id || item.assignmentId),
         assignmentTitle: toText(assignment.title, "Bài tập chưa đặt tên"),
         classroomName: toText(classroom.name, "Chưa có lớp"),

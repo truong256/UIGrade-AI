@@ -87,14 +87,19 @@ function EditClassDialogForm({
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-xs">
-            <div className="w-full max-w-xl rounded-3xl border border-blue-100 bg-white p-6 shadow-2xl transition-all">
+            <div
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby="edit-class-title"
+                className="w-full max-w-xl rounded-3xl border border-blue-100 bg-white p-6 shadow-2xl transition-all"
+            >
                 <div className="flex items-center justify-between border-b border-blue-100 pb-4">
                     <div className="flex items-center gap-2">
                         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600 border border-blue-200">
                             <span className="material-symbols-outlined text-[20px]">edit_note</span>
                         </div>
                         <div>
-                            <h2 className="text-base font-bold text-slate-900">
+                            <h2 id="edit-class-title" className="text-base font-bold text-slate-900">
                                 Chỉnh sửa thông tin lớp
                             </h2>
                             <p className="text-xs text-slate-500">
@@ -105,6 +110,7 @@ function EditClassDialogForm({
 
                     <button
                         type="button"
+                        aria-label="Đóng chỉnh sửa lớp"
                         onClick={onClose}
                         className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-slate-400 transition hover:bg-slate-50 hover:text-slate-600"
                     >

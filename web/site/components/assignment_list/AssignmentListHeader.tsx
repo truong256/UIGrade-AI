@@ -1,10 +1,9 @@
 import Link from "next/link";
 import type { FC } from "react";
-
-type Role = "admin" | "teacher" | "student" | "lecturer" | "User";
+import type { AuthenticatedRole } from "@/lib/auth-routing";
 
 type AssignmentListHeaderProps = {
-    role?: Role;
+    role?: AuthenticatedRole;
     canManage?: boolean;
     isStudent?: boolean;
     onOpenCreateModal?: () => void;
@@ -15,7 +14,7 @@ export const AssignmentListHeader: FC<AssignmentListHeaderProps> = ({
     canManage,
     onOpenCreateModal,
 }) => {
-    const showCreate = canManage || (role === "teacher" || role === "lecturer" || role === "admin");
+    const showCreate = canManage || role === "lecturer" || role === "admin";
 
     return (
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">

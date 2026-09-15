@@ -74,7 +74,6 @@ function validateSubmissionAssets(
         : ["zip", "apk"];
     const repositoryUrl = String(payload.repositoryUrl || "").trim();
     const allowRepository = policy.allowGithubUrl === true;
-    const requireZip = policy.requireZip === true;
 
     if (files.length > MAX_SUBMISSION_FILES) {
         throw new WebMvpError(`Mỗi bài nộp chỉ được chứa tối đa ${MAX_SUBMISSION_FILES} tệp`, 413);
@@ -94,12 +93,9 @@ function validateSubmissionAssets(
     if (repositoryUrl && !allowRepository) {
         throw new WebMvpError("Bài tập này không cho phép nộp bằng đường dẫn repository", 400);
     }
-    if (payload.action === "submit" && requireZip && !files.some((file) => normalizedExtension(file.name) === "zip")) {
-        throw new WebMvpError("Bài tập yêu cầu một tệp ZIP mã nguồn", 400);
-    }
-    if (payload.action === "submit" && !files.length && !repositoryUrl) {
-        throw new WebMvpError("Vui lòng tải tệp hoặc cung cấp repository trước khi nộp chính thức", 400);
-    }
+    // Final asset requirements are enforced atomically by save_student_submission().
+    // The RPC can safely reuse files from the student's existing draft, which are
+    // intentionally not sent back to this server as trusted storage paths.
 }
 
 function classDto(row: AnyRecord, lecturer: AnyRecord | null, memberCount: number, assignmentCount: number) {
@@ -293,6 +289,8 @@ function assignmentDtoFromRelations(
     submission: AnyRecord | null
 ) {
     const sub = record(submission);
+    const grade = Array.isArray(sub.grade) ? record(sub.grade[0]) : record(sub.grade);
+    const publishedGrade = grade.status === "published";
     const attachmentRows = rows(item.attachments).map(normalizeAttachment);
     const submissionFiles = rows(sub.files).map((file, index) => ({
         originalName: String(file.originalName || file.original_name || `Tệp ${index + 1}`),
@@ -328,6 +326,10 @@ function assignmentDtoFromRelations(
             submittedAt: sub.submitted_at,
             repositoryUrl: sub.repository_url || "",
             note: String(sub.content || ""),
+            gradeStatus: publishedGrade ? "published" : "pending",
+            finalScore: publishedGrade && grade.score !== null && grade.score !== undefined
+                ? Number(grade.score)
+                : null,
             files: submissionFiles,
         } : null,
     };
@@ -351,7 +353,7 @@ async function assignmentDtos(
             : Promise.resolve({ data: [], error: null }),
         actor.role === "student" && assignmentIds.length
             ? db.from("submissions")
-                .select("id,assignment_id,status,submitted_at,repository_url,content,files,attempt_no,is_late")
+                .select("id,assignment_id,status,submitted_at,repository_url,content,files,attempt_no,is_late,grade:grades(status,score)")
                 .in("assignment_id", assignmentIds)
                 .eq("student_id", actor.userId)
                 .eq("is_current", true)

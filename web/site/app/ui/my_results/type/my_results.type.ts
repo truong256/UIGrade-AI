@@ -1,7 +1,7 @@
 export type CurrentUser = {
     _id?: string;
     name?: string;
-    role?: "admin" | "lecturer" | "student" | "teacher" | "User";
+    role?: "admin" | "lecturer" | "student";
     studentCode?: string;
 };
 
@@ -17,6 +17,7 @@ export type ScoreCriterion = {
 
 export type ResultItem = {
     _id: string;
+    submissionId: string;
     assignmentId: string;
     assignmentTitle: string;
     classroomName: string;

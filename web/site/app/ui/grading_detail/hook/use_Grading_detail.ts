@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type {
     AnyObj,
@@ -10,9 +10,13 @@ import type {
 } from "../type/grading_detail.type";
 import { normalizeAssignment, normalizeSubmissions, requestJson } from "../type/grading_detail.api";
 import { asObj, buildSidebar, toText } from "../type/grading_detail.unit";
-import { normalizeAssignmentRubric } from "@/lib/grading-workflow";
+import {
+    normalizeAssignmentRubric,
+    validateGradePayload,
+} from "@/lib/grading-workflow";
 
 type ScoreMap = Record<string, string>;
+type GradingMutation = "ai" | "save" | "publish";
 
 export function useGradingDetail() {
     const router = useRouter();
@@ -39,9 +43,10 @@ export function useGradingDetail() {
     const [teacherComment, setTeacherComment] = useState("");
     const [loading, setLoading] = useState(true);
     const [detailLoading, setDetailLoading] = useState(false);
-    const [grading, setGrading] = useState(false);
-    const [saving, setSaving] = useState(false);
-    const [publishing, setPublishing] = useState(false);
+    const [mutation, setMutation] = useState<GradingMutation | null>(null);
+    const mutationRef = useRef<GradingMutation | null>(null);
+    const detailRequestIdRef = useRef(0);
+    const pageRequestIdRef = useRef(0);
     const [error, setError] = useState("");
     const [notice, setNotice] = useState("");
 
@@ -80,6 +85,10 @@ export function useGradingDetail() {
     }, [assignment?.rubric, detail?.assignment?.rubric]);
     const rubric = rubricState.items;
     const maxScore = Number(detail?.assignment?.maxScore || assignment?.maxScore || 10);
+    const isPublished = detail?.grade?.status === "published";
+    const grading = mutation === "ai";
+    const saving = mutation === "save";
+    const publishing = mutation === "publish";
     const selectedFile = detail?.sourceArchive || detail?.files?.[0] || null;
     const totalScore = useMemo(() => {
         if (!rubric.length) {
@@ -140,12 +149,14 @@ export function useGradingDetail() {
         nextSubmissionId: string | null,
         updateUrl = false
     ) {
+        const requestId = ++detailRequestIdRef.current;
         setSelectedStudentId(nextStudentId);
         setSelectedSubmissionId(nextSubmissionId);
         if (updateUrl) syncUrl(nextAssignmentId, nextStudentId, nextSubmissionId);
         if (!nextSubmissionId) {
             setDetail(null);
             setHistory([]);
+            setDetailLoading(false);
             resetGradeForm();
             return;
         }
@@ -157,6 +168,8 @@ export function useGradingDetail() {
                 requestJson(`/api/grading/submissions/${nextSubmissionId}`),
                 requestJson(`/api/grading/submissions/${nextSubmissionId}/history`),
             ]);
+            if (requestId !== detailRequestIdRef.current) return;
+
             const detailData = asObj(detailJson.data);
             const grade = asObj(detailData.grade);
             const scoreMap: ScoreMap = {};
@@ -175,17 +188,24 @@ export function useGradingDetail() {
             setCriterionComments(commentMap);
             setTeacherComment(toText(grade.lecturerFeedback));
         } catch (loadError) {
-            setError(loadError instanceof Error ? loadError.message : "Không thể tải chi tiết bài nộp");
+            if (requestId === detailRequestIdRef.current) {
+                setError(loadError instanceof Error ? loadError.message : "Không thể tải chi tiết bài nộp");
+            }
         } finally {
-            setDetailLoading(false);
+            if (requestId === detailRequestIdRef.current) {
+                setDetailLoading(false);
+            }
         }
     }
 
     async function loadPage(nextAssignmentId: string, preferredSubmission?: string | null, preferredStudent?: string | null) {
+        const requestId = ++pageRequestIdRef.current;
         setLoading(true);
         setError("");
         try {
             const json = await requestJson(`/api/grading/assignments/${nextAssignmentId}/submissions`);
+            if (requestId !== pageRequestIdRef.current) return;
+
             const workspace = asObj(json.data);
             const assignmentData = normalizeAssignment(workspace.assignment);
             const submissionList = normalizeSubmissions(
@@ -211,9 +231,13 @@ export function useGradingDetail() {
                 resetGradeForm();
             }
         } catch (loadError) {
-            setError(loadError instanceof Error ? loadError.message : "Không thể tải trang chấm bài");
+            if (requestId === pageRequestIdRef.current) {
+                setError(loadError instanceof Error ? loadError.message : "Không thể tải trang chấm bài");
+            }
         } finally {
-            setLoading(false);
+            if (requestId === pageRequestIdRef.current) {
+                setLoading(false);
+            }
         }
     }
 
@@ -242,8 +266,8 @@ export function useGradingDetail() {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [assignmentId, submissionIdParam, studentIdParam]);
 
-    function gradePayload() {
-        return {
+    function gradePayload(publish: boolean) {
+        const payload = {
             manualScore,
             lecturerFeedback: teacherComment,
             criteria: rubric.flatMap((criterion) => {
@@ -255,6 +279,32 @@ export function useGradingDetail() {
                 }];
             }),
         };
+
+        validateGradePayload({
+            assignmentRubric: rubric,
+            assignmentMaxScore: maxScore,
+            criteria: payload.criteria,
+            manualScore: payload.manualScore,
+            lecturerFeedback: payload.lecturerFeedback,
+            publish,
+        });
+
+        return payload;
+    }
+
+    function beginMutation(nextMutation: GradingMutation) {
+        if (mutationRef.current) return false;
+        mutationRef.current = nextMutation;
+        setMutation(nextMutation);
+        setError("");
+        setNotice("");
+        return true;
+    }
+
+    function finishMutation(nextMutation: GradingMutation) {
+        if (mutationRef.current !== nextMutation) return;
+        mutationRef.current = null;
+        setMutation(null);
     }
 
     async function refreshSelected(message?: string) {
@@ -263,46 +313,37 @@ export function useGradingDetail() {
     }
 
     async function handleSaveDraft() {
-        if (!canGrade || !selectedSubmissionId || saving || publishing) return;
-        setSaving(true);
-        setError("");
-        setNotice("");
+        if (!canGrade || !selectedSubmissionId || isPublished || !beginMutation("save")) return;
         try {
             const json = await requestJson(`/api/grading/submissions/${selectedSubmissionId}/draft`, {
                 method: "PUT",
-                body: JSON.stringify(gradePayload()),
+                body: JSON.stringify(gradePayload(false)),
             });
             await refreshSelected(json.message || "Đã lưu bản chấm nháp");
         } catch (saveError) {
             setError(saveError instanceof Error ? saveError.message : "Không thể lưu bản chấm nháp");
         } finally {
-            setSaving(false);
+            finishMutation("save");
         }
     }
 
     async function handlePublish() {
-        if (!canGrade || !selectedSubmissionId || saving || publishing) return;
-        setPublishing(true);
-        setError("");
-        setNotice("");
+        if (!canGrade || !selectedSubmissionId || !beginMutation("publish")) return;
         try {
             const json = await requestJson(`/api/grading/submissions/${selectedSubmissionId}/publish`, {
                 method: "POST",
-                body: JSON.stringify(gradePayload()),
+                body: JSON.stringify(gradePayload(true)),
             });
             await refreshSelected(json.message || "Đã công bố điểm cho sinh viên");
         } catch (publishError) {
             setError(publishError instanceof Error ? publishError.message : "Không thể công bố điểm");
         } finally {
-            setPublishing(false);
+            finishMutation("publish");
         }
     }
 
     async function handleGrade() {
-        if (!canGrade || !selectedSubmissionId || grading || saving || publishing) return;
-        setGrading(true);
-        setError("");
-        setNotice("");
+        if (!canGrade || !selectedSubmissionId || isPublished || !beginMutation("ai")) return;
         try {
             const json = await requestJson(`/api/grading/submissions/${selectedSubmissionId}/ai-suggest`, {
                 method: "POST",
@@ -319,7 +360,7 @@ export function useGradingDetail() {
             const detail = gradeError instanceof Error ? gradeError.message : "Dịch vụ AI không phản hồi.";
             setError(`Không thể tạo gợi ý AI. Bạn vẫn có thể chấm bài thủ công. ${detail}`);
         } finally {
-            setGrading(false);
+            finishMutation("ai");
         }
     }
 

@@ -46,5 +46,7 @@ describe("Supabase authentication role routing", () => {
         expect(isRouteAllowedForRole("/ui/server_config/users", "admin")).toBe(true);
         expect(isRouteAllowedForRole("/ui/grading_detail", "admin")).toBe(true);
         expect(isRouteAllowedForRole("/ui/create_assignment", "admin")).toBe(false);
+        expect(isRouteAllowedForRole("/ui/submit_assignment", "admin")).toBe(false);
+        expect(isRouteAllowedForRole("/ui/my_results", "admin")).toBe(false);
     });
 });

@@ -218,15 +218,15 @@ export default function AssignmentDetailDialog({
                         {isStudent ? (
                             <>
                                 <Link
-                                    href="/ui/submit_assignment"
+                                    href={`/ui/submit_assignment?assignmentId=${encodeURIComponent(item._id)}`}
                                     className="rounded-xl bg-blue-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-blue-600/20 hover:bg-blue-700 transition"
                                 >
                                     Đi tới nộp bài
                                 </Link>
 
-                                {item.latestSubmission?._id ? (
+                                {item.latestSubmission?._id && item.latestSubmission.gradeStatus === "published" ? (
                                     <Link
-                                        href={`/ui/grading_detail?assignmentId=${item._id}&submissionId=${item.latestSubmission._id}`}
+                                        href={`/ui/my_results?submissionId=${encodeURIComponent(item.latestSubmission._id)}`}
                                         className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
                                     >
                                         Xem kết quả chấm

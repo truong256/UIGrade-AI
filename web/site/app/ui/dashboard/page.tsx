@@ -21,6 +21,7 @@ export default function DashboardPage() {
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [retryKey, setRetryKey] = useState(0);
 
     useEffect(() => {
         let cancelled = false;
@@ -63,7 +64,7 @@ export default function DashboardPage() {
         return () => {
             cancelled = true;
         };
-    }, [rangeDays]);
+    }, [rangeDays, retryKey]);
 
     const statCards = useMemo<StatCardProps[]>(() => {
         if (!data) return [];
@@ -124,7 +125,12 @@ export default function DashboardPage() {
 
             {loading ? <DashboardLoading /> : null}
 
-            {!loading && error ? <DashboardError error={error} /> : null}
+            {!loading && error ? (
+                <DashboardError
+                    error={error}
+                    onRetry={() => setRetryKey((value) => value + 1)}
+                />
+            ) : null}
 
             {!loading && !error && data ? (
                 <>

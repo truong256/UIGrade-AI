@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useRef, useState, type FormEvent } from "react";
 
 type JoinClassDialogProps = {
     open: boolean;
@@ -20,6 +20,7 @@ export function JoinClassDialog({
     const [code, setCode] = useState("");
     const [error, setError] = useState("");
     const [internalLoading, setInternalLoading] = useState(false);
+    const requestInFlightRef = useRef(false);
 
     if (!open) return null;
 
@@ -27,6 +28,8 @@ export function JoinClassDialog({
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
         e.preventDefault();
+        if (requestInFlightRef.current || externalLoading) return;
+
         setError("");
 
         const trimmedCode = code.trim().toUpperCase();
@@ -37,6 +40,7 @@ export function JoinClassDialog({
         }
 
         try {
+            requestInFlightRef.current = true;
             setInternalLoading(true);
             if (onJoin) {
                 const success = await onJoin(trimmedCode);
@@ -59,9 +63,10 @@ export function JoinClassDialog({
                 onClose();
                 if (onSuccess) await onSuccess();
             }
-        } catch (err: any) {
-            setError(err.message || "Đã xảy ra lỗi khi tham gia lớp");
+        } catch (err: unknown) {
+            setError(err instanceof Error ? err.message : "Đã xảy ra lỗi khi tham gia lớp");
         } finally {
+            requestInFlightRef.current = false;
             setInternalLoading(false);
         }
     };
@@ -72,15 +77,17 @@ export function JoinClassDialog({
                 className="w-full max-w-md rounded-3xl border border-blue-100 bg-white p-6 shadow-2xl animate-in fade-in zoom-in-95 duration-150"
                 role="dialog"
                 aria-modal="true"
+                aria-labelledby="join-class-title"
             >
                 <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
+                    <h3 id="join-class-title" className="text-lg font-bold text-slate-900 flex items-center gap-2">
                         <span className="material-symbols-outlined text-blue-600 text-[22px]">login</span>
                         Tham gia Lớp học
                     </h3>
                     <button
                         type="button"
                         onClick={onClose}
+                        disabled={loading}
                         className="rounded-xl p-1.5 text-slate-400 hover:bg-slate-100 transition"
                         aria-label="Đóng dialog"
                     >
@@ -90,24 +97,28 @@ export function JoinClassDialog({
 
                 <form onSubmit={handleSubmit} className="mt-4 space-y-4">
                     <div>
-                        <label className="block text-xs font-semibold text-slate-700 mb-1.5">
+                        <label htmlFor="join-class-code" className="block text-xs font-semibold text-slate-700 mb-1.5">
                             Mã tham gia lớp học *
                         </label>
                         <input
                             type="text"
+                            id="join-class-code"
                             value={code}
                             onChange={(e) => setCode(e.target.value.toUpperCase())}
                             placeholder="VD: ANDR2026-L01"
                             autoFocus
+                            maxLength={64}
+                            disabled={loading}
+                            aria-describedby="join-class-code-help"
                             className="h-12 w-full rounded-2xl border border-slate-200 px-4 text-center text-base font-bold uppercase tracking-widest text-blue-950 outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         />
-                        <p className="mt-1 text-[11px] text-slate-500">
-                            Nhập mã lớp 6-12 ký tự do giảng viên cung cấp để ghi danh vào lớp.
+                        <p id="join-class-code-help" className="mt-1 text-[11px] text-slate-500">
+                            Nhập mã lớp do giảng viên cung cấp để ghi danh vào lớp.
                         </p>
                     </div>
 
                     {error ? (
-                        <div className="rounded-xl bg-red-50 border border-red-100 px-4 py-2.5 text-xs text-red-600 font-medium flex items-center gap-2">
+                        <div role="alert" className="rounded-xl bg-red-50 border border-red-100 px-4 py-2.5 text-xs text-red-600 font-medium flex items-center gap-2">
                             <span className="material-symbols-outlined text-[16px]">error</span>
                             {error}
                         </div>
@@ -117,6 +128,7 @@ export function JoinClassDialog({
                         <button
                             type="button"
                             onClick={onClose}
+                            disabled={loading}
                             className="rounded-xl border border-slate-200 px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition"
                         >
                             Hủy bỏ

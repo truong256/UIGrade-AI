@@ -1,9 +1,8 @@
 import type { FC } from "react";
-
-type Role = "admin" | "teacher" | "student" | "lecturer" | "User";
+import type { AuthenticatedRole } from "@/lib/auth-routing";
 
 type ClassesHeaderProps = {
-    role?: Role;
+    role?: AuthenticatedRole;
     total?: number;
     onOpenAddModal?: () => void;
     onOpenJoinModal?: () => void;
@@ -11,7 +10,7 @@ type ClassesHeaderProps = {
 };
 
 export const ClassesHeader: FC<ClassesHeaderProps> = ({
-    role = "teacher",
+    role = "student",
     total,
     onOpenAddModal,
     onOpenJoinModal,
@@ -46,7 +45,7 @@ export const ClassesHeader: FC<ClassesHeaderProps> = ({
                     </button>
                 )}
 
-                {onOpenAddModal && (role === "teacher" || role === "lecturer" || role === "admin") && (
+                {onOpenAddModal && (role === "lecturer" || role === "admin") && (
                     <button
                         type="button"
                         onClick={onOpenAddModal}

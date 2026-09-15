@@ -23,7 +23,7 @@ export function ResultsFilters({
         <section className="rounded-2xl border border-slate-200/80 bg-white p-4 shadow-xs">
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-[2fr,1.2fr,1fr]">
                 <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                    <label htmlFor="results-keyword" className="mb-1 block text-xs font-semibold text-slate-700">
                         Tìm kiếm bài tập
                     </label>
                     <div className="relative">
@@ -31,6 +31,7 @@ export function ResultsFilters({
                             search
                         </span>
                         <input
+                            id="results-keyword"
                             value={keyword}
                             onChange={(event) => onKeywordChange(event.target.value)}
                             placeholder="Nhập tên bài tập hoặc mã lớp..."
@@ -40,10 +41,11 @@ export function ResultsFilters({
                 </div>
 
                 <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                    <label htmlFor="results-class-filter" className="mb-1 block text-xs font-semibold text-slate-700">
                         Lớp học
                     </label>
                     <select
+                        id="results-class-filter"
                         value={classFilter}
                         onChange={(event) => onClassFilterChange(event.target.value)}
                         className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs sm:text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
@@ -58,10 +60,11 @@ export function ResultsFilters({
                 </div>
 
                 <div>
-                    <label className="mb-1 block text-xs font-semibold text-slate-700">
+                    <label htmlFor="results-status-filter" className="mb-1 block text-xs font-semibold text-slate-700">
                         Trạng thái
                     </label>
                     <select
+                        id="results-status-filter"
                         value={statusFilter}
                         onChange={(event) => onStatusFilterChange(event.target.value)}
                         className="h-10 w-full rounded-xl border border-slate-200 bg-white px-3 text-xs sm:text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
