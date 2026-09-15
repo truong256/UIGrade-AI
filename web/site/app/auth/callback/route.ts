@@ -37,10 +37,28 @@ export async function GET(request: Request) {
 
         if (error || !data.user) {
             // Log only the error code/status — never the token, code, or session.
-            // Common codes: "otp_expired" (code reused), "provider_error" (DB trigger
-            // rejected signup, e.g. non-.edu.vn email on first OAuth login).
+            // Common codes:
+            //   "otp_expired"      — code already exchanged (browser refresh)
+            //   "provider_error"   — Supabase/DB error during OAuth
+            //   "check_violation"  — DB trigger rejected signup (e.g. non-.edu.vn email)
             const errCode = error?.code ?? error?.status ?? "no_user";
+            const errMsg = typeof error?.message === "string" ? error.message : "";
             console.error(`[auth/callback] Exchange failed: ${errCode}`);
+
+            // If the DB trigger raised a check_violation for the .edu.vn email rule,
+            // surface a clear, user-friendly message rather than the generic oauth_failed.
+            const isEduViolation =
+                errCode === "check_violation" ||
+                errMsg.toLowerCase().includes("edu.vn") ||
+                errMsg.toLowerCase().includes("education");
+            if (isEduViolation) {
+                return NextResponse.redirect(
+                    `${origin}/login?error=education_email_required&message=${encodeURIComponent(
+                        "Vui lòng sử dụng tài khoản email giáo dục (.edu.vn) để đăng nhập."
+                    )}`
+                );
+            }
+
             return NextResponse.redirect(`${origin}/login?error=oauth_failed`);
         }
 

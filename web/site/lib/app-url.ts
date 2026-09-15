@@ -13,29 +13,33 @@
  * `0.0.0.0` is a valid server *listen* address but is NOT a valid browser
  * URL — browsers reject it with ERR_ADDRESS_INVALID.
  *
- * Using `new URL(request.url).origin` for redirect targets therefore breaks
- * the Google → Supabase → /auth/callback → /auth/select-role flow locally.
+ * In production, NEXT_PUBLIC_APP_URL might be set to `http://localhost:3000`
+ * (the .env.local default) if it was accidentally propagated to Vercel env vars.
+ * That value must never be used as a production redirect origin.
  *
  * RESOLUTION PRIORITY
  * ────────────────────
- * 1. `NEXT_PUBLIC_APP_URL` env var (explicit, trusted config — preferred)
+ * 1. `VERCEL_PROJECT_PRODUCTION_URL` (auto-injected by Vercel — no manual config)
+ *    Set on every Vercel project's production environment. Stable — does not change
+ *    between deployments. Format: `your-app.vercel.app` (no protocol). Always https.
+ *    Only used when VERCEL_ENV === "production" to avoid contaminating preview/dev.
+ *
+ * 2. `NEXT_PUBLIC_APP_URL` (explicit manual config — preferred when set correctly)
  *    Local:      http://localhost:3000
  *    Production: https://your-app.vercel.app
+ *    Skipped on production Vercel (VERCEL_ENV=production) when it resolves to a
+ *    localhost/loopback/bind address — prevents accidental localhost redirect chains.
  *
- * 2. `x-forwarded-proto` + `x-forwarded-host` headers
- *    Set by Vercel / nginx / other reverse proxies in production.
+ * 3. `x-forwarded-proto` + `x-forwarded-host` headers
+ *    Set by Vercel / nginx / Cloudflare in production.
  *    Only used when both headers are present.
  *
- * 3. `VERCEL_URL` env var (auto-injected by Vercel runtime — no manual config)
- *    Vercel automatically sets this to the deployment's canonical hostname
- *    (without protocol) for every production and preview deployment.
- *    Format: `your-app-git-main-org.vercel.app` (no https:// prefix).
- *    Always uses https:// because Vercel deployments are always HTTPS.
- *    This is a reliable safety net when NEXT_PUBLIC_APP_URL is not explicitly
- *    configured on the Vercel dashboard.
+ * 4. `VERCEL_URL` (auto-injected by Vercel — deployment-specific URL)
+ *    Set on every Vercel deployment (production and preview). Value is a hostname
+ *    only (no protocol). For preview deployments this is the unique preview URL.
+ *    Always https since Vercel deployments are HTTPS-only.
  *
- * 4. `request.url` origin — last resort, only when the host is not a
- *    server bind address (0.0.0.0, ::, [::]).
+ * 5. `request.url` origin — last resort when not a server bind address.
  *
  * SECURITY
  * ────────
@@ -47,10 +51,60 @@
 /** Hosts that are valid server bind addresses but invalid browser URLs. */
 const INVALID_BROWSER_HOSTS = new Set(["0.0.0.0", "::", "[::]"]);
 
+/** Loopback / bind-address hostnames that are invalid as production origins. */
+const LOCALHOST_HOSTS = new Set(["localhost", "127.0.0.1", "0.0.0.0", "::", "[::]"]);
+
 function isValidBrowserHost(host: string): boolean {
     // Strip port before checking
     const hostname = host.split(":")[0].replace(/^\[|\]$/g, "");
     return !INVALID_BROWSER_HOSTS.has(hostname);
+}
+
+/**
+ * Returns true when the parsed URL resolves to a loopback / development host
+ * that must never be used as a canonical redirect origin in production.
+ */
+export function isLocalhostOrigin(origin: string): boolean {
+    try {
+        const parsed = new URL(origin);
+        const hostname = parsed.hostname.replace(/^\[|\]$/g, "");
+        return LOCALHOST_HOSTS.has(hostname);
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Safely parse a raw value that may be:
+ *   - A bare hostname:       "your-app.vercel.app"          → "https://your-app.vercel.app"
+ *   - A valid URL with path: "https://your-app.vercel.app/" → "https://your-app.vercel.app"
+ *   - Already an origin:     "https://your-app.vercel.app"  → "https://your-app.vercel.app"
+ * Always strips trailing slashes and path/query components.
+ * Returns null if the input is empty or cannot be parsed.
+ */
+export function normalizeOrigin(raw: string | undefined, defaultProtocol = "https"): string | null {
+    if (!raw) return null;
+    const trimmed = raw.trim();
+    if (!trimmed) return null;
+
+    try {
+        // If it already has a protocol, parse directly.
+        if (/^https?:\/\//i.test(trimmed)) {
+            return new URL(trimmed).origin;
+        }
+        // Bare hostname — prepend default protocol.
+        return new URL(`${defaultProtocol}://${trimmed}`).origin;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Returns true when running inside a Vercel production deployment.
+ * Vercel auto-sets VERCEL_ENV to "production" | "preview" | "development".
+ */
+function isVercelProduction(): boolean {
+    return process.env.VERCEL_ENV === "production";
 }
 
 /**
@@ -62,19 +116,33 @@ function isValidBrowserHost(host: string): boolean {
  *   Vercel production:       "https://your-app.vercel.app"
  */
 export function getCanonicalOrigin(request: Request): string {
-    // 1. Explicit env var — most reliable, always correct.
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
-    if (appUrl) {
-        try {
-            const parsed = new URL(appUrl);
-            // Return origin (strips any path/query that might have been set by mistake)
-            return parsed.origin;
-        } catch {
-            // Malformed env var — fall through to next strategy
+    const isProduction = isVercelProduction();
+
+    // 1. VERCEL_PROJECT_PRODUCTION_URL — auto-injected by Vercel, stable production domain.
+    //    Only trust it in a verified production environment to avoid leaking
+    //    the production URL from preview or local runs.
+    if (isProduction) {
+        const projectProductionUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL;
+        const origin = normalizeOrigin(projectProductionUrl, "https");
+        if (origin && !isLocalhostOrigin(origin)) {
+            return origin;
         }
     }
 
-    // 2. Reverse-proxy forwarded headers (Vercel, nginx, Cloudflare, etc.)
+    // 2. NEXT_PUBLIC_APP_URL — explicit manual config.
+    //    On production Vercel, skip it if it resolves to localhost to prevent
+    //    .env.local defaults from being accidentally configured in the dashboard.
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL;
+    const appOrigin = normalizeOrigin(appUrl, "https");
+    if (appOrigin) {
+        if (isProduction && isLocalhostOrigin(appOrigin)) {
+            // NEXT_PUBLIC_APP_URL is set to localhost but we're in production — skip.
+        } else {
+            return appOrigin;
+        }
+    }
+
+    // 3. Reverse-proxy forwarded headers (Vercel, nginx, Cloudflare, etc.)
     const reqHeaders = request.headers instanceof Headers
         ? request.headers
         : new Headers(request.headers as HeadersInit);
@@ -85,30 +153,19 @@ export function getCanonicalOrigin(request: Request): string {
         // x-forwarded-proto may be a comma-separated list; take the first value.
         const proto = fwdProto.split(",")[0].trim();
         if (proto === "https" || proto === "http") {
-            try {
-                return new URL(`${proto}://${fwdHost}`).origin;
-            } catch {
-                // Malformed header — fall through
-            }
+            const fwdOrigin = normalizeOrigin(`${proto}://${fwdHost}`, proto);
+            if (fwdOrigin) return fwdOrigin;
         }
     }
 
-    // 3. VERCEL_URL — auto-injected by Vercel runtime for every deployment.
-    //    No manual configuration required; always set on Vercel production and
-    //    preview environments. Value is a hostname only (no protocol), so we
-    //    always prepend https:// because Vercel deployments are HTTPS-only.
-    //    This is the safety net when NEXT_PUBLIC_APP_URL was not explicitly set
-    //    on the Vercel dashboard, preventing fallback to localhost on production.
+    // 4. VERCEL_URL — auto-injected, deployment-specific (production or preview).
+    //    Useful as a fallback when NEXT_PUBLIC_APP_URL is not set and forwarded
+    //    headers are unavailable.
     const vercelUrl = process.env.VERCEL_URL;
-    if (vercelUrl) {
-        try {
-            return new URL(`https://${vercelUrl}`).origin;
-        } catch {
-            // Malformed VERCEL_URL — fall through
-        }
-    }
+    const vercelOrigin = normalizeOrigin(vercelUrl, "https");
+    if (vercelOrigin) return vercelOrigin;
 
-    // 4. request.url origin — only when the host is a real browser-accessible address.
+    // 5. request.url origin — only when the host is a real browser-accessible address.
     try {
         const parsed = new URL(request.url);
         if (isValidBrowserHost(parsed.host)) {
@@ -118,7 +175,7 @@ export function getCanonicalOrigin(request: Request): string {
         // Malformed request.url — fall through to hard fallback
     }
 
-    // 5. Hard fallback — should never be reached in a correctly configured
+    // 6. Hard fallback — should never be reached in a correctly configured
     //    environment, but prevents a crash if all strategies fail.
     return "http://localhost:3000";
 }
