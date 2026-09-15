@@ -5,7 +5,8 @@
  * and isLocalhostOrigin().
  *
  * Scenarios covered:
- *  - VERCEL_PROJECT_PRODUCTION_URL takes priority in production
+ *  - A valid browser-facing request origin takes priority in production
+ *  - VERCEL_PROJECT_PRODUCTION_URL safely handles invalid request origins
  *  - NEXT_PUBLIC_APP_URL is skipped on production when it resolves to localhost
  *  - NEXT_PUBLIC_APP_URL is used on development even when it is localhost
  *  - x-forwarded-proto + x-forwarded-host fallback
@@ -115,7 +116,14 @@ describe("isLocalhostOrigin()", () => {
 describe("getCanonicalOrigin() — production environment (VERCEL_ENV=production)", () => {
     afterEach(() => vi.unstubAllEnvs());
 
-    it("CASE P1 — VERCEL_PROJECT_PRODUCTION_URL is used first in production", () => {
+    it("CASE P0 — keeps the active Vercel alias instead of switching cookie hosts", () => {
+        vi.stubEnv("VERCEL_ENV", "production");
+        vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "site-tan-sigma-58.vercel.app");
+        const result = getCanonicalOrigin(req("https://site-truong257.vercel.app/auth/callback?code=x"));
+        expect(result).toBe("https://site-truong257.vercel.app");
+    });
+
+    it("CASE P1 — VERCEL_PROJECT_PRODUCTION_URL replaces an invalid bind origin", () => {
         vi.stubEnv("VERCEL_ENV", "production");
         vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "uigrade-ai.vercel.app");
         vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://localhost:3000");
@@ -161,13 +169,23 @@ describe("getCanonicalOrigin() — production environment (VERCEL_ENV=production
         expect(result).toBe("https://uigrade-ai.vercel.app");
     });
 
-    it("CASE P6 — x-forwarded headers used when VERCEL_PROJECT_PRODUCTION_URL absent", () => {
+    it("rejects an HTTP NEXT_PUBLIC_APP_URL in production", () => {
+        vi.stubEnv("VERCEL_ENV", "production");
+        vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "");
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "http://public.example.com");
+        vi.stubEnv("VERCEL_URL", "uigrade-ai.vercel.app");
+        expect(getCanonicalOrigin(req("http://0.0.0.0:3000/auth/callback?code=x")))
+            .toBe("https://uigrade-ai.vercel.app");
+    });
+
+    it("CASE P6 — untrusted forwarded host cannot override the Vercel fallback", () => {
         vi.stubEnv("VERCEL_ENV", "production");
         vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "");
         vi.stubEnv("NEXT_PUBLIC_APP_URL", "");
+        vi.stubEnv("VERCEL_URL", "uigrade-ai.vercel.app");
         const result = getCanonicalOrigin(req("http://0.0.0.0:3000/auth/callback?code=x", {
             "x-forwarded-proto": "https",
-            "x-forwarded-host": "uigrade-ai.vercel.app",
+            "x-forwarded-host": "attacker.example",
         }));
         expect(result).toBe("https://uigrade-ai.vercel.app");
     });
@@ -191,6 +209,17 @@ describe("getCanonicalOrigin() — production environment (VERCEL_ENV=production
         const result = getCanonicalOrigin(req("http://0.0.0.0:3000/auth/callback?code=x"));
         expect(result).not.toContain("0.0.0.0");
         expect(result).not.toContain("::");
+    });
+
+    it.each([
+        "http://public.example.com/auth/callback?code=x",
+        "https://localhost:3000/auth/callback?code=x",
+        "http://[::]:3000/auth/callback?code=x",
+        "https://[::1]:3000/auth/callback?code=x",
+    ])("rejects unsafe production request origin %s", url => {
+        vi.stubEnv("VERCEL_ENV", "production");
+        vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "uigrade-ai.vercel.app");
+        expect(getCanonicalOrigin(req(url))).toBe("https://uigrade-ai.vercel.app");
     });
 });
 

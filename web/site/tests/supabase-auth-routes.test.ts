@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
 const mock = vi.hoisted(() => ({
@@ -71,6 +71,8 @@ beforeEach(() => {
     vi.stubEnv("NEXT_PUBLIC_SUPABASE_ANON_KEY", "test-public-key");
 });
 
+afterEach(() => vi.unstubAllEnvs());
+
 describe("real callback handler with mocked Supabase boundary", () => {
     it.each(["exchange", "profile", "unexpected", "onboarding-read", "onboarding-unexpected"])(
         "does not log provider or database payloads on %s failure", async failure => {
@@ -136,6 +138,24 @@ describe("real callback handler with mocked Supabase boundary", () => {
         expect(mock.exchange).toHaveBeenCalledWith("one-time-code");
         expect(res.headers.get("location")).toBe(`${origin}/ui/dashboard`);
         expect(mock.insert).not.toHaveBeenCalled();
+    });
+
+    it("keeps the post-OAuth redirect on the host that received the callback", async () => {
+        vi.stubEnv("VERCEL_ENV", "production");
+        vi.stubEnv("VERCEL_PROJECT_PRODUCTION_URL", "site-tan-sigma-58.vercel.app");
+        vi.stubEnv("NEXT_PUBLIC_APP_URL", "");
+        read(profile("student"));
+
+        const callbackOrigin = "https://site-truong257.vercel.app";
+        const res = await callback(new NextRequest(
+            `${callbackOrigin}/auth/callback?code=one-time-code`,
+            { headers: {
+                "x-forwarded-proto": "https",
+                "x-forwarded-host": "attacker.example",
+            } }
+        ));
+
+        expect(res.headers.get("location")).toBe(`${callbackOrigin}/ui/dashboard`);
     });
 
     it("allows an existing non-.edu.vn Admin through Google callback", async () => {
