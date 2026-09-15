@@ -26,7 +26,15 @@
  *    Set by Vercel / nginx / other reverse proxies in production.
  *    Only used when both headers are present.
  *
- * 3. `request.url` origin — last resort, only when the host is not a
+ * 3. `VERCEL_URL` env var (auto-injected by Vercel runtime — no manual config)
+ *    Vercel automatically sets this to the deployment's canonical hostname
+ *    (without protocol) for every production and preview deployment.
+ *    Format: `your-app-git-main-org.vercel.app` (no https:// prefix).
+ *    Always uses https:// because Vercel deployments are always HTTPS.
+ *    This is a reliable safety net when NEXT_PUBLIC_APP_URL is not explicitly
+ *    configured on the Vercel dashboard.
+ *
+ * 4. `request.url` origin — last resort, only when the host is not a
  *    server bind address (0.0.0.0, ::, [::]).
  *
  * SECURITY
@@ -85,7 +93,22 @@ export function getCanonicalOrigin(request: Request): string {
         }
     }
 
-    // 3. request.url origin — only when the host is a real browser-accessible address.
+    // 3. VERCEL_URL — auto-injected by Vercel runtime for every deployment.
+    //    No manual configuration required; always set on Vercel production and
+    //    preview environments. Value is a hostname only (no protocol), so we
+    //    always prepend https:// because Vercel deployments are HTTPS-only.
+    //    This is the safety net when NEXT_PUBLIC_APP_URL was not explicitly set
+    //    on the Vercel dashboard, preventing fallback to localhost on production.
+    const vercelUrl = process.env.VERCEL_URL;
+    if (vercelUrl) {
+        try {
+            return new URL(`https://${vercelUrl}`).origin;
+        } catch {
+            // Malformed VERCEL_URL — fall through
+        }
+    }
+
+    // 4. request.url origin — only when the host is a real browser-accessible address.
     try {
         const parsed = new URL(request.url);
         if (isValidBrowserHost(parsed.host)) {
@@ -95,7 +118,7 @@ export function getCanonicalOrigin(request: Request): string {
         // Malformed request.url — fall through to hard fallback
     }
 
-    // 4. Hard fallback — should never be reached in a correctly configured
+    // 5. Hard fallback — should never be reached in a correctly configured
     //    environment, but prevents a crash if all strategies fail.
     return "http://localhost:3000";
 }

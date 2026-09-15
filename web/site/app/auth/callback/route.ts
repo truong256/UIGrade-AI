@@ -36,7 +36,11 @@ export async function GET(request: Request) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (error || !data.user) {
-            console.error("[auth/callback] Exchange failed");
+            // Log only the error code/status — never the token, code, or session.
+            // Common codes: "otp_expired" (code reused), "provider_error" (DB trigger
+            // rejected signup, e.g. non-.edu.vn email on first OAuth login).
+            const errCode = error?.code ?? error?.status ?? "no_user";
+            console.error(`[auth/callback] Exchange failed: ${errCode}`);
             return NextResponse.redirect(`${origin}/login?error=oauth_failed`);
         }
 
