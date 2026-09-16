@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseRouteClient } from "@/lib/supabase/server";
 import { dashboardForRole, authenticatedProfileRole } from "@/lib/auth-routing";
 import { allowOAuthArrival } from "@/lib/auth-visit";
 import { getCanonicalOrigin } from "@/lib/app-url";
@@ -31,8 +31,15 @@ export async function GET(request: Request) {
         );
     }
 
+    let applySupabaseCookies = (response: NextResponse) => response;
+
     try {
-        const supabase = await createSupabaseServerClient();
+        const { supabase, applyCookies } = await createSupabaseRouteClient();
+        applySupabaseCookies = applyCookies;
+        const redirect = (path: string, oauthArrival = false) => {
+            const response = NextResponse.redirect(`${origin}${path}`);
+            return applySupabaseCookies(oauthArrival ? allowOAuthArrival(response, path) : response);
+        };
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
         if (error || !data.user) {
@@ -52,14 +59,14 @@ export async function GET(request: Request) {
                 errMsg.toLowerCase().includes("edu.vn") ||
                 errMsg.toLowerCase().includes("education");
             if (isEduViolation) {
-                return NextResponse.redirect(
-                    `${origin}/login?error=education_email_required&message=${encodeURIComponent(
+                return redirect(
+                    `/login?error=education_email_required&message=${encodeURIComponent(
                         "Vui lòng sử dụng tài khoản email giáo dục (.edu.vn) để đăng nhập."
                     )}`
                 );
             }
 
-            return NextResponse.redirect(`${origin}/login?error=oauth_failed`);
+            return redirect("/login?error=oauth_failed");
         }
 
         const user = data.user;
@@ -73,29 +80,26 @@ export async function GET(request: Request) {
 
         if (profileReadError) {
             console.error("[auth/callback] Profile read failed");
-            return NextResponse.redirect(`${origin}/login?error=profile_unavailable`);
+            return redirect("/login?error=profile_unavailable");
         }
 
         const profile = existingProfile as { id: string; role: string; status: string } | null;
 
         if (profile && profile.status !== "active") {
-            return NextResponse.redirect(`${origin}/login?error=account_inactive`);
+            return redirect("/login?error=account_inactive");
         }
 
         // Password recovery requires the exchanged session only long enough to
         // set a new password. Do not route this flow into onboarding/dashboard.
         if (isPasswordRecovery) {
-            return allowOAuthArrival(
-                NextResponse.redirect(`${origin}/reset-password`),
-                "/reset-password"
-            );
+            return redirect("/reset-password", true);
         }
 
         // Profile exists with a real (non-pending) role → go directly to dashboard
         const existingRole = authenticatedProfileRole(profile?.role);
         if (existingRole) {
             const destination = dashboardForRole(existingRole);
-            return allowOAuthArrival(NextResponse.redirect(`${origin}${destination}`), destination);
+            return redirect(destination, true);
         }
 
         // The .edu.vn rule applies only while creating/onboarding a new account.
@@ -106,7 +110,7 @@ export async function GET(request: Request) {
             } catch {
                 // The redirect still closes this signup flow. Do not expose provider details.
             }
-            return NextResponse.redirect(`${origin}/login?error=education_email_required`);
+            return redirect("/login?error=education_email_required");
         }
 
         // Profile doesn't exist or has pending role → create/keep partial profile and redirect to role selection
@@ -137,23 +141,25 @@ export async function GET(request: Request) {
                     .from("profiles").select("id, role, status").eq("id", user.id).maybeSingle();
                 const resolved = concurrent as { id: string; role: string; status: string } | null;
                 if (retryError || !resolved) {
-                    return NextResponse.redirect(`${origin}/login?error=profile_creation_failed`);
+                    return redirect("/login?error=profile_creation_failed");
                 }
                 if (resolved.status !== "active") {
-                    return NextResponse.redirect(`${origin}/login?error=account_inactive`);
+                    return redirect("/login?error=account_inactive");
                 }
                 const resolvedRole = authenticatedProfileRole(resolved.role);
                 if (resolvedRole) {
                     const destination = dashboardForRole(resolvedRole);
-                    return allowOAuthArrival(NextResponse.redirect(`${origin}${destination}`), destination);
+                    return redirect(destination, true);
                 }
             }
         }
 
         // Redirect to role selection onboarding
-        return allowOAuthArrival(NextResponse.redirect(`${origin}/auth/select-role`), "/auth/select-role");
+        return redirect("/auth/select-role", true);
     } catch {
         console.error("[auth/callback] Unexpected failure");
-        return NextResponse.redirect(`${origin}/login?error=oauth_failed`);
+        return applySupabaseCookies(
+            NextResponse.redirect(`${origin}/login?error=oauth_failed`)
+        );
     }
 }

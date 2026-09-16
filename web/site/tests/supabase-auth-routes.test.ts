@@ -12,7 +12,13 @@ const mock = vi.hoisted(() => ({
     cookies: [] as Array<{ name: string; value: string }>,
 }));
 
-vi.mock("@/lib/supabase/server", () => ({ createSupabaseServerClient: async () => client() }));
+vi.mock("@/lib/supabase/server", () => ({
+    createSupabaseServerClient: async () => client(),
+    createSupabaseRouteClient: async () => ({
+        supabase: client(),
+        applyCookies: <T>(response: T) => response,
+    }),
+}));
 vi.mock("@supabase/ssr", () => ({ createServerClient: () => client() }));
 vi.mock("next/headers", () => ({ cookies: async () => ({ getAll: () => mock.cookies }) }));
 
