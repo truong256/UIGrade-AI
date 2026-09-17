@@ -1,173 +1,189 @@
-# Kiến trúc hệ thống UIGrade AI (System Architecture)
+# Kiến Trúc Hệ Thống UIGrade AI (System Architecture)
 
-> Tài liệu mô tả kiến trúc tổng thể của nền tảng **UIGrade AI** — Hệ sinh thái đánh giá giao diện người dùng và chấm bài tập lập trình Android tự động, kết hợp kiểm tra tất định (Deterministic Runner) và mô hình ngôn ngữ lớn/đa phương thức (Multimodal AI).
+> **Tài liệu kiến trúc hệ thống chính thức tham gia Cuộc thi "Phát triển phần mềm mã nguồn mở tích hợp AI 2026"**
+>
+> *Dự án: UIGrade AI — Hệ sinh thái Đánh giá Giao diện Người dùng và Chấm bài Lập trình Android Tích hợp Trí tuệ Nhân tạo Đa phương thức*
 
 ---
 
-## 1. Tổng quan hệ thống (High-Level Overview)
+## 1. Sơ Đồ Kiến Trúc Tổng Thể (High-Level Architecture)
 
-UIGrade AI được thiết kế theo kiến trúc module hoá hiện đại, phân tách rõ ràng giữa lớp giao diện (Web/Mobile), lớp dịch vụ nghiệp vụ (Next.js App Router API), lớp dữ liệu/lưu trữ (Supabase PostgreSQL & Storage), lớp thực thi kiểm tra tất định (Static & Runtime Runner) và lớp trí tuệ nhân tạo (Multimodal AI Pipeline).
+Kiến trúc UIGrade AI được xây dựng theo mô hình phân tầng module hoá, phân định rõ ràng giữa tầng giao diện người dùng, tầng định tuyến và nghiệp vụ máy chủ, tầng phân quyền và dữ liệu, tầng đánh giá tất định, và tầng trí tuệ nhân tạo đa phương thức.
 
 ```mermaid
-flowchart TB
-    subgraph Clients["Lớp Client (Giao diện người dùng)"]
-        WebLecturer["Web Portal - Giảng viên\n(Next.js 16 + React 19)"]
-        WebStudent["Web Portal - Sinh viên\n(Next.js 16 + React 19)"]
-        AndroidApp["Android Companion App\n(Kotlin + Jetpack Compose)"]
+flowchart LR
+    subgraph Clients["Tác tử / Người dùng"]
+        Student["Sinh viên (Student)"]
+        Lecturer["Giảng viên (Lecturer)"]
+        Admin["Quản trị viên (Admin)"]
     end
 
-    subgraph Backend["Lớp Backend & Nghiệp vụ (Next.js Server / API)"]
-        AuthModule["Xác thực & Phân quyền\n(OAuth / JWT / Role-based)"]
-        ClassModule["Quản lý Lớp học & Bài tập\n(Classroom & Assignment API)"]
-        SubModule["Tiếp nhận & Lưu trữ Bài nộp\n(Submission Ingestion API)"]
-        GradingOrchestrator["Bộ điều phối chấm điểm\n(Grading Orchestration Engine)"]
+    subgraph WebApp["Nền tảng Web Portal (Next.js 16 App Router)"]
+        WebUI["Giao diện Người dùng\n(React 19 + Tailwind v4)"]
+        AuthModule["Quản lý Phiên & Phân quyền\n(Cookie / Role Guards)"]
+        API["API Routes\n(/api/*)"]
     end
 
-    subgraph RunnerEngine["Lớp Đánh giá Tất định (Deterministic Engine)"]
-        ZipSandbox["Giải nén an toàn & Quét mã\n(Path Traversal / Safe Zip)"]
-        StaticAnalyzer["Phân tích cấu trúc Android\n(Manifest, Layout XML, Gradle)"]
-        RuntimeRunner["Android Runtime Runner\n(Gradle build / Unit test runner)"]
-        VisualDiff["Visual Comparison Engine\n(SSIM, MSE, WCAG Contrast)"]
+    subgraph SupabaseServices["Hạ tầng Backend (Supabase)"]
+        SupabaseAuth["Supabase Auth\n(Google OAuth 2.0 / Email)"]
+        Database[("PostgreSQL Database\n(18 Migrations, RLS, Triggers)")]
+        Storage[("Supabase Object Storage\n(Zip Submissions, Screenshots)")]
     end
 
-    subgraph AIEngine["Lớp Trí tuệ nhân tạo (AI Pipeline v2.0)"]
-        RubricParser["Bộ phân tích Rubric tự động\n(Structured Criteria Parser)"]
-        EvidenceBuilder["Đóng gói bằng chứng đa phương thức\n(Grading Evidence Bundle)"]
-        GraderCritic["Mô hình Chấm & Phản biện Grader-Critic\n(Gemini 2.5 / Structured Output)"]
-        HumanReviewGate["Cổng kiểm duyệt của Giảng viên\n(Needs Teacher Review Safeguard)"]
+    subgraph Engine["Phân hệ Xử lý Chấm điểm"]
+        GradingPipeline["Grading Orchestration Engine\n(Runner + Context Builder)"]
+        RunnerEngine["Deterministic Runner\n(Safe Zip, Static XML, Visual Diff)"]
+        AIProvider["AI Provider (Google Gemini)\n(@google/genai, Gemini 2.5 Flash/Pro)"]
     end
 
-    subgraph DataStore["Lớp Dữ liệu & Lưu trữ (Supabase)"]
-        Database[("PostgreSQL Database\n(Row Level Security - RLS)")]
-        Storage[("Supabase Object Storage\n(Mã nguồn zip, Ảnh chụp, Báo cáo)")]
+    subgraph Hosting["Môi trường Triển khai"]
+        Vercel["Vercel Production Platform\n(Serverless Functions & Global CDN)"]
     end
 
-    %% Client to Backend
-    WebLecturer --> Backend
-    WebStudent --> Backend
-    AndroidApp --> Backend
+    %% Tương tác người dùng
+    Student --> WebUI
+    Lecturer --> WebUI
+    Admin --> WebUI
 
-    %% Backend to DataStore
-    Backend <--> Database
-    Backend <--> Storage
+    %% Web nội bộ
+    WebUI --> AuthModule
+    WebUI --> API
 
-    %% Grading Flow
-    SubModule --> GradingOrchestrator
-    GradingOrchestrator --> RunnerEngine
-    RunnerEngine --> EvidenceBuilder
-    EvidenceBuilder --> AIEngine
-    AIEngine --> HumanReviewGate
-    HumanReviewGate --> Database
+    %% Kết nối dịch vụ
+    AuthModule <--> SupabaseAuth
+    API <--> Database
+    API <--> Storage
+    API --> GradingPipeline
+
+    %% Pipeline chấm
+    GradingPipeline --> RunnerEngine
+    GradingPipeline --> AIProvider
+    AIProvider -.->|Suggested Grade & Evidence| GradingPipeline
+    GradingPipeline --> Database
+
+    %% Triển khai
+    WebApp -.-> Vercel
 ```
 
 ---
 
-## 2. Các tầng thành phần (System Layers)
+## 2. Chi Tiết Các Tầng Kỹ Thuật (Technology Stack Breakdown)
 
-### 2.1. Lớp Client (Client Layer)
-- **Web Application (`web/site`)**:
-  - Xây dựng trên **Next.js 16 (App Router)**, **React 19**, và **Tailwind CSS v4**.
-  - Hỗ trợ đầy đủ hai vai trò người dùng chính: **Giảng viên (Lecturer)** và **Sinh viên (Student)**.
-  - Tối ưu hoá hiển thị đáp ứng (Responsive Design), hỗ trợ Dark/Light mode, giao diện tinh gọn, không phụ thuộc thư viện UI cồng kềnh.
-- **Android Companion App (`app/`)**:
-  - Ứng dụng di động viết bằng **Kotlin** với **Jetpack Compose** và **Material 3**.
-  - Cho phép sinh viên tra cứu lớp học, xem bài tập, kiểm tra kết quả chấm và lịch sử nộp bài trực tiếp trên thiết bị Android.
+### 2.1. Frontend & Client Layer
+- **Framework:** **Next.js 16.2 (App Router)** kết hợp **React 19.2**.
+- **Ngôn ngữ:** **TypeScript 5.x** với cấu hình type-check nghiêm ngặt (`tsc --noEmit` đạt 0 lỗi).
+- **Styling & UI:** **Tailwind CSS v4** với `@tailwindcss/postcss`. Thiết kế giao diện theo phong cách Soft UI / Modern EdTech, tối ưu tương phản WCAG, hỗ trợ đầy đủ Dark/Light theme.
+- **Biểu đồ & Hiển thị:** **Recharts 3.8** (thống kê phổ điểm, độ tương đồng trực quan), **React Markdown 10.1** (kết xuất nhận xét định dạng), **Lucide React** (bộ biểu tượng giao diện).
+- **Android Companion App (`app/`):** Ứng dụng Android native viết bằng **Kotlin 2.0**, **Jetpack Compose BOM 2024.12**, **Hilt DI**, và **Material 3**.
 
-### 2.2. Lớp Backend & Dịch vụ (Backend & Services Layer)
-- **Next.js App Router API Routes (`web/site/app/api/*`)**:
-  - `auth/`: Đăng nhập, đăng ký, phiên làm việc, callback Google OAuth.
-  - `classes/`: Quản lý lớp học, mã tham gia (invite code), danh sách thành viên.
-  - `assignments/`: Tạo và cấu hình bài tập, thiết lập Rubric, cấu hình Runner.
-  - `submissions/`: Tiếp nhận file `.zip`, metadata bài nộp, kiểm tra định dạng và kích thước.
-  - `grading/`: Kích hoạt tiến trình chấm, lưu trữ kết quả, xử lý duyệt/ghi đè điểm từ giảng viên.
-  - `rubric/`: Hỗ trợ sinh và phân tích Rubric tiêu chí từ văn bản thô.
+### 2.2. Authentication & Session Management
+- **Nhà cung cấp xác thực:** **Supabase Auth** tích hợp **Google OAuth 2.0** và xác thực mật khẩu.
+- **Bảo mật phiên làm việc (Session Security):**
+  - Quản lý phiên qua **HTTP-only Cookie** an toàn, chống tấn công XSS đánh cắp token.
+  - Xử lý chuyển hướng OAuth thông minh qua `proxy.ts` (Next.js Middleware), bảo đảm không bị lặp chuyển hướng (redirect loop) và nhận diện chính xác origin callback giữa môi trường cục bộ và production.
+- **Ràng buộc học thuật:** Quy định email đăng ký tài khoản phải thuộc tên miền giáo dục `.edu.vn` (kiểm tra ở cả frontend validation và database trigger).
+- **Luồng Onboarding chọn vai trò:** Người dùng đăng nhập lần đầu được chuyển hướng đến `/auth/select-role` để thiết lập vai trò ban đầu (`student` hoặc `lecturer`), ngăn chặn tình trạng tài khoản vô danh.
 
-### 2.3. Lớp Đánh giá Tất định (Deterministic Runner Engine)
-Toàn bộ mã nguồn bài nộp trước tiên phải đi qua bộ kiểm tra tất định, không dựa vào AI để đảm bảo tính khách quan và có thể tái lập (Reproducible):
-1. **Safe Zip Extraction**: Kiểm tra an toàn tệp nén, ngăn chặn lỗ hổng Zip Slip và Path Traversal (`runner.service.ts`).
-2. **Static Structure Analyzer**: Quét cây thư mục bài nộp, đối chiếu sự tồn tại của `AndroidManifest.xml`, các tệp layout `.xml`, `build.gradle`, và mã nguồn Kotlin/Java.
-3. **Android Runtime Runner**: Hỗ trợ thực thi kiểm thử tự động, build dự án mẫu và phân tích log thực thi (`android-runtime-runner.service.ts`).
-4. **Visual Comparison Engine**: Đo lường sự sai khác giao diện giữa bài làm sinh viên và giao diện mẫu thông qua các chỉ số định lượng: SSIM (Structural Similarity Index), MSE (Mean Squared Error), và độ tương phản màu sắc đạt chuẩn WCAG (`visual-comparison.service.ts`).
+### 2.3. Database & Persistence Layer (Supabase PostgreSQL)
+- **Hệ quản trị CSDL:** **PostgreSQL 15+** được lưu trữ trên nền tảng Supabase.
+- **Quản lý phiên bản Schema:** Hệ thống quản lý toàn bộ cấu trúc qua **18 tệp migration SQL** tuần tự (`web/site/supabase/migrations/`).
+- **Row-Level Security (RLS):**
+  - Kích hoạt RLS trên 100% các bảng nhạy cảm: `profiles`, `classes`, `class_members`, `assignments`, `submissions`, `grading_results`, `system_configs`.
+  - Quy tắc phân lập dữ liệu: Sinh viên chỉ được đọc bài nộp của chính mình; Giảng viên chỉ được quản lý lớp và chấm bài do mình giảng dạy; Bảng điểm chỉ hiển thị với sinh viên khi đã được giảng viên `publish`.
+- **Database Functions & Triggers:**
+  - `save_student_submission`: Hàm `SECURITY DEFINER` kiểm soát số lần nộp bài (submission attempts) và ghi nhận timestamp chống gian lận thời gian.
+  - `trg_prevent_self_role_escalation`: Trigger chặn người dùng tự động leo quyền sửa đổi trường `role` của chính mình.
+  - `trg_protect_last_admin`: Trigger sử dụng PostgreSQL Advisory Locks (`pg_advisory_xact_lock`) tuần tự hóa giao dịch, ngăn chặn tuyệt đối việc xóa, hạ quyền, hoặc khóa Admin cuối cùng của hệ thống.
 
-### 2.4. Lớp AI Chấm điểm & Phản hồi (Multimodal AI Pipeline v2.0)
-- Tích hợp mô hình ngôn ngữ lớn đa phương thức (**Google Gemini**) qua SDK chuẩn `@google/genai`.
-- Kiến trúc **Grader-Critic kép**: Một mô hình đề xuất điểm kèm bằng chứng (`grader`), một mô hình phản biện tính nhất quán và phát hiện hallucination (`critic`).
-- **Nguyên tắc "Human-in-the-Loop"**: AI không tự ý chốt điểm chính thức. Mọi tiêu chí chấm bằng AI đều yêu cầu trạng thái `needs_teacher_review`, bảo đảm giảng viên luôn là người quyết định cuối cùng.
+### 2.4. Storage Layer (Supabase Object Storage)
+- **Bucket `submissions`:** Lưu trữ tệp mã nguồn nén `.zip` của sinh viên. Quyền truy cập được kiểm soát thông qua Signed URLs và quyền sở hữu bài nộp.
+- **Bucket `baseline-images`:** Lưu trữ ảnh chụp giao diện chuẩn do giảng viên tải lên làm căn cứ chấm bài.
+- **Bucket `runner-artifacts`:** Lưu trữ ảnh chụp thực tế từ bài làm sinh viên, ảnh sai khác trực quan (`diff.png`), và các tệp báo cáo kỹ thuật.
 
-### 2.5. Lớp Dữ liệu & Lưu trữ (Data & Persistence Layer)
-- **Supabase PostgreSQL**:
-  - Lưu trữ thông tin người dùng, lớp học, bài tập, rubric, bài nộp, kết quả chấm điểm từng tiêu chí.
-  - Bảo vệ dữ liệu với chính sách **Row-Level Security (RLS)**: sinh viên chỉ đọc bài của mình; giảng viên quản lý lớp do mình phụ trách.
-- **Supabase Storage**:
-  - Lưu trữ tệp mã nguồn nén (`.zip`), ảnh chụp giao diện bài làm, ảnh tham chiếu mẫu và các tệp đính kèm.
+### 2.5. Authorization & Application Security Guards
+Hệ thống áp dụng cơ chế bảo vệ phân quyền hai lớp (Defense-in-Depth):
+1. **Lớp 1 (Database Layer):** PostgreSQL Row Level Security (RLS) ngăn chặn rò rỉ dữ liệu ngay cả khi có truy vấn trực tiếp qua API client.
+2. **Lớp 2 (Application Layer):** Các bộ bảo vệ tập trung trong `web/site/lib/authorization.ts` và `proxy.ts`:
+   - `requireAuthUser`: Bắt buộc người dùng đã đăng nhập và tài khoản ở trạng thái `active`.
+   - `requireStudent`: Kiểm tra quyền sinh viên khi nộp bài hoặc xem kết quả.
+   - `requireLecturer`: Kiểm tra quyền giảng viên khi tạo lớp, tạo bài tập, cấu hình rubric, và chấm bài.
+   - `requireAdmin`: Kiểm tra quyền quản trị tối cao khi quản lý người dùng và cấu hình hệ thống.
+
+### 2.6. AI Engine & Provider
+- **Nhà cung cấp:** **Google Gemini API** thông qua SDK chính thức `@google/genai` và `@google/generative-ai`.
+- **Mô hình triển khai:** `gemini-2.5-flash` (ưu tiên tốc độ và chi phí) và `gemini-2.5-pro` (đánh giá chuyên sâu).
+- **Ràng buộc đầu ra:** Sử dụng **Structured JSON Output** kết hợp kiểm thực cấu trúc bằng **Zod Schema** tại tầng runtime.
+- **Cơ chế Fallback an toàn:** Nếu mất kết nối hoặc hết quota API AI, hệ thống tự động giữ nguyên kết quả đo đạc tất định từ Runner và chuyển bài nộp sang hàng đợi chờ giảng viên chấm thủ công, không gây gián đoạn hệ thống.
+
+### 2.7. Deployment & Infrastructure
+- **Nền tảng triển khai Web:** **Vercel** (Edge Network và Node.js Serverless Runtime).
+- **Cấu hình Vercel (`web/site/vercel.json`):** Tối ưu hóa thời gian chạy tối đa (maxDuration 60 giây) cho các API endpoint xử lý tác vụ nặng như giải nén và gọi mô hình AI.
+- **Live Demo:** Hệ thống đang hoạt động công khai tại [https://site-truong257.vercel.app](https://site-truong257.vercel.app).
 
 ---
 
-## 3. Quy trình xử lý dữ liệu chính (Core Data Flows)
-
-### 3.1. Quy trình Nộp bài & Chấm bài tự động (Submission & Grading Pipeline)
+## 3. Sơ Đồ Luồng Dữ Liệu Chấm Điểm (Grading Data Flow)
 
 ```mermaid
 sequenceDiagram
     autonumber
-    actor Student as Sinh viên
-    participant Web as Web Portal
-    participant API as Ingestion API
-    participant Store as Supabase Storage / DB
+    actor Student as Sinh viên (Student)
+    participant Web as Next.js Web Portal
+    participant Supabase as Supabase (Auth/DB/Storage)
     participant Runner as Deterministic Runner
-    participant AI as AI Grader-Critic Pipeline
-    actor Teacher as Giảng viên
+    participant Evidence as Evidence Builder
+    participant AI as Gemini Grader-Critic Pipeline
+    actor Lecturer as Giảng viên (Lecturer)
 
-    Student->>Web: Tải lên mã nguồn (.zip) & thông tin bài nộp
-    Web->>API: POST /api/submissions
-    API->>Store: Lưu trữ file .zip & tạo bản ghi submission
-    API->>Runner: Kích hoạt Runner đánh giá tất định
-    Runner->>Runner: Quét cấu trúc, kiểm tra file bắt buộc, đo đạc visual
-    Runner-->>API: Trả về RunnerReport (Score, Log, Bằng chứng thực nghiệm)
-    API->>AI: Gửi GradingEvidenceBundle (Mã nguồn, Layout, Visual Diff, Runner Logs)
-    AI->>AI: Grader sinh đánh giá -> Critic phản biện
-    AI-->>API: Trả về AiFeedbackResult (Đề xuất điểm, Bằng chứng, Cảnh báo)
-    API->>Store: Lưu kết quả tạm thời (Status: needs_teacher_review)
-    Teacher->>Web: Xem bảng điểm & bằng chứng chi tiết
-    Teacher->>API: Duyệt / Điều chỉnh điểm (Override)
-    API->>Store: Cập nhật điểm chính thức & phát hành cho sinh viên
-    Web-->>Student: Xem điểm chính thức, nhận xét chi tiết & hướng dẫn sửa lỗi
+    Student->>Web: Tải lên mã nguồn (.zip)
+    Web->>Supabase: Xác thực phiên (JWT) & Upload file .zip vào Storage
+    Web->>Supabase: Gọi RPC save_student_submission (Kiểm tra deadline, attempt limit)
+    Web->>Runner: Kích hoạt Runner tiến trình giải nén an toàn
+    Runner->>Runner: Quét cấu trúc (Safe Zip, Manifest, Layout XML)
+    Runner->>Runner: So khớp ảnh giao diện (Sharp, Pixelmatch, SSIM, WCAG)
+    Runner-->>Evidence: Kết quả đo đạc kỹ thuật & log thực thi
+    Evidence->>Evidence: Đóng gói GradingEvidenceBundle (Gán Evidence IDs)
+    Evidence->>AI: Gửi mã nguồn, layout, ảnh giao diện & bằng chứng đo đạc
+    AI->>AI: Stage 1: Grader đề xuất điểm & nhận xét thế mạnh/lỗ hổng
+    AI->>AI: Stage 2: Critic phản biện độc lập (ACCEPT / ADJUST / REVIEW)
+    AI-->>Web: Trả về AiFeedbackResult có cấu trúc chuẩn Zod
+    Web->>Supabase: Lưu bảng điểm sơ bộ (is_published = false, needs_teacher_review)
+    Note over Student,Supabase: Sinh viên CHƯA THỂ xem kết quả ở bước này
+    Lecturer->>Web: Truy cập Grading Workspace
+    Web->>Supabase: Tải ảnh đối chiếu, log runner và đề xuất từ AI
+    Lecturer->>Web: Xem xét bằng chứng, điều chỉnh điểm (Manual Override) nếu cần
+    Lecturer->>Web: Bấm "Phát hành kết quả" (Publish Grade)
+    Web->>Supabase: Cập nhật is_published = true & lưu vết kiểm toán
+    Student->>Web: Truy cập màn hình kết quả: xem điểm chính thức & nhận xét sư phạm
 ```
 
 ---
 
-## 4. Kiến trúc Bảo mật & Cô lập (Security & Isolation)
+## 4. Bản Đồ Tuyến API (API Route Architecture)
 
-| Hạng mục | Cơ chế thực hiện | Mục tiêu bảo vệ |
+Hệ thống Next.js App Router cung cấp 53 route được cấu trúc phân định theo nghiệp vụ:
+
+| Tiền tố Tuyến (Route Prefix) | Chức năng Chính | Quyền Hạn (Role Guards) |
 |---|---|---|
-| **Xác thực danh tính** | Supabase Auth + Google OAuth 2.0 + HTTP-only Cookie / Session Token | Chống tấn công giả mạo phiên, bảo vệ thông tin người dùng |
-| **Phân quyền dữ liệu** | PostgreSQL Row-Level Security (RLS) + Middleware kiểm tra vai trò | Ngăn chặn học sinh truy cập bài nộp hoặc điểm của học sinh khác |
-| **An toàn giải nén** | Quét đường dẫn chuẩn hoá (`normalizePath`), chặn `../` và ký tự lạ | Chống lỗ hổng Zip Slip và tấn công ghi đè tệp hệ thống |
-| **Kiểm soát đầu ra AI** | Zod Schema Validation + JSON Schema Mode | Đảm bảo phản hồi của LLM luôn đúng định dạng, không vỡ cấu trúc |
-| **Quản lý khóa bảo mật** | Biến môi trường (`.env.local`), không commit khóa lên git | Chống rò rỉ Service Role Key, Gemini API Key |
+| `/api/auth/*` | Đăng nhập, đăng ký, đăng xuất, lấy thông tin cá nhân (`/me`), đổi vai trò onboarding (`/set-role`) | Public / Authenticated |
+| `/api/classes/*` | Tạo lớp, quản lý sinh viên, tìm kiếm học viên, tham gia lớp qua mã mời (`/join`) | Lecturer / Student |
+| `/api/assignments/*` | Tạo bài tập, cấu hình Rubric, tải ảnh UI baseline, cấu hình runner kiểm thử | Lecturer / Authenticated |
+| `/api/submissions/*` | Nộp bài (.zip), xem lịch sử nộp bài, ghi đè điểm số | Student / Lecturer |
+| `/api/grading/*` | Kích hoạt chấm bài, gọi AI gợi ý (`/ai-suggest`), lưu bản nháp, xuất bản điểm (`/publish`) | Lecturer |
+| `/api/reports/*` | Báo cáo phân tích học tập, tóm tắt AI về tình hình tiếp thu của lớp (`/ai-summary`) | Lecturer / Admin |
+| `/api/settings/users/*` | Quản trị người dùng, khóa tài khoản, phân vai trò, bảo vệ Last-Admin | Admin |
+| `/api/server-config/*` | Cấu hình máy chủ, thiết lập SMTP thông báo, kiểm tra gửi email | Admin |
 
 ---
 
-## 5. Cấu trúc thư mục nguồn (Repository Layout)
+## 5. Kiến Trúc Bảo Mật Phòng Thủ Theo Chiều Sâu (Defense-in-Depth)
 
-```text
-UIGrade-AI/
-├── app/                        # Ứng dụng Android Companion (Kotlin, Jetpack Compose)
-├── docs/                       # Tài liệu kiến trúc, hướng dẫn kỹ thuật & đặc tả
-│   ├── ARCHITECTURE.md         # Tài liệu kiến trúc hệ thống tổng thể (Tệp này)
-│   ├── AI_ARCHITECTURE.md      # Tài liệu kiến trúc chi tiết phân hệ AI
-│   └── superpowers/            # Kế hoạch và đặc tả phát triển chuyên sâu
-├── web/
-│   ├── site/                   # Web Application chính (Next.js 16 + React 19)
-│   │   ├── app/                # App Router (Trang giao diện & API endpoints)
-│   │   ├── components/         # React Components (UI, Auth, Classroom, Grading)
-│   │   ├── lib/                # Thư viện tiện ích, Grading Contract, Supabase clients
-│   │   ├── services/           # Nghiệp vụ backend (Runner, AI v2, Supabase services)
-│   │   └── public/             # Tài nguyên tĩnh
-│   └── project-files/          # Tài liệu đề cương, sổ tay dữ liệu nghiên cứu khoa học
-├── LICENSE                     # Giấy phép nguồn mở MIT
-├── NOTICE.md                   # Thông cáo bản quyền và cấu phần bên thứ ba
-├── CONTRIBUTING.md             # Hướng dẫn đóng góp mã nguồn
-├── CODE_OF_CONDUCT.md          # Bộ quy tắc ứng xử cộng đồng
-└── SECURITY.md                 # Chính sách bảo mật & báo cáo lỗ hổng
-```
+| Lớp bảo vệ (Defense Layer) | Kỹ thuật áp dụng | Mối đe dọa được triệt tiêu |
+|---|---|---|
+| **Mạng & Định tuyến** | Next.js Middleware (`proxy.ts`), HSTS, Cookie HTTP-only, CORS an toàn | Tấn công Man-in-the-middle, XSS đánh cắp phiên làm việc |
+| **Xác thực người dùng** | Supabase Auth, Google OAuth 2.0, Ràng buộc đuôi email `.edu.vn` | Giả mạo danh tính, tạo tài khoản rác hàng loạt |
+| **Giải nén tệp nộp** | Chuẩn hóa đường dẫn (`path.normalize`), kiểm tra Path Traversal, chặn tệp độc | Tấn công Zip Slip, ghi đè tệp nhị phân trên máy chủ |
+| **Kiểm soát truy cập dữ liệu** | PostgreSQL Row-Level Security (RLS) trên từng bảng | Tấn công IDOR (Insecure Direct Object Reference), đọc trộm bài của người khác |
+| **Tránh rò rỉ điểm số** | Cờ `is_published` được bảo vệ ở cả RLS policy và API endpoint | Sinh viên xem điểm trước khi giảng viên phê duyệt |
+| **Bảo vệ tính toàn vẹn Admin** | Trigger `trg_protect_last_admin` với khóa cố vấn transaction | Tình huống vô tình hoặc cố ý xóa sạch quyền quản trị hệ thống |
+| **Kiểm soát đầu ra AI** | Zod Schema Validation, JSON Schema Enforced Mode | Lỗi cú pháp LLM, mã độc chèn qua prompt injection |

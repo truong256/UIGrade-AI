@@ -20,12 +20,17 @@ const docFiles = [
   'CONTRIBUTING.md',
   'SECURITY.md',
   'CODE_OF_CONDUCT.md',
+  'docs/SOLUTION_DESCRIPTION.md',
   'docs/ARCHITECTURE.md',
   'docs/AI_ARCHITECTURE.md',
+  'docs/AI_GRADING.md',
+  'docs/SECURITY.md',
+  'docs/THIRD_PARTY_NOTICES.md',
   'docs/COMPETITION_COMPLIANCE.md',
   'web/site/README.md',
   'web/project-files/README.md',
 ];
+
 
 const forbiddenPatterns = [
   { pattern: /file:\/\/\//i, label: 'file:///' },
