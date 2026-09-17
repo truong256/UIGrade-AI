@@ -9,20 +9,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- SPDX license headers on primary source files
-
 ---
 
 ## [1.0.0] - 2026-09-17
 
 ### Highlights
 
-First production-ready competition release. Web platform is fully operational
-with Supabase backend, Google OAuth, three-role workflow (Student / Lecturer /
-Admin), AI-assisted grading feedback, and automated test suite.
+First production-ready competition release for "Phát triển phần mềm mã nguồn mở tích hợp AI 2026".
+Web platform is fully operational with Supabase backend, Google OAuth 2.0, three-role workflow
+(Student / Lecturer / Admin), Multimodal AI Grader-Critic grading feedback (Gemini 2.5), deterministic
+Runner engine, comprehensive architectural documentation, and automated test suite.
 
 ### Added
+
+#### Documentation & Community Standards
+- System architecture overview (`docs/ARCHITECTURE.md`)
+- Multimodal AI integration architecture (`docs/AI_ARCHITECTURE.md`)
+- Root OSI-approved MIT License (`LICENSE`)
+- Third-party component notices and licenses (`NOTICE.md`)
+- Community contribution guidelines (`CONTRIBUTING.md`)
+- Contributor Covenant Code of Conduct (`CODE_OF_CONDUCT.md`)
+- Security policy and vulnerability disclosure process (`SECURITY.md`)
+- GitHub issue templates for bug reports and feature requests
+- SPDX-License-Identifier headers on 52 primary TypeScript source files
 
 #### Web Platform — Authentication & Authorization
 - Supabase-backed authentication with email/password and Google OAuth 2.0
