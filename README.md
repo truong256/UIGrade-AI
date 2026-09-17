@@ -26,7 +26,19 @@ Khác với các công cụ chấm bài AI dạng "hộp đen" (Black-box AI) v�
 
 ---
 
-## 2. Cấu trúc Hệ sinh thái (Repository Layout)
+## 2. Trải nghiệm Trực tuyến (Live Demo)
+
+Nền tảng Web UIGrade AI đã được triển khai và hoạt động trực tuyến tại:
+
+- **Địa chỉ truy cập (Production):** [https://site-truong257.vercel.app](https://site-truong257.vercel.app)
+- **Phương thức đăng nhập & xác thực:**
+  - **Google OAuth 2.0:** Đăng nhập an toàn một chạm với Google.
+  - **Đăng ký tài khoản học thuật:** Hỗ trợ đăng ký và xác thực với email giáo dục (`.edu.vn`).
+  - **Luồng phân quyền tự động:** Người dùng lần đầu truy cập được dẫn qua màn hình Onboarding chọn vai trò (**Sinh viên** hoặc **Giảng viên**) để thiết lập giao diện và quyền hạn phù hợp.
+
+---
+
+## 3. Cấu trúc Hệ sinh thái (Repository Layout)
 
 Kho mã nguồn được tổ chức theo mô hình Monorepo rõ ràng:
 
@@ -34,7 +46,8 @@ Kho mã nguồn được tổ chức theo mô hình Monorepo rõ ràng:
 UIGrade AI/
 ├── docs/                        # Tài liệu kiến trúc và hướng dẫn kỹ thuật
 │   ├── ARCHITECTURE.md          # Kiến trúc hệ thống tổng thể
-│   └── AI_ARCHITECTURE.md       # Kiến trúc chi tiết phân hệ AI Grader-Critic
+│   ├── AI_ARCHITECTURE.md       # Kiến trúc chi tiết phân hệ AI Grader-Critic
+│   └── COMPETITION_COMPLIANCE.md# Báo cáo tuân thủ tiêu chí cuộc thi PoF 50đ
 │
 ├── web/
 │   ├── site/                    # [SẢN PHẨM CHÍNH] Nền tảng Web Portal
@@ -72,9 +85,10 @@ UIGrade AI/
 
 ---
 
-## 3. Tài liệu Kỹ thuật Chi tiết
+## 4. Tài liệu Kỹ thuật Chi tiết
 
 Để hiểu sâu về hệ thống, vui lòng tham khảo các tài liệu chuyên sâu:
+- 🏆 **[Báo cáo Tuân thủ Thể lệ Cuộc thi (docs/COMPETITION_COMPLIANCE.md)](docs/COMPETITION_COMPLIANCE.md)**: Chi tiết bằng chứng cho 6 tiêu chí PoF 50 điểm của Cuộc thi Phần mềm mã nguồn mở tích hợp AI 2026.
 - 📐 **[Kiến trúc Hệ thống (docs/ARCHITECTURE.md)](docs/ARCHITECTURE.md)**: Luồng dữ liệu, phân tầng ứng dụng, cơ chế bảo mật và cô lập sandbox.
 - 🤖 **[Kiến trúc Tích hợp AI (docs/AI_ARCHITECTURE.md)](docs/AI_ARCHITECTURE.md)**: Quy trình Grader-Critic hai giai đoạn, cơ chế neo bằng chứng (Evidence Grounding), và dữ liệu thực nghiệm.
 - 📜 **[Lịch sử Phiên bản (CHANGELOG.md)](CHANGELOG.md)**: Lịch sử phát triển và thay đổi qua các mốc phát hành.
@@ -82,7 +96,7 @@ UIGrade AI/
 
 ---
 
-## 4. Yêu cầu Môi trường (System Requirements)
+## 5. Yêu cầu Môi trường (System Requirements)
 
 - **Node.js**: Phiên bản `>= 20.0.0` (Khuyến nghị Node.js 20 LTS hoặc 22 LTS).
 - **Trình quản lý gói**: `npm` (đi kèm Node.js).
@@ -92,9 +106,9 @@ UIGrade AI/
 
 ---
 
-## 5. Cài đặt & Khởi chạy từ Mã nguồn (Build from Source)
+## 6. Cài đặt & Khởi chạy từ Mã nguồn (Build from Source)
 
-### 5.1. Nền tảng Web (`web/site`) — Sản phẩm cốt lõi
+### 6.1. Nền tảng Web (`web/site`) — Sản phẩm cốt lõi
 
 1. **Di chuyển vào thư mục Web:**
    ```bash
@@ -116,7 +130,6 @@ UIGrade AI/
    Cập nhật các giá trị biến môi trường trong `.env.local`:
    - `NEXT_PUBLIC_APP_URL`: URL chạy ứng dụng (ví dụ: `http://localhost:3000`).
    - `NEXT_PUBLIC_SUPABASE_URL` & `NEXT_PUBLIC_SUPABASE_ANON_KEY`: Khóa kết nối Supabase.
-   - `SUPABASE_SERVICE_ROLE_KEY`: Khóa quản trị Supabase backend.
    - `JWT_SECRET`: Chuỗi khóa ký phiên làm việc (tối thiểu 32 ký tự).
    - `GEMINI_API_KEY`: Khóa API Google Gemini.
 
@@ -132,7 +145,7 @@ UIGrade AI/
    npm run start
    ```
 
-### 5.2. Ứng dụng Di động Android (`app/`) — Ứng dụng đồng hành
+### 6.2. Ứng dụng Di động Android (`app/`) — Ứng dụng đồng hành
 
 1. **Thực hiện tại thư mục gốc repository:**
    ```bash
@@ -150,7 +163,7 @@ UIGrade AI/
 
 ---
 
-## 6. Kiểm thử Tự động & Chất lượng Mã nguồn (Testing & Quality)
+## 7. Kiểm thử Tự động & Chất lượng Mã nguồn (Testing & Quality)
 
 Repository được thiết lập kiểm tra chất lượng tự động nghiêm ngặt trên GitHub Actions CI:
 
@@ -179,7 +192,7 @@ npm test
 
 ---
 
-## 7. Quy trình Chấm điểm Lai (Hybrid Grading Flow)
+## 8. Quy trình Chấm điểm Lai (Hybrid Grading Flow)
 
 ```text
 [Bài nộp của sinh viên (.zip)]
@@ -205,7 +218,7 @@ npm test
 
 ---
 
-## 8. Bảo mật & Giấy phép Bản quyền
+## 9. Bảo mật & Giấy phép Bản quyền
 
 - **Giấy phép**: Toàn bộ mã nguồn do nhóm dự án UIGrade AI phát triển được phát hành theo giấy phép chuẩn mã nguồn mở **[MIT License](LICENSE)** (được tổ chức OSI phê duyệt).
 - **Thành phần bên thứ ba**: Các thư viện nguồn mở, mô hình nghiên cứu tham khảo và dataset được ghi nhận chi tiết, minh bạch tại **[NOTICE.md](NOTICE.md)**.
