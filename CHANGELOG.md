@@ -11,6 +11,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.1] - 2026-09-17
+
+### Highlights
+
+Competition Readiness Update for "Phát triển phần mềm mã nguồn mở tích hợp AI 2026".
+Achieved 100% SPDX license header coverage across all 461 original source files, enabled and configured
+GitHub Discussions and repository discovery metadata, added formal competition compliance documentation,
+and verified full green status on Web CI and Android CI test suites.
+
+### Added
+- Complete SPDX-License-Identifier coverage across all original source files (461 total owned files across Android and Web)
+- Competition compliance scorecard documentation (`docs/COMPETITION_COMPLIANCE.md`) detailing PoF 50/50 criteria
+- Repository metadata configuration with domain discovery topics and project summary
+- Enabled GitHub Discussions for community engagement
+- Live demo access guide and verification in `README.md`
+
+### Fixed
+- Fixed assignment deadline in Android mock data to remain active during competition evaluation
+- Resolved broken discussions link in `.github/ISSUE_TEMPLATE/config.yml` by enabling Discussions on repository
+- Verified clean passage of all 64 Android unit tests, Android lint, and Compose UI test compilation
+
+---
+
 ## [1.0.0] - 2026-09-17
 
 ### Highlights
@@ -130,6 +153,7 @@ Runner engine, comprehensive architectural documentation, and automated test sui
 
 ---
 
-[Unreleased]: https://github.com/truong256/UIGrade-AI/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/truong256/UIGrade-AI/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/truong256/UIGrade-AI/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/truong256/UIGrade-AI/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/truong256/UIGrade-AI/releases/tag/v0.1.0
