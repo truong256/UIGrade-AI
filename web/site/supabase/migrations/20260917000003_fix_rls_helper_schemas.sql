@@ -2,20 +2,12 @@
 -- Copyright (c) 2026 UIGrade AI contributors
 
 -- ====================================================================
--- Migration: Lecturer Approval workflow for class joining
--- 1. Student joins class -> status = 'pending'
--- 2. Duplicate join checks:
---    - Already active: 'Bạn đã tham gia lớp học này.'
---    - Already pending: 'Yêu cầu tham gia lớp đang chờ giảng viên duyệt.'
--- 3. Capacity limit: 50 active students
--- 4. RLS updates:
---    - Students can view their own membership (including pending)
---    - Students can view basic class metadata when membership is pending
---    - Assignments remain viewable ONLY by active students
---    - All RLS helpers referenced from schema 'private'
+-- Migration: Repair RLS policies and RPC function to use schema 'private'
+-- This ensures databases where 20260917000002 was applied or attempted
+-- have correct references to private helper functions.
 -- ====================================================================
 
--- 1. Replace join_class_by_code function to implement Lecturer Approval
+-- 1. Ensure join_class_by_code uses private.is_active_student()
 CREATE OR REPLACE FUNCTION public.join_class_by_code(input_code TEXT)
 RETURNS JSONB
 LANGUAGE plpgsql SECURITY DEFINER
@@ -107,7 +99,7 @@ GRANT EXECUTE ON FUNCTION public.join_class_by_code(TEXT) TO authenticated;
 COMMENT ON FUNCTION public.join_class_by_code(TEXT) IS
 'Allows authenticated active students to submit a join request with pending status and capacity check (max 50 active members). Requires lecturer approval.';
 
--- 2. Update RLS on class_members to allow students to read their own membership status
+-- 2. Update RLS on class_members using private.* functions
 DROP POLICY IF EXISTS "Authorized users can view class members" ON public.class_members;
 CREATE POLICY "Authorized users can view class members"
 ON public.class_members FOR SELECT
@@ -128,7 +120,7 @@ USING (
     )
 );
 
--- 3. Update RLS on classes to allow students with pending membership to view class metadata
+-- 3. Update RLS on classes using private.* functions
 DROP POLICY IF EXISTS "Authorized users can view related classes" ON public.classes;
 CREATE POLICY "Authorized users can view related classes"
 ON public.classes FOR SELECT

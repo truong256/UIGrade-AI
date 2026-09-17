@@ -365,20 +365,40 @@ describe("Lecturer Approval Workflow Specification & Tests", () => {
         ).rejects.toThrow("Lớp học đã đạt số lượng thành viên tối đa (50 sinh viên).");
     });
 
-    it("10. validates new migration file 20260917000002_lecturer_approval_join_workflow.sql exists and is correct", () => {
-        const migrationPath = resolve(
+    it("10. validates migration files 20260917000002 and 20260917000003 exist and use private schema helpers", () => {
+        const migration002Path = resolve(
             __dirname,
             "../supabase/migrations/20260917000002_lecturer_approval_join_workflow.sql"
         );
-        const content = readFileSync(migrationPath, "utf-8");
+        const migration003Path = resolve(
+            __dirname,
+            "../supabase/migrations/20260917000003_fix_rls_helper_schemas.sql"
+        );
 
-        expect(content).toContain("CREATE OR REPLACE FUNCTION public.join_class_by_code");
-        expect(content).toContain("'pending'");
-        expect(content).toContain("current_active_members >= 50");
-        expect(content).toContain("Yêu cầu tham gia lớp đang chờ giảng viên duyệt.");
-        expect(content).toContain("Bạn đã tham gia lớp học này.");
-        expect(content).toContain("Lớp học đã đạt số lượng thành viên tối đa.");
-        expect(content).toContain("DROP POLICY IF EXISTS \"Authorized users can view class members\" ON public.class_members");
-        expect(content).toContain("DROP POLICY IF EXISTS \"Authorized users can view related classes\" ON public.classes");
+        for (const filePath of [migration002Path, migration003Path]) {
+            const content = readFileSync(filePath, "utf-8");
+
+            expect(content).toContain("CREATE OR REPLACE FUNCTION public.join_class_by_code");
+            expect(content).toContain("'pending'");
+            expect(content).toContain("current_active_members >= 50");
+            expect(content).toContain("Yêu cầu tham gia lớp đang chờ giảng viên duyệt.");
+            expect(content).toContain("Bạn đã tham gia lớp học này.");
+            expect(content).toContain("Lớp học đã đạt số lượng thành viên tối đa.");
+            expect(content).toContain("DROP POLICY IF EXISTS \"Authorized users can view class members\" ON public.class_members");
+            expect(content).toContain("DROP POLICY IF EXISTS \"Authorized users can view related classes\" ON public.classes");
+
+            // Verify strictly private.* schema helper usage
+            expect(content).toContain("private.is_active_student()");
+            expect(content).toContain("private.is_active_user()");
+            expect(content).toContain("private.is_admin()");
+            expect(content).toContain("private.owns_class(");
+            expect(content).toContain("private.is_active_class_member(");
+            expect(content).toContain("private.is_lecturer()");
+
+            // Assert no non-existent public.* helper references
+            expect(content).not.toMatch(/public\.(is_active_user|is_active_student|is_lecturer|is_admin|owns_class|is_active_class_member)\b/);
+            // Assert no duplicate helper definitions in public
+            expect(content).not.toMatch(/CREATE\s+(OR\s+REPLACE\s+)?FUNCTION\s+public\.(is_active_user|is_active_student|is_lecturer|is_admin|owns_class|is_active_class_member)\b/i);
+        }
     });
 });
