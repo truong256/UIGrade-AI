@@ -13,7 +13,7 @@ import {
 const migration = readFileSync(
     resolve(process.cwd(), "supabase/migrations/20260911000001_harden_submission_and_profile_privacy.sql"),
     "utf8"
-);
+).replace(/\r\n/g, "\n");
 const service = readFileSync(
     resolve(process.cwd(), "services/supabase/web-mvp.supabase.ts"),
     "utf8"

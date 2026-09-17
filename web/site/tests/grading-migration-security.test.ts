@@ -8,7 +8,7 @@ import { describe, expect, it } from "vitest";
 const migration = readFileSync(resolve(
     process.cwd(),
     "supabase/migrations/20260908000001_complete_grading_workflow.sql"
-), "utf8");
+), "utf8").replace(/\r\n/g, "\n");
 
 describe("grading migration security contract", () => {
     it("does not drop grading tables or application rows", () => {
