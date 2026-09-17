@@ -1,0 +1,126 @@
+name: Bug Report
+description: Report a reproducible bug in UIGrade AI
+title: "[Bug]: "
+labels: ["bug", "needs-triage"]
+assignees: []
+
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug.
+        Please fill in as much detail as possible so we can reproduce and fix it quickly.
+
+        **Do NOT use this form to report security vulnerabilities.**
+        See [SECURITY.md](../../SECURITY.md) for responsible disclosure instructions.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of the bug.
+      placeholder: Describe what the bug is...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to Reproduce
+      description: Provide exact steps to reproduce the bug.
+      placeholder: |
+        1. Go to '...'
+        2. Click on '...'
+        3. Scroll down to '...'
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual Behavior
+      description: What actually happened? Include any error messages.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Affected Component
+      multiple: true
+      options:
+        - Web — Authentication (Login/Register/OAuth)
+        - Web — Student workflow
+        - Web — Lecturer workflow
+        - Web — Admin workflow
+        - Web — Grading / AI feedback
+        - Web — UI / Layout
+        - Web — API / Backend
+        - Android App
+        - CI / Build
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Affected Version
+      description: Which release or commit SHA does this affect?
+      placeholder: "v1.0.0 or commit SHA"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating System (if relevant)
+      options:
+        - Windows
+        - macOS
+        - Linux
+        - Android
+        - Not applicable
+    validations:
+      required: false
+
+  - type: input
+    id: browser
+    attributes:
+      label: Browser / Node.js Version (if relevant)
+      placeholder: "Chrome 125, Node 22.x, etc."
+    validations:
+      required: false
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs / Screenshots
+      description: |
+        Paste relevant logs, stack traces, or attach screenshots.
+        Remove any sensitive information (API keys, emails, passwords) before pasting.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Checklist
+      options:
+        - label: I have searched existing issues and this is not a duplicate
+          required: true
+        - label: I have NOT included any API keys, passwords, or secrets in this report
+          required: true
+        - label: I can reproduce this issue consistently
+          required: false
