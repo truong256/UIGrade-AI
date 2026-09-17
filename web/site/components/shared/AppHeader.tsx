@@ -26,12 +26,23 @@ type NotificationItem = {
     created_at: string;
 };
 
+type SearchDomainItem = {
+    id: string;
+    type: "class" | "assignment" | "student";
+    title: string;
+    subtitle: string;
+    href: string;
+    icon: string;
+};
+
 export function AppHeader({ children }: { children: ReactNode }) {
     const [sidebarExpanded, setSidebarExpanded] = useState(false);
     const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
     const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null);
     const [searchOpen, setSearchOpen] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
+    const [domainResults, setDomainResults] = useState<SearchDomainItem[]>([]);
+    const [isSearching, setIsSearching] = useState(false);
     const [notificationsOpen, setNotificationsOpen] = useState(false);
     const [notifications, setNotifications] = useState<NotificationItem[]>([]);
     const [unreadCount, setUnreadCount] = useState(0);
@@ -82,6 +93,41 @@ export function AppHeader({ children }: { children: ReactNode }) {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, []);
 
+    // Query domain search API when search query changes
+    useEffect(() => {
+        if (!searchOpen) {
+            setDomainResults([]);
+            setIsSearching(false);
+            return;
+        }
+
+        const trimmed = searchQuery.trim();
+        if (!trimmed) {
+            setDomainResults([]);
+            setIsSearching(false);
+            return;
+        }
+
+        setIsSearching(true);
+        const timer = setTimeout(async () => {
+            try {
+                const res = await fetch(`/api/search?q=${encodeURIComponent(trimmed)}`);
+                if (res.ok) {
+                    const json = await res.json();
+                    setDomainResults(json.data?.results || []);
+                } else {
+                    setDomainResults([]);
+                }
+            } catch {
+                setDomainResults([]);
+            } finally {
+                setIsSearching(false);
+            }
+        }, 200);
+
+        return () => clearTimeout(timer);
+    }, [searchQuery, searchOpen]);
+
     const userRole = authenticatedProfileRole(currentUser?.role) || "student";
 
     const visibleNavItems = useMemo(() => {
@@ -97,11 +143,16 @@ export function AppHeader({ children }: { children: ReactNode }) {
         student: "Sinh viên",
     }[userRole] || "Người dùng";
 
-    const searchResults = useMemo(() => {
-        if (!searchQuery.trim()) return visibleNavItems;
-        const q = searchQuery.toLowerCase();
-        return visibleNavItems.filter((item) => item.label.toLowerCase().includes(q));
-    }, [searchQuery, visibleNavItems]);
+    const getEntityBadge = (type: "class" | "assignment" | "student") => {
+        switch (type) {
+            case "class":
+                return <span className="rounded-md bg-blue-100 px-2 py-0.5 text-[10px] font-bold text-blue-700">Lớp học</span>;
+            case "assignment":
+                return <span className="rounded-md bg-purple-100 px-2 py-0.5 text-[10px] font-bold text-purple-700">Bài tập</span>;
+            case "student":
+                return <span className="rounded-md bg-emerald-100 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Sinh viên</span>;
+        }
+    };
 
     return (
         <div className="min-h-dvh bg-[#F6F9FF] text-[#172033]">
@@ -159,12 +210,15 @@ export function AppHeader({ children }: { children: ReactNode }) {
                         <div className="flex items-center gap-2.5">
                             <button
                                 type="button"
-                                onClick={() => setSearchOpen(true)}
+                                onClick={() => {
+                                    setSearchOpen(true);
+                                    setSearchQuery("");
+                                }}
                                 className="inline-flex h-10 items-center gap-2 rounded-xl border border-slate-200 bg-slate-50/70 px-3.5 text-sm text-slate-600 transition-all hover:bg-slate-100 hover:border-slate-300 focus-visible:ring-2 focus-visible:ring-blue-500"
-                                aria-label="Tìm kiếm nhanh trang và bài tập"
+                                aria-label="Tìm kiếm nhanh lớp học, bài tập"
                             >
                                 <span className="material-symbols-outlined text-[18px] text-blue-600">search</span>
-                                <span className="hidden sm:inline">Tìm kiếm...</span>
+                                <span className="hidden sm:inline">Tìm lớp học, bài tập...</span>
                                 <kbd className="hidden rounded bg-white px-1.5 py-0.5 text-[11px] font-semibold text-slate-500 shadow-xs sm:inline border border-slate-200">
                                     Ctrl K
                                 </kbd>
@@ -239,7 +293,7 @@ export function AppHeader({ children }: { children: ReactNode }) {
                     </div>
                 </header>
 
-                {/* Global Search Dialog */}
+                {/* Global Domain Search Dialog */}
                 {searchOpen && (
                     <div className="fixed inset-0 z-50 flex items-start justify-center bg-slate-900/40 backdrop-blur-xs p-4 pt-20">
                         <div
@@ -251,7 +305,7 @@ export function AppHeader({ children }: { children: ReactNode }) {
                                 <span className="material-symbols-outlined mr-2 text-blue-600">search</span>
                                 <input
                                     type="text"
-                                    placeholder="Tìm kiếm trang chức năng hoặc bài tập..."
+                                    placeholder="Tìm theo tên lớp, mã lớp, bài tập..."
                                     value={searchQuery}
                                     onChange={(e) => setSearchQuery(e.target.value)}
                                     autoFocus
@@ -266,15 +320,24 @@ export function AppHeader({ children }: { children: ReactNode }) {
                                 </button>
                             </div>
 
-                            <div className="mt-3 max-h-64 overflow-y-auto space-y-1">
-                                {searchResults.length === 0 ? (
-                                    <div className="py-8 text-center text-sm text-slate-400">
-                                        Không tìm thấy trang hoặc chức năng phù hợp
+                            <div className="mt-3 max-h-72 overflow-y-auto space-y-1">
+                                {!searchQuery.trim() ? (
+                                    <div className="py-8 text-center text-xs text-slate-400">
+                                        Nhập từ khóa để tìm kiếm lớp học, bài tập hoặc sinh viên
+                                    </div>
+                                ) : isSearching ? (
+                                    <div className="py-8 flex items-center justify-center gap-2 text-xs text-slate-400">
+                                        <span className="material-symbols-outlined animate-spin text-[18px] text-blue-600">progress_activity</span>
+                                        Đang tìm kiếm dữ liệu...
+                                    </div>
+                                ) : domainResults.length === 0 ? (
+                                    <div className="py-8 text-center text-xs text-slate-400">
+                                        Không tìm thấy lớp học hoặc bài tập phù hợp
                                     </div>
                                 ) : (
-                                    searchResults.map((item) => (
+                                    domainResults.map((item) => (
                                         <button
-                                            key={item.href}
+                                            key={`${item.type}-${item.id}`}
                                             type="button"
                                             onClick={() => {
                                                 setSearchOpen(false);
@@ -282,13 +345,22 @@ export function AppHeader({ children }: { children: ReactNode }) {
                                             }}
                                             className="flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-left text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-900 transition"
                                         >
-                                            <div className="flex items-center gap-3">
-                                                <span className="material-symbols-outlined text-[20px] text-blue-600">
+                                            <div className="flex items-center gap-3 overflow-hidden">
+                                                <span className="material-symbols-outlined text-[20px] text-blue-600 shrink-0">
                                                     {item.icon}
                                                 </span>
-                                                <span className="font-medium">{item.label}</span>
+                                                <div className="truncate">
+                                                    <div className="font-semibold text-xs text-slate-900 truncate">
+                                                        {item.title}
+                                                    </div>
+                                                    <div className="text-[11px] text-slate-400 truncate">
+                                                        {item.subtitle}
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <span className="text-xs text-slate-400">{item.href}</span>
+                                            <div className="shrink-0 ml-2">
+                                                {getEntityBadge(item.type)}
+                                            </div>
                                         </button>
                                     ))
                                 )}

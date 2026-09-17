@@ -64,8 +64,10 @@ export function mapSupabaseErrorToVietnamese(error: unknown): string {
     [/file does not exist or violates assignment policy/i, "Tệp nộp không tồn tại hoặc không đúng chính sách của bài tập."],
     [/repository url is not allowed/i, "Bài tập này không cho phép đường dẫn repository hoặc đường dẫn không an toàn."],
     [/file or repository url is required/i, "Vui lòng tải tệp hoặc cung cấp repository trước khi nộp."],
-    [/class not found or inactive/i, "Không tìm thấy lớp học đang hoạt động với mã này."],
-    [/already (joined|requested)|membership.*active/i, "Bạn đã tham gia hoặc đã gửi yêu cầu vào lớp học này."],
+    [/mã lớp không tồn tại|class not found/i, "Mã lớp không tồn tại."],
+    [/bạn đã tham gia lớp học này|already (joined|requested)|membership.*active/i, "Bạn đã tham gia lớp học này."],
+    [/lớp học đã đạt số lượng thành viên tối đa|capacity.*reached|class.*full/i, "Lớp học đã đạt số lượng thành viên tối đa."],
+    [/lớp học hiện không nhận thêm sinh viên|class.*inactive/i, "Lớp học hiện không nhận thêm sinh viên."],
   ];
   const known = knownDatabaseMessages.find(([pattern]) => pattern.test(message));
   if (known) return known[1];

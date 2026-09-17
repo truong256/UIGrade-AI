@@ -5,6 +5,7 @@
 
 import { useState, type FormEvent } from "react";
 import { Classroom, ClassroomSemester, ClassroomStatus } from "@/app/ui/my_classes/type/classroom.type";
+import { validateAcademicYear } from "@/validations/classroom.schema";
 
 type EditClassPayload = {
     name: string;
@@ -65,8 +66,9 @@ function EditClassDialogForm({
             return;
         }
 
-        if (!trimmedAcademicYear) {
-            setError("Vui lòng nhập năm học");
+        const yearResult = validateAcademicYear(trimmedAcademicYear);
+        if (!yearResult.isValid) {
+            setError(yearResult.error || "Năm học không hợp lệ");
             return;
         }
 
@@ -78,7 +80,7 @@ function EditClassDialogForm({
                 code: trimmedCode,
                 description: trimmedDescription || undefined,
                 semester,
-                academicYear: trimmedAcademicYear,
+                academicYear: yearResult.normalizedYear,
                 status,
             });
 

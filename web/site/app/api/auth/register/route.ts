@@ -5,7 +5,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { dashboardForRole } from "@/lib/auth-routing";
 import { mapSupabaseErrorToVietnamese } from "@/lib/supabase/errors";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseAdminClient } from "@/lib/supabase/admin";
 import { isEducationEmail, normalizeEmail } from "@/lib/education-email";
+import { validateFullName } from "@/validations/name.validation";
 
 const SELF_REGISTER_ROLES = ["student", "lecturer"] as const;
 type SelfRegisterRole = (typeof SELF_REGISTER_ROLES)[number];
@@ -13,7 +15,14 @@ type SelfRegisterRole = (typeof SELF_REGISTER_ROLES)[number];
 export async function POST(request: NextRequest) {
     try {
         const body = await request.json();
-        const fullName = String(body?.name || "").trim();
+        const nameValidation = validateFullName(body?.name);
+        if (!nameValidation.isValid) {
+            return NextResponse.json(
+                { message: nameValidation.error },
+                { status: 400 }
+            );
+        }
+        const fullName = nameValidation.normalizedName;
         const email = normalizeEmail(body?.email);
         const password = String(body?.password || "");
         const studentCode = String(body?.studentCode || "").trim().toUpperCase();
@@ -64,6 +73,21 @@ export async function POST(request: NextRequest) {
                 { message: mapSupabaseErrorToVietnamese(error) },
                 { status: 400 }
             );
+        }
+
+        // Guarantee that the profile exists immediately in public.profiles for Admin visibility
+        try {
+            const admin = createSupabaseAdminClient();
+            await admin.from("profiles").upsert({
+                id: data.user.id,
+                email,
+                full_name: fullName,
+                role,
+                status: "active",
+                student_code: role === "student" ? studentCode || null : null,
+            }, { onConflict: "id" });
+        } catch {
+            // Secondary safety guard; DB trigger handles the primary insertion
         }
 
         const requiresEmailConfirmation = !data.session;

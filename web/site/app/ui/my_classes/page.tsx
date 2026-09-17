@@ -127,6 +127,20 @@ export default function MyClassesPage() {
                 return false;
             }
 
+            // Reset filters to ensure the new class is immediately visible to the lecturer
+            setSemesterFilter("all");
+            setSearch("");
+
+            if (result.data) {
+                setClasses((prev) => {
+                    const newClass = result.data as Classroom;
+                    const existingFiltered = prev.filter(
+                        (c) => (c.id || (c as any)._id) !== (newClass.id || (newClass as any)._id)
+                    );
+                    return [newClass, ...existingFiltered];
+                });
+            }
+
             await fetchClasses();
             setNotice("Đã tạo lớp học thành công.");
             return true;

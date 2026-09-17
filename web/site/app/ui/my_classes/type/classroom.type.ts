@@ -6,6 +6,7 @@ export type ClassroomStatus = "active" | "archived";
 
 export type ClassroomUserRef = {
     _id?: string;
+    id?: string;
     name?: string;
     email?: string;
     role?: string;
@@ -16,6 +17,7 @@ export type ClassroomTeacher = ClassroomUserRef;
 
 export type ClassroomMember = {
     _id?: string;
+    id?: string;
     role?: string;
     status?: string;
     approvalStatus?: string;
@@ -27,6 +29,7 @@ export type ClassroomMember = {
 
 export type ClassroomPendingRequest = {
     _id?: string;
+    id?: string;
     status?: string;
     approvalStatus?: string;
     joinStatus?: string;
@@ -38,6 +41,7 @@ export type ClassroomPendingRequest = {
 
 export type Classroom = {
     _id: string;
+    id?: string;
     name: string;
     code: string;
     description?: string;

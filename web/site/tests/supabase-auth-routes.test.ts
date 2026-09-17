@@ -519,6 +519,19 @@ describe("education email registration boundary", () => {
             }));
         }
     );
+
+    it.each(["123456", "000001", "9999999", "  12345  ", "12 34 56"])(
+        "rejects numeric-only name %j during registration", async name => {
+            const res = await register(request("/api/auth/register", {
+                ...validRegistration,
+                name,
+                email: "student@university.edu.vn",
+            }));
+            expect(res.status).toBe(400);
+            expect((await res.json()).message).toContain("Họ tên phải chứa ít nhất một chữ cái");
+            expect(mock.signUp).not.toHaveBeenCalled();
+        }
+    );
 });
 
 // ─────────────────────────────────────────────────────────────────────────────

@@ -7,6 +7,7 @@ import Link from "next/link";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { isEducationEmail } from "@/lib/education-email";
+import { validateFullName } from "@/validations/name.validation";
 import {
     AuthAlert,
     AuthCard,
@@ -92,13 +93,18 @@ export function RegisterFormCard({ data }: Props) {
         setError("");
         setSuccess("");
 
-        const trimmedName = name.trim();
+        const nameValidation = validateFullName(name);
+        if (!nameValidation.isValid) {
+            setNameError(nameValidation.error || "Vui lòng nhập họ và tên của bạn");
+            return;
+        }
+        setNameError("");
+
         const trimmedEmail = email.trim();
         const trimmedStudentCode = studentCode.trim().toUpperCase();
-        setNameError(trimmedName ? "" : "Vui lòng nhập họ và tên của bạn");
 
         const emailIsValid = validateEmail(trimmedEmail);
-        if (!trimmedName || !emailIsValid) return;
+        if (!emailIsValid) return;
         if (!password) {
             setError("Vui lòng nhập mật khẩu");
             return;
@@ -121,7 +127,7 @@ export function RegisterFormCard({ data }: Props) {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    name: trimmedName,
+                    name: nameValidation.normalizedName,
                     email: trimmedEmail,
                     password,
                     confirmPassword,
@@ -167,7 +173,16 @@ export function RegisterFormCard({ data }: Props) {
                     value={name}
                     onChange={(event) => {
                         setName(event.target.value);
-                        if (nameError && event.target.value.trim()) setNameError("");
+                        if (nameError) {
+                            const val = validateFullName(event.target.value);
+                            if (val.isValid) setNameError("");
+                        }
+                    }}
+                    onBlur={() => {
+                        if (name) {
+                            const val = validateFullName(name);
+                            if (!val.isValid) setNameError(val.error || "");
+                        }
                     }}
                     disabled={loading || socialLoading}
                     error={nameError}

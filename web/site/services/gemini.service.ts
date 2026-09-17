@@ -8,6 +8,7 @@ import type {
     RunnerReportInput,
 } from "@/lib/grading-contract";
 import type { GeminiInlinePart } from "@/services/grading-context.service";
+import { safeParseAiJson } from "@/lib/ai-json";
 
 type GenerateAiFeedbackInput = {
     assignmentTitle: string;
@@ -75,20 +76,8 @@ function fallbackAiFeedback(rubric: RubricCriterion[]): AiFeedbackResult {
 }
 
 function safeParseJson(text: string): ParsedAiFeedback | null {
-    try {
-        const parsed: unknown = JSON.parse(text);
-        return isObject(parsed) ? (parsed as ParsedAiFeedback) : null;
-    } catch {
-        const match = text.match(/\{[\s\S]*\}/);
-        if (!match) return null;
-
-        try {
-            const parsed: unknown = JSON.parse(match[0]);
-            return isObject(parsed) ? (parsed as ParsedAiFeedback) : null;
-        } catch {
-            return null;
-        }
-    }
+    const res = safeParseAiJson(text);
+    return res.success && isObject(res.data) ? (res.data as ParsedAiFeedback) : null;
 }
 
 export async function generateAiFeedback(
@@ -170,7 +159,12 @@ CẤU TRÚC JSON:
             },
         ];
 
-        const response = await ai.models.generateContent({
+        // 20s timeout to prevent hanging connections
+        const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error("Timeout: Gemini request exceeded 20s")), 20000);
+        });
+
+        const generatePromise = ai.models.generateContent({
             model: input.model || process.env.GEMINI_MODEL || "gemini-3.8-flash",
             contents: [
                 {
@@ -183,6 +177,7 @@ CẤU TRÚC JSON:
             },
         });
 
+        const response = await Promise.race([generatePromise, timeoutPromise]);
         const rawText = response.text || "";
         const parsed = safeParseJson(rawText);
 

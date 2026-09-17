@@ -2,7 +2,9 @@
 // Copyright (c) 2026 UIGrade AI contributors
 
 import { GoogleGenAI } from "@google/genai";
+import { z } from "zod";
 import type { RubricCriterion } from "@/lib/grading-contract";
+import { safeParseAiJson } from "@/lib/ai-json";
 
 export type ParsedRubricResult = {
     rubric: RubricCriterion[];
@@ -16,6 +18,43 @@ type ParseRubricInput = {
     assignmentTitle?: string;
     language?: string;
 };
+
+const RubricCriterionAiSchema = z.object({
+    code: z.string().optional(),
+    title: z.string().min(1, "Tiêu chí phải có tiêu đề"),
+    description: z.string().optional(),
+    maxPoints: z.number().or(z.string().transform(Number)),
+    gradingSource: z.enum(["runner", "ai", "hybrid", "manual"]).optional(),
+    requiredEvidence: z.array(z.string()).optional(),
+    passThreshold: z.number().nullable().optional(),
+    notes: z.string().optional(),
+});
+
+const RubricAiResponseSchema = z.object({
+    criteria: z.array(RubricCriterionAiSchema).min(1, "Rubric phải chứa ít nhất 1 tiêu chí"),
+    warnings: z.array(z.string()).optional(),
+});
+
+function classifyGeminiError(error: unknown): string {
+    if (!error) return "Không thể tạo nội dung bằng AI lúc này. Bạn vẫn có thể tiếp tục tạo bài tập thủ công.";
+    const message = error instanceof Error ? error.message : String(error);
+    const lower = message.toLowerCase();
+
+    if (lower.includes("abort") || lower.includes("timeout")) {
+        return "Thời gian kết nối đến AI quá hạn (Timeout). Bạn vẫn có thể tiếp tục tạo bài tập thủ công.";
+    }
+    if (lower.includes("api_key") || lower.includes("api key") || lower.includes("401") || lower.includes("unauthenticated")) {
+        return "Khóa API Gemini không hợp lệ hoặc chưa được cấu hình. Bạn vẫn có thể tiếp tục tạo bài tập thủ công.";
+    }
+    if (lower.includes("403") || lower.includes("permission_denied")) {
+        return "Khóa API Gemini không có quyền truy cập mô hình đã chọn. Bạn vẫn có thể tiếp tục tạo bài tập thủ công.";
+    }
+    if (lower.includes("429") || lower.includes("quota") || lower.includes("resource_exhausted") || lower.includes("rate limit")) {
+        return "Hạn mức gọi AI tạm thời bị quá tải (Rate limit/Quota exceeded). Bạn vẫn có thể tiếp tục tạo bài tập thủ công.";
+    }
+
+    return "Không thể tạo nội dung bằng AI lúc này. Bạn vẫn có thể tiếp tục tạo bài tập thủ công.";
+}
 
 function slugifyCriterionCode(value: string) {
     return value
@@ -94,21 +133,6 @@ function rebalanceRubricPoints(
     );
 
     return scaled;
-}
-
-function safeParseJson(text: string): any | null {
-    try {
-        return JSON.parse(text);
-    } catch {
-        const match = text.match(/\{[\s\S]*\}/);
-        if (!match) return null;
-
-        try {
-            return JSON.parse(match[0]);
-        } catch {
-            return null;
-        }
-    }
 }
 
 function heuristicParseRubricText(
@@ -234,7 +258,9 @@ export async function parseRubricTextWithAI(
         return {
             rubric: fallbackRubric,
             source: "heuristic",
-            warnings: ["Chưa có GEMINI_API_KEY, dùng parser heuristic."],
+            warnings: [
+                "Không thể tạo nội dung bằng AI lúc này do chưa cấu hình GEMINI_API_KEY. Bạn vẫn có thể tiếp tục tạo bài tập thủ công.",
+            ],
         };
     }
 
@@ -252,7 +278,7 @@ NHIỆM VỤ:
 - Nếu rubric có cấu trúc kiểu "Câu 2" rồi mới có "a, b, c" thì KHÔNG tạo tiêu chí thừa cho dòng mô tả trung gian.
 - Nếu đề nói RecyclerView nhưng ngữ cảnh là Compose thì có thể ghi chú chấp nhận LazyColumn trong notes.
 - Tổng maxPoints sau khi parse phải bằng ${input.maxScore}.
-- Trả về DUY NHẤT JSON hợp lệ, không markdown.
+- Trả về DUY NHẤT JSON hợp lệ, không markdown code fences.
 
 JSON phải có dạng:
 {
@@ -272,7 +298,12 @@ JSON phải có dạng:
 }
         `.trim();
 
-        const response = await ai.models.generateContent({
+        // 15s timeout to prevent hanging connections
+        const timeoutPromise = new Promise<never>((_, reject) => {
+            setTimeout(() => reject(new Error("Timeout: Yêu cầu AI quá 15 giây")), 15000);
+        });
+
+        const generatePromise = ai.models.generateContent({
             model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
             contents: [
                 {
@@ -290,18 +321,22 @@ JSON phải có dạng:
             },
         });
 
-        const parsed = safeParseJson(response.text || "");
-        const items = Array.isArray(parsed?.criteria) ? parsed.criteria : [];
+        const response = await Promise.race([generatePromise, timeoutPromise]);
+        const parseResult = safeParseAiJson(response.text || "", RubricAiResponseSchema);
 
-        if (!items.length) {
+        if (!parseResult.success) {
             return {
                 rubric: fallbackRubric,
                 source: "heuristic",
-                warnings: ["AI không trả về criteria hợp lệ, dùng parser heuristic."],
+                warnings: [
+                    parseResult.error,
+                    "Không thể tạo nội dung bằng AI lúc này. Bạn vẫn có thể tiếp tục tạo bài tập thủ công.",
+                ],
             };
         }
 
-        const normalized = items.map((item: any, index: number) =>
+        const items = parseResult.data.criteria;
+        const normalized = items.map((item, index) =>
             normalizeRubricCriterion(item, index)
         );
         const validated = validateRubric(normalized);
@@ -310,15 +345,16 @@ JSON phải có dạng:
         return {
             rubric,
             source: "gemini",
-            warnings: Array.isArray(parsed?.warnings)
-                ? parsed.warnings.map(String)
+            warnings: Array.isArray(parseResult.data.warnings)
+                ? parseResult.data.warnings
                 : [],
         };
-    } catch {
+    } catch (error) {
+        const errorMsg = classifyGeminiError(error);
         return {
             rubric: fallbackRubric,
             source: "heuristic",
-            warnings: ["Gọi Gemini lỗi, dùng parser heuristic."],
+            warnings: [errorMsg],
         };
     }
 }

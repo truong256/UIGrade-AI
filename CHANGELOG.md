@@ -11,6 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.2] - 2026-09-17
+
+### Fixed
+- **Username Registration Validation**: Enforced Unicode letter requirement (\p{L}), rejection of numeric-only or whitespace-only inputs, and 2-100 character bounds across client and server auth endpoints.
+- **Search Bar Domain Scoping**: Removed navigation, sidebar, and routing elements from global search, returning only domain entities (Classrooms, Assignments, and Enrolled Students).
+- **Class Creation & Refresh**: Resolved semester filter misalignment where "Tất cả" mapped to empty string instead of "all", added optimistic UI insertion and query reset upon creation.
+- **Academic Year & Date Validation**: Standardized academic year format (YYYY-YYYY), strictly enforced endYear = startYear + 1 with dynamic sliding current-year limits and startDate < dueDate checks.
+- **Assignment Creation Error Presentation**: Replaced top-only error banners with prominent Error Summary cards directly inside the "Tóm tắt" submit section alongside clear inline field error messages.
+- **Gemini Request Resilience**: Added configurable timeouts with AbortController, structured Vietnamese classification for rate limits (429), auth failures (401/403), network timeouts, and graceful fallbacks.
+- **AI JSON Robust Parsing**: Implemented markdown code fence stripping, conversational preamble trimming, balanced bracket extraction, and strict Zod schema validation without unsafe type assertions.
+- **Request & Query Performance**: Removed sequential N+1 query waterfall in submissionDtos by leveraging Supabase foreign key join (classes:class_id(id,name,class_code)), significantly decreasing page load times.
+- **Student Class Join Workflow**: Upgraded join_class_by_code database RPC to immediately grant active membership (fixing RLS lockout), enforce strict 50-student capacity limit, and return exact user-friendly Vietnamese messages.
+- **Admin User Visibility & Latency**: Replaced full-table auth.admin.listUsers({ perPage: 1000 }) with per-page parallel lookup in attachLastSignIn, and added a manual "Làm mới" action button on the Admin dashboard.
+
+### Improved
+- Standardized API error response envelopes across all modified routes ({ success: false, error: { code, message } }).
+- Protected against double submit and duplicate operations across critical forms.
+- Maintained strict RLS enforcement with zero service-role leaks to client boundaries.
+
+---
+
 ## [1.0.1] - 2026-09-17
 
 ### Highlights
@@ -153,7 +174,8 @@ Runner engine, comprehensive architectural documentation, and automated test sui
 
 ---
 
-[Unreleased]: https://github.com/truong256/UIGrade-AI/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/truong256/UIGrade-AI/compare/v1.0.2...HEAD
+[1.0.2]: https://github.com/truong256/UIGrade-AI/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/truong256/UIGrade-AI/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/truong256/UIGrade-AI/compare/v0.1.0...v1.0.0
 [0.1.0]: https://github.com/truong256/UIGrade-AI/releases/tag/v0.1.0

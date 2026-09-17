@@ -83,10 +83,22 @@ function safePage(value: unknown, fallback: number) {
 async function attachLastSignIn(users: Array<Record<string, any>>) {
     if (!users.length) return users;
     const admin = createSupabaseAdminClient();
-    const { data, error } = await admin.auth.admin.listUsers({ page: 1, perPage: 1000 });
-    if (error) return users;
-    const byId = new Map(data.users.map((user) => [user.id, user.last_sign_in_at || null]));
-    return users.map((row) => ({ ...row, last_sign_in_at: byId.get(String(row.id)) || null }));
+    try {
+        const signIns = await Promise.all(
+            users.map(async (row) => {
+                try {
+                    const { data } = await admin.auth.admin.getUserById(String(row.id));
+                    return [String(row.id), data?.user?.last_sign_in_at || null] as const;
+                } catch {
+                    return [String(row.id), null] as const;
+                }
+            })
+        );
+        const byId = new Map(signIns);
+        return users.map((row) => ({ ...row, last_sign_in_at: byId.get(String(row.id)) || null }));
+    } catch {
+        return users;
+    }
 }
 
 export const userManagementService = {

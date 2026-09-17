@@ -11,6 +11,7 @@ import {
     MAX_SUBMISSION_FILE_SIZE_MB,
 } from "@/lib/submission-limits";
 import UiScenarioEditor from "@/components/grading_detail/UiScenarioEditor";
+import { safeParseAiJson } from "@/lib/ai-json";
 import {
     DEFAULT_ANDROID_UI_RUNNER_CONFIG,
     EMPTY_RUNNER_CONFIG,
@@ -310,11 +311,12 @@ async function buildRubricPayload(
 
     if (jsonRubricFile) {
         try {
-            const raw = JSON.parse(await jsonRubricFile.text());
+            const parsedResult = safeParseAiJson(await jsonRubricFile.text());
+            const raw = parsedResult.success && parsedResult.data ? parsedResult.data : null;
             const items = Array.isArray(raw)
                 ? raw
-                : Array.isArray(raw?.criteria)
-                    ? raw.criteria
+                : Array.isArray((raw as any)?.criteria)
+                    ? (raw as any).criteria
                     : [];
 
             if (items.length) {
@@ -364,7 +366,18 @@ export default function AssignmentFormPage() {
     const [submitting, setSubmitting] = useState(false);
     const submittingRef = useRef(false);
     const [error, setError] = useState("");
+    const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+    const [errorList, setErrorList] = useState<string[]>([]);
     const [success, setSuccess] = useState("");
+
+    const clearFieldError = (field: string) => {
+        setFieldErrors((prev) => {
+            if (!prev[field]) return prev;
+            const next = { ...prev };
+            delete next[field];
+            return next;
+        });
+    };
 
     const [form, setForm] = useState<FormState>({
         title: "",
@@ -444,33 +457,50 @@ export default function AssignmentFormPage() {
         if (submittingRef.current) return;
 
         setError("");
+        setFieldErrors({});
+        setErrorList([]);
         setSuccess("");
 
+        const errors: Record<string, string> = {};
+        const summaryErrors: string[] = [];
+
         if (form.title.trim().length < 3) {
-            setError("Tên bài tập phải có ít nhất 3 ký tự.");
-            return;
+            errors.title = "Tên bài tập phải có ít nhất 3 ký tự.";
+            summaryErrors.push("Tên bài tập phải có ít nhất 3 ký tự.");
         }
 
         if (!form.classroomId) {
-            setError("Vui lòng chọn lớp học.");
-            return;
+            errors.classroomId = "Vui lòng chọn lớp học.";
+            summaryErrors.push("Chưa chọn lớp học cho bài tập.");
         }
 
         if (form.description.trim().length < 3) {
-            setError("Mô tả bài tập phải có ít nhất 3 ký tự.");
-            return;
+            errors.description = "Mô tả bài tập phải có ít nhất 3 ký tự.";
+            summaryErrors.push("Mô tả bài tập phải có ít nhất 3 ký tự.");
         }
 
         const startAt = new Date(form.startAt);
         const dueAt = new Date(form.dueAt);
 
-        if (Number.isNaN(startAt.getTime()) || Number.isNaN(dueAt.getTime())) {
-            setError("Ngày bắt đầu hoặc hạn nộp không hợp lệ.");
-            return;
+        if (Number.isNaN(startAt.getTime())) {
+            errors.startAt = "Ngày bắt đầu không hợp lệ.";
+            summaryErrors.push("Ngày bắt đầu không hợp lệ.");
         }
 
-        if (dueAt.getTime() <= startAt.getTime()) {
-            setError("Hạn nộp phải sau ngày bắt đầu.");
+        if (Number.isNaN(dueAt.getTime())) {
+            errors.dueAt = "Hạn nộp không hợp lệ.";
+            summaryErrors.push("Hạn nộp không hợp lệ.");
+        }
+
+        if (!Number.isNaN(startAt.getTime()) && !Number.isNaN(dueAt.getTime()) && dueAt.getTime() <= startAt.getTime()) {
+            errors.dueAt = "Hạn nộp phải sau ngày bắt đầu.";
+            summaryErrors.push("Ngày hết hạn không hợp lệ.");
+        }
+
+        if (summaryErrors.length > 0) {
+            setFieldErrors(errors);
+            setErrorList(summaryErrors);
+            setError(summaryErrors[0]);
             return;
         }
 
@@ -582,11 +612,12 @@ export default function AssignmentFormPage() {
                 router.refresh();
             }, 1200);
         } catch (submitError) {
-            setError(
+            const message =
                 submitError instanceof Error
                     ? submitError.message
-                    : "Không thể tạo bài tập"
-            );
+                    : "Không thể tạo bài tập";
+            setError(message);
+            setErrorList([message]);
         } finally {
             submittingRef.current = false;
             setSubmitting(false);
@@ -629,7 +660,7 @@ export default function AssignmentFormPage() {
                 </div>
             </div>
 
-            {error ? (
+            {error && errorList.length === 0 ? (
                 <div role="alert" className="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
                     {error}
                 </div>
@@ -654,12 +685,23 @@ export default function AssignmentFormPage() {
                                 <input
                                     id="assignment-title"
                                     value={form.title}
-                                    onChange={(event) =>
-                                        setForm((prev) => ({ ...prev, title: event.target.value }))
-                                    }
+                                    onChange={(event) => {
+                                        clearFieldError("title");
+                                        setForm((prev) => ({ ...prev, title: event.target.value }));
+                                    }}
                                     placeholder="Ví dụ: Lab 03 - Quản lý danh bạ"
-                                    className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                                    className={`h-12 w-full rounded-2xl border px-4 outline-none transition focus:ring-4 ${
+                                        fieldErrors.title
+                                            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-100"
+                                            : "border-slate-200 focus:border-orange-400 focus:ring-orange-100"
+                                    }`}
                                 />
+                                {fieldErrors.title ? (
+                                    <p className="mt-1 text-xs font-semibold text-rose-600 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[14px]">error</span>
+                                        {fieldErrors.title}
+                                    </p>
+                                ) : null}
                             </div>
 
                             <div>
@@ -669,13 +711,18 @@ export default function AssignmentFormPage() {
                                 <select
                                     id="assignment-classroom"
                                     value={form.classroomId}
-                                    onChange={(event) =>
+                                    onChange={(event) => {
+                                        clearFieldError("classroomId");
                                         setForm((prev) => ({
                                             ...prev,
                                             classroomId: event.target.value,
-                                        }))
-                                    }
-                                    className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                                        }));
+                                    }}
+                                    className={`h-12 w-full rounded-2xl border px-4 outline-none transition focus:ring-4 ${
+                                        fieldErrors.classroomId
+                                            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-100"
+                                            : "border-slate-200 focus:border-orange-400 focus:ring-orange-100"
+                                    }`}
                                 >
                                     {classes.map((item) => (
                                         <option key={item._id} value={item._id}>
@@ -683,6 +730,12 @@ export default function AssignmentFormPage() {
                                         </option>
                                     ))}
                                 </select>
+                                {fieldErrors.classroomId ? (
+                                    <p className="mt-1 text-xs font-semibold text-rose-600 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[14px]">error</span>
+                                        {fieldErrors.classroomId}
+                                    </p>
+                                ) : null}
                             </div>
 
                             <div>
@@ -712,15 +765,26 @@ export default function AssignmentFormPage() {
                                 <textarea
                                     id="assignment-description"
                                     value={form.description}
-                                    onChange={(event) =>
+                                    onChange={(event) => {
+                                        clearFieldError("description");
                                         setForm((prev) => ({
                                             ...prev,
                                             description: event.target.value,
-                                        }))
-                                    }
+                                        }));
+                                    }}
                                     placeholder="Mô tả yêu cầu, cấu trúc project, đầu vào đầu ra, quy ước đặt tên file..."
-                                    className="min-h-[180px] w-full rounded-2xl border border-slate-200 p-4 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                                    className={`min-h-[180px] w-full rounded-2xl border p-4 outline-none transition focus:ring-4 ${
+                                        fieldErrors.description
+                                            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-100"
+                                            : "border-slate-200 focus:border-orange-400 focus:ring-orange-100"
+                                    }`}
                                 />
+                                {fieldErrors.description ? (
+                                    <p className="mt-1 text-xs font-semibold text-rose-600 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[14px]">error</span>
+                                        {fieldErrors.description}
+                                    </p>
+                                ) : null}
                             </div>
 
                             <div className="md:col-span-2">
@@ -865,11 +929,23 @@ export default function AssignmentFormPage() {
                                     id="assignment-start-at"
                                     type="datetime-local"
                                     value={form.startAt}
-                                    onChange={(event) =>
-                                        setForm((prev) => ({ ...prev, startAt: event.target.value }))
-                                    }
-                                    className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                                    onChange={(event) => {
+                                        clearFieldError("startAt");
+                                        clearFieldError("dueAt");
+                                        setForm((prev) => ({ ...prev, startAt: event.target.value }));
+                                    }}
+                                    className={`h-12 w-full rounded-2xl border px-4 outline-none transition focus:ring-4 ${
+                                        fieldErrors.startAt
+                                            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-100"
+                                            : "border-slate-200 focus:border-orange-400 focus:ring-orange-100"
+                                    }`}
                                 />
+                                {fieldErrors.startAt ? (
+                                    <p className="mt-1 text-xs font-semibold text-rose-600 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[14px]">error</span>
+                                        {fieldErrors.startAt}
+                                    </p>
+                                ) : null}
                             </div>
 
                             <div>
@@ -880,11 +956,22 @@ export default function AssignmentFormPage() {
                                     id="assignment-due-at"
                                     type="datetime-local"
                                     value={form.dueAt}
-                                    onChange={(event) =>
-                                        setForm((prev) => ({ ...prev, dueAt: event.target.value }))
-                                    }
-                                    className="h-12 w-full rounded-2xl border border-slate-200 px-4 outline-none transition focus:border-orange-400 focus:ring-4 focus:ring-orange-100"
+                                    onChange={(event) => {
+                                        clearFieldError("dueAt");
+                                        setForm((prev) => ({ ...prev, dueAt: event.target.value }));
+                                    }}
+                                    className={`h-12 w-full rounded-2xl border px-4 outline-none transition focus:ring-4 ${
+                                        fieldErrors.dueAt
+                                            ? "border-rose-400 focus:border-rose-500 focus:ring-rose-100"
+                                            : "border-slate-200 focus:border-orange-400 focus:ring-orange-100"
+                                    }`}
                                 />
+                                {fieldErrors.dueAt ? (
+                                    <p className="mt-1 text-xs font-semibold text-rose-600 flex items-center gap-1">
+                                        <span className="material-symbols-outlined text-[14px]">error</span>
+                                        {fieldErrors.dueAt}
+                                    </p>
+                                ) : null}
                             </div>
 
                             <div>
@@ -997,6 +1084,24 @@ export default function AssignmentFormPage() {
                                 </span>
                             </div>
                         </div>
+
+                        {errorList.length > 0 ? (
+                            <div
+                                role="alert"
+                                aria-live="assertive"
+                                className="mt-5 rounded-2xl border border-rose-200 bg-rose-50 p-4 text-xs text-rose-900 shadow-xs animate-in fade-in duration-150"
+                            >
+                                <div className="flex items-center gap-1.5 font-bold text-rose-800">
+                                    <span className="material-symbols-outlined text-[18px] text-rose-600">error</span>
+                                    <span>Không thể tạo bài tập</span>
+                                </div>
+                                <ul className="mt-2 list-inside list-disc space-y-1 font-medium text-rose-700">
+                                    {errorList.map((err, index) => (
+                                        <li key={index}>{err}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        ) : null}
 
                         <div className="mt-6 space-y-3">
                             <button

@@ -38,8 +38,8 @@ describe("join class route security matrix", () => {
         mocks.rpc.mockResolvedValue({
             data: {
                 classId: "class-a",
-                membershipStatus: "pending",
-                message: "Đang chờ duyệt",
+                membershipStatus: "active",
+                message: "Tham gia lớp học thành công",
             },
             error: null,
         });
@@ -87,5 +87,57 @@ describe("join class route security matrix", () => {
         expect(response.status).toBe(200);
         expect((await response.json()).data.membershipStatus).toBe("active");
         expect(mocks.rpc).toHaveBeenCalledTimes(1);
+    });
+
+    it("returns exact Vietnamese error 'Mã lớp không tồn tại.' when class code does not exist", async () => {
+        mocks.rpc.mockResolvedValue({
+            data: null,
+            error: { message: "Mã lớp không tồn tại." },
+        });
+        const response = await POST(request("NOTFOUND-01"));
+        expect(response.status).toBe(404);
+        expect(await response.json()).toMatchObject({
+            success: false,
+            message: "Mã lớp không tồn tại.",
+        });
+    });
+
+    it("returns exact Vietnamese error 'Bạn đã tham gia lớp học này.' when already active member", async () => {
+        mocks.rpc.mockResolvedValue({
+            data: null,
+            error: { message: "Bạn đã tham gia lớp học này." },
+        });
+        const response = await POST(request("CLASS-01"));
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+            success: false,
+            message: "Bạn đã tham gia lớp học này.",
+        });
+    });
+
+    it("returns exact Vietnamese error 'Lớp học đã đạt số lượng thành viên tối đa.' when capacity (50) is reached", async () => {
+        mocks.rpc.mockResolvedValue({
+            data: null,
+            error: { message: "Lớp học đã đạt số lượng thành viên tối đa." },
+        });
+        const response = await POST(request("CLASS-01"));
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+            success: false,
+            message: "Lớp học đã đạt số lượng thành viên tối đa.",
+        });
+    });
+
+    it("returns exact Vietnamese error 'Lớp học hiện không nhận thêm sinh viên.' when class is inactive or closed", async () => {
+        mocks.rpc.mockResolvedValue({
+            data: null,
+            error: { message: "Lớp học hiện không nhận thêm sinh viên." },
+        });
+        const response = await POST(request("CLASS-01"));
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+            success: false,
+            message: "Lớp học hiện không nhận thêm sinh viên.",
+        });
     });
 });

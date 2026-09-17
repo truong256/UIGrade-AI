@@ -406,14 +406,28 @@ export function UserManagementClient() {
                             </p>
                         </div>
 
-                        <button
-                            type="button"
-                            onClick={() => setShowCreateModal(true)}
-                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 active:scale-98 shrink-0"
-                        >
-                            <span className="material-symbols-outlined text-[18px]">person_add</span>
-                            Thêm người dùng
-                        </button>
+                        <div className="flex items-center gap-2.5 shrink-0">
+                            <button
+                                type="button"
+                                onClick={() => void loadUsers()}
+                                disabled={loading}
+                                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3.5 text-sm font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 active:scale-98 disabled:opacity-50"
+                                title="Làm mới danh sách"
+                            >
+                                <span className={`material-symbols-outlined text-[18px] ${loading ? "animate-spin" : ""}`}>
+                                    refresh
+                                </span>
+                                <span className="hidden sm:inline">Làm mới</span>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setShowCreateModal(true)}
+                                className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-blue-600 px-4 text-sm font-semibold text-white shadow-xs transition hover:bg-blue-700 active:scale-98 shrink-0"
+                            >
+                                <span className="material-symbols-outlined text-[18px]">person_add</span>
+                                Thêm người dùng
+                            </button>
+                        </div>
                     </div>
                 </section>
 

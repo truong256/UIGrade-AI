@@ -582,7 +582,7 @@ async function submissionDtos(db: SupabaseClient<any>, submissionRows: AnyRecord
     const studentIds = [...new Set(submissionRows.map((item) => item.student_id))];
     const submissionIds = submissionRows.map((item) => item.id);
     const [assignmentsResult, studentsResult, gradesResult] = await Promise.all([
-        assignmentIds.length ? db.from("assignments").select("id,class_id,title,max_score,due_at").in("id", assignmentIds) : Promise.resolve({ data: [], error: null }),
+        assignmentIds.length ? db.from("assignments").select("id,class_id,title,max_score,due_at,classes:class_id(id,name,class_code)").in("id", assignmentIds) : Promise.resolve({ data: [], error: null }),
         studentIds.length ? db.from("profiles").select("id,full_name,email,student_code").in("id", studentIds) : Promise.resolve({ data: [], error: null }),
         submissionIds.length ? db.from("grades").select("submission_id,status,score,max_score,feedback,published_at").in("submission_id", submissionIds) : Promise.resolve({ data: [], error: null }),
     ]);
@@ -592,17 +592,11 @@ async function submissionDtos(db: SupabaseClient<any>, submissionRows: AnyRecord
     const assignmentMap = new Map(rows(assignmentsResult.data).map((item) => [item.id, item]));
     const studentMap = new Map(rows(studentsResult.data).map((item) => [item.id, item]));
     const gradeMap = new Map(rows(gradesResult.data).map((item) => [item.submission_id, item]));
-    const classIds = [...new Set([...assignmentMap.values()].map((item) => item.class_id))];
-    const { data: classes, error: classesError } = classIds.length
-        ? await db.from("classes").select("id,name,class_code").in("id", classIds)
-        : { data: [], error: null };
-    if (classesError) fail(classesError, "Không thể tải lớp của bài nộp");
-    const classMap = new Map(rows(classes).map((item) => [item.id, item]));
 
     return submissionRows.map((item) => {
         const assignment = assignmentMap.get(item.assignment_id) || {};
         const student = studentMap.get(item.student_id) || {};
-        const classroom = classMap.get(assignment.class_id) || {};
+        const classroom = record(assignment.classes);
         const grade = gradeMap.get(item.id);
         return {
             _id: item.id,

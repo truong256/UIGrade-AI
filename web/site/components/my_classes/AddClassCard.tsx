@@ -5,6 +5,7 @@
 
 import { useState, type FormEvent } from "react";
 import type { ClassroomSemester } from "@/app/ui/my_classes/type/classroom.type";
+import { validateAcademicYear } from "@/validations/classroom.schema";
 
 type AddClassPayload = {
     name: string;
@@ -19,14 +20,18 @@ type AddClassCardProps = {
     loading?: boolean;
 };
 
-const DEFAULT_YEAR = "2025-2026";
+function getDefaultAcademicYear(): string {
+    const currentYear = new Date().getFullYear();
+    return `${currentYear}-${currentYear + 1}`;
+}
 
 export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
+    const defaultYear = getDefaultAcademicYear();
     const [name, setName] = useState("");
     const [code, setCode] = useState("");
     const [description, setDescription] = useState("");
     const [semester, setSemester] = useState<ClassroomSemester>("HK1");
-    const [academicYear, setAcademicYear] = useState(DEFAULT_YEAR);
+    const [academicYear, setAcademicYear] = useState(defaultYear);
     const [error, setError] = useState("");
 
     const resetForm = () => {
@@ -34,7 +39,7 @@ export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
         setCode("");
         setDescription("");
         setSemester("HK1");
-        setAcademicYear(DEFAULT_YEAR);
+        setAcademicYear(getDefaultAcademicYear());
     };
 
     const handleSubmit = async (e: FormEvent<HTMLFormElement>) => {
@@ -56,8 +61,9 @@ export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
             return;
         }
 
-        if (!trimmedAcademicYear) {
-            setError("Vui lòng nhập năm học");
+        const yearValidation = validateAcademicYear(trimmedAcademicYear);
+        if (!yearValidation.isValid) {
+            setError(yearValidation.error || "Năm học không hợp lệ");
             return;
         }
 
@@ -66,7 +72,7 @@ export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
             code: trimmedCode,
             description: trimmedDescription || undefined,
             semester,
-            academicYear: trimmedAcademicYear,
+            academicYear: yearValidation.normalizedYear,
         });
 
         if (success) {
@@ -135,7 +141,7 @@ export function AddClassCard({ onCreate, loading = false }: AddClassCardProps) {
                             type="text"
                             value={academicYear}
                             onChange={(e) => setAcademicYear(e.target.value)}
-                            placeholder="2025-2026"
+                            placeholder={defaultYear}
                             className="h-10 w-full rounded-xl border border-slate-200 px-3.5 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         />
                     </div>
