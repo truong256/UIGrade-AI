@@ -1,6 +1,8 @@
 # Kiến trúc Tích hợp Trí tuệ Nhân tạo (AI Architecture v2.0)
 
 > Tài liệu kỹ thuật chi tiết về phân hệ **Trí tuệ Nhân tạo Đa phương thức (Multimodal AI Grading Engine)** trong nền tảng **UIGrade AI**. Mô tả triết lý thiết kế, quy trình hai giai đoạn Grader-Critic, cơ chế neo bằng chứng (Evidence Grounding), và nguyên tắc con người kiểm soát (Human-in-the-Loop).
+>
+> Xem thêm tài liệu đặc tả quy trình chấm chi tiết cho cuộc thi tại **[AI_GRADING.md](AI_GRADING.md)**.
 
 ---
 

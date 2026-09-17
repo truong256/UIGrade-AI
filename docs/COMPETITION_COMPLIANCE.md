@@ -1,130 +1,82 @@
-# UIGrade AI — Báo Cáo Tuân Thủ Tiêu Chí Mã Nguồn Mở (Competition Compliance)
+# UIGrade AI — Báo Cáo Tuân Thủ Tiêu Chí Cuộc Thi (Competition Compliance Report)
 
-> Tài liệu tổng hợp và tự đánh giá chi tiết mức độ đáp ứng thể lệ Cuộc thi **"Phát triển phần mềm mã nguồn mở tích hợp AI 2026"** (Phần I — Tiêu chí PoF 50 điểm) của đề tài **UIGrade AI**.
+> **Tài liệu tổng hợp và tự đánh giá chi tiết mức độ đáp ứng thể lệ Cuộc thi "Phát triển phần mềm mã nguồn mở tích hợp AI 2026"**
+>
+> *Đề tài: UIGrade AI — Nền tảng Đánh giá Giao diện Người dùng và Chấm bài Lập trình Android Tích hợp Trí tuệ Nhân tạo Đa phương thức*
 
 ---
 
-## Repository
+## 1. Thông Tin Kho Mã Nguồn & Phát Hành
 
-- **Tổ chức/Tác giả:** `truong256`
-- **Kho mã nguồn:** [https://github.com/truong256/UIGrade-AI](https://github.com/truong256/UIGrade-AI)
-- **Nhánh chính (Default branch):** `main`
+- **Tác giả / Nhóm phát triển:** `truong256` & UIGrade AI contributors
+- **Kho mã nguồn chính thức:** [https://github.com/truong256/UIGrade-AI](https://github.com/truong256/UIGrade-AI)
+- **Nhánh mặc định (Default branch):** `main`
 - **Khả năng truy cập:** Công khai (Public repository)
 - **Trực quan hoá trực tuyến (Live Demo):** [https://site-truong257.vercel.app](https://site-truong257.vercel.app)
+- **Bản phát hành chính thức (Release):** [v1.0.1](https://github.com/truong256/UIGrade-AI/releases/tag/v1.0.1) (`UIGrade AI v1.0.1 — Competition Readiness Update`)
+- **Git Tag:** `v1.0.1`
 
 ---
 
-## Release
+## 2. Bảng Đối Chiếu Toàn Diện Tiêu Chí Cuộc Thi (Comprehensive Compliance Matrix)
 
-- **Bản phát hành chính thức hiện tại (Current Release):** [v1.0.1](https://github.com/truong256/UIGrade-AI/releases/tag/v1.0.1) (`UIGrade AI v1.0.1 — Competition Readiness Update`)
-- **Git Tag tương ứng:** `v1.0.1`
-- **Bản phát hành nền tảng trước đó (Previous Release):** [v1.0.0](https://github.com/truong256/UIGrade-AI/releases/tag/v1.0.0) (`UIGrade AI v1.0.0 — Competition Release`)
-- **Ghi chú phát hành:** Chi tiết các tính năng hoàn thiện, kiến trúc bảo mật và thay đổi kỹ thuật đính kèm theo chuẩn Keep a Changelog.
-- **Tính mở của định dạng phát hành:** Phát hành qua mã nguồn Git tag nguyên bản được GitHub tự động nén tarball; tuyệt đối không sử dụng định dạng đóng/không mở (`.zip`, `.rar`, `.arj`).
+Bảng đối chiếu dưới đây áp dụng nghiêm ngặt 4 trạng thái chuẩn theo quy định đánh giá:
+- `PASS`: Đã đáp ứng đầy đủ và có bằng chứng kỹ thuật xác thực trong kho mã nguồn.
+- `PARTIAL`: Đã hoàn thiện một phần, còn điểm cần bổ trợ.
+- `MISSING`: Chưa có trong kho mã nguồn hoặc chưa thực hiện.
+- `NEEDS_MANUAL_CONFIRMATION`: Yêu cầu thí sinh / nhóm phát triển xác nhận thủ công bằng hồ sơ hành chính, chữ ký hoặc làm việc trực tiếp với Ban Tổ chức.
 
----
-
-## 1. Public Source Control (Quản lý mã nguồn công khai — 5/5đ)
-
-- **Trạng thái:** **PASS** (Đạt điểm tối đa)
-- **Bằng chứng:**
-  - Repository được thiết lập ở chế độ **Public** từ khi khởi tạo, có thể xem trực tuyến thông qua Web UI của GitHub mà không cần đăng nhập hay xin quyền.
-  - Lịch sử Git thể hiện quá trình làm việc thực tế, liên tục qua nhiều đợt commit phân tách theo nhóm chức năng logic:
-    - Cập nhật giao diện xác thực người dùng.
-    - Bổ sung tài liệu chuẩn cộng đồng (Community files).
-    - Kiến trúc hệ thống tổng thể và AI Grader-Critic.
-    - Phủ định danh bản quyền SPDX trên toàn bộ cây mã nguồn.
-    - Thiết lập và kiểm thử các cổng kiểm tra chất lượng CI.
-
----
-
-## 2. OSI-approved License (Giấy phép mã nguồn mở — 10/10đ)
-
-- **Trạng thái:** **PASS** (Đạt điểm tối đa)
-- **Bằng chứng:**
-  - **Giấy phép toàn văn tại gốc repo:** File [LICENSE](../LICENSE) chứa toàn văn giấy phép **MIT License** — một giấy phép được tổ chức Open Source Initiative (OSI) chính thức phê duyệt.
-  - **Thông cáo bản quyền bên thứ ba:** File [NOTICE.md](../NOTICE.md) liệt kê chi tiết, minh bạch từng thư viện bên thứ ba (Next.js, React, Tailwind CSS, Supabase, Google GenAI SDK, Jetpack Compose, Kotlin, Vitest), giấy phép tương ứng, cũng như tuyên bố phạm vi sở hữu trí tuệ đối với các mô hình và tài liệu nghiên cứu tham khảo.
-  - **Định danh giấy phép trên từng tệp mã (SPDX Identifiers):** Toàn bộ 461 tệp mã nguồn nguyên bản do nhóm phát triển (bao gồm các tệp Kotlin `.kt`, `.kts`, TypeScript `.ts`, `.tsx`, Python `.py`) đều được gắn header định danh bản quyền chuẩn:
-    ```text
-    SPDX-License-Identifier: MIT
-    Copyright (c) 2026 UIGrade AI contributors
-    ```
-  - **Bảo toàn cú pháp:** Đối với các tệp Next.js có directive `"use client"` hoặc `"use server"`, directive prologue được bảo toàn nguyên vẹn ở dòng đầu tiên trước header SPDX nhằm tránh phá vỡ cơ chế biên dịch của bundler.
+| Hạng mục yêu cầu (Requirement) | Bằng chứng thực tế hiện có (Current Evidence) | Trạng thái (Status) | Hạng mục còn thiếu (Missing) | Hành động cần thực hiện (Action) |
+|---|---|---|---|---|
+| **1. Quản lý mã nguồn công khai (Public Source Control - 5đ)** | Repo chế độ Public trên GitHub; lịch sử Git thể hiện tiến trình làm việc liên tục, minh bạch qua từng tính năng logic. | **PASS** | Không có | Duy trì branch và commit sạch sẽ. |
+| **2. Giấy phép nguồn mở OSI (OSI-approved License - 10đ)** | Toàn văn giấy phép **MIT License** tại `LICENSE`; 461 tệp mã nguồn nguyên bản có gắn header SPDX chuẩn; thông cáo [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md) chi tiết. | **PASS** | Xác nhận biểu mẫu hành chính với BTC | Tích chọn giấy phép MIT trong hồ sơ nộp dự thi chính thức. |
+| **3. Bản phát hành chính thức (Release - 5đ)** | Gắn Git tag `v1.0.1` và công bố phát hành trên GitHub Releases kèm changelog chuẩn; phân phối bằng mã nguồn mở qua tarball Git. | **PASS** | Không có | Giữ nguyên phiên bản release ổn định `v1.0.1`. |
+| **4. Cài đặt & Dịch từ mã nguồn (Build From Source - 10đ)** | Hướng dẫn rõ ràng từng bước trong `README.md`; `npm ci`, `npm run lint`, `npm run type-check`, `npm test` (51 test files, 444 tests), `npm run build` (53 routes) thành công 100%. | **PASS** | Không có | Bảo đảm developer mới có thể dựng lại môi trường từ `.env.example`. |
+| **5. Quản lý thư viện phụ thuộc (Dependencies - 10đ)** | Khai báo tường minh qua `package.json`, `package-lock.json`, Gradle libs toml; không commit `node_modules` hay thư mục build; cách ly dữ liệu nghiên cứu trong `web/project-files/`. | **PASS** | Không có | Giữ đồng bộ lockfiles trước khi nộp. |
+| **6. Tài liệu & Giao tiếp cộng đồng (Docs & Communication - 10đ)** | Hệ thống tài liệu chuyên sâu 6 phần trong `docs/`; `CHANGELOG.md`, `CONTRIBUTING.md`, `CODE_OF_CONDUCT.md`, `SECURITY.md`; Issue templates chuẩn YAML trên GitHub. | **PASS** | Không có | Kiểm tra tính toàn vẹn liên kết qua `scripts/check-doc-links.js`. |
+| **7. Tư cách thành viên đội thi (Team Eligibility)** | Tài khoản GitHub `truong256`. Các thông tin cá nhân/thẻ sinh viên không lưu trên repo công khai để bảo vệ quyền riêng tư. | **NEEDS_MANUAL_CONFIRMATION** | Giấy tờ xác nhận sinh viên / học viên của các thành viên | Đội thi hoàn thiện hồ sơ thành viên theo biểu mẫu riêng của BTC. |
+| **8. Sản phẩm chưa từng dự thi giải khác (Originality)** | Đề tài được phát triển mới cho mùa giải 2026; các mã nguồn tham khảo học thuật nền tảng được ghi rõ trong `NOTICE.md` và `web/project-files/`. | **NEEDS_MANUAL_CONFIRMATION** | Bản cam kết không trùng lặp giải thưởng có chữ ký của nhóm | Đại diện nhóm ký cam kết tính nguyên bản theo biểu mẫu cuộc thi. |
+| **9. Quyền sở hữu trí tuệ (IP Rights / Authorship)** | Bản quyền thuộc về UIGrade AI contributors theo MIT License; ghi công tác giả minh bạch. | **NEEDS_MANUAL_CONFIRMATION** | Thỏa thuận phân định quyền tác giả giữa các thành viên | Toàn bộ thành viên ký thỏa thuận đồng sở hữu mã nguồn. |
+| **10. Tài nguyên ngoài được BTC chấp thuận (External Approval)** | Sử dụng Google Gemini API và các thư viện nguồn mở tương thích MIT. | **NEEDS_MANUAL_CONFIRMATION** | Văn bản/Email xác nhận của BTC về việc chấp thuận sử dụng Gemini API | Nhóm gửi email xác nhận việc sử dụng API AI với BTC nếu quy chế yêu cầu. |
+| **11. Video trình diễn dự thi (Showcase Video)** | Đã có hệ thống Live Demo trực tuyến tại [https://site-truong257.vercel.app](https://site-truong257.vercel.app); chưa có link video clip thuyết trình 3-5 phút chính thức trong repo. | **NEEDS_MANUAL_CONFIRMATION** | Video demo trình diễn tính năng theo format cuộc thi | Quay video demo hoàn chỉnh, tải lên YouTube/Drive và đính kèm vào hồ sơ nộp bài. |
+| **12. Chữ ký & Cam kết nộp bài (Pledges & Signatures)** | Các cam kết kỹ thuật được thể hiện trong `CONTRIBUTING.md` và `SECURITY.md`. | **NEEDS_MANUAL_CONFIRMATION** | Phiếu nộp bài có chữ ký của đội trưởng và giảng viên hướng dẫn (nếu có) | In phiếu đăng ký, ký tên và scan nộp cùng hồ sơ trực tuyến. |
 
 ---
 
-## 3. Release (Có bản phát hành — 5/5đ)
+## 3. Hệ Thống Hồ Sơ Kỹ Thuật Đính Kèm (Technical Dossier)
 
-- **Trạng thái:** **PASS** (Đạt điểm tối đa)
-- **Bằng chứng:**
-  - Đã gắn Git Tag phiên bản chính thức: `v1.0.1` (cùng bản nền tảng `v1.0.0`).
-  - Công bố bản phát hành trên GitHub Releases:
-    - [UIGrade AI v1.0.1 — Competition Readiness Update](https://github.com/truong256/UIGrade-AI/releases/tag/v1.0.1)
-    - [UIGrade AI v1.0.0 — Competition Release](https://github.com/truong256/UIGrade-AI/releases/tag/v1.0.0)
-  - Bản phát hành sử dụng mã nguồn gốc gắn với tag commit cụ thể, phục vụ việc kiểm tra tính tái lập (Reproducibility).
+Hồ sơ kỹ thuật của đề tài được cấu trúc đầy đủ, mạch lạc trong thư mục `docs/`:
+
+1. 📄 **[Mô Tả Giải Pháp (docs/SOLUTION_DESCRIPTION.md)](SOLUTION_DESCRIPTION.md)**:
+   - Tổng quan bài toán chấm bài giao diện Android, phân tích hạn chế của phương pháp thủ công và AI hộp đen.
+   - Đặc tả kiến trúc giải pháp ba trụ cột: Deterministic First — Multimodal AI Second — Human-in-the-Loop Always.
+   - Phân tích 3 nhóm tác tử: Student, Lecturer, Admin; tính mới và khả năng ứng dụng thực tế.
+2. 📐 **[Kiến Trúc Hệ Thống (docs/ARCHITECTURE.md)](ARCHITECTURE.md)**:
+   - Sơ đồ tương tác chi tiết giữa Web Next.js 16, Supabase Auth, PostgreSQL RLS, Storage, Deterministic Runner và Gemini AI.
+   - Bản đồ 53 tuyến API và cơ chế phòng thủ bảo mật đa tầng (Defense-in-Depth).
+3. 🤖 **[Quy Trình Chấm Bài AI & Con Người Kiểm Soát (docs/AI_GRADING.md)](AI_GRADING.md)**:
+   - Đặc tả quy trình 10 bước từ khi sinh viên nộp bài đến khi giảng viên phát hành điểm.
+   - Cơ chế neo bằng chứng (Evidence Grounding) với định danh `evidenceIds` chống ảo giác.
+   - Mô hình Grader-Critic hai giai đoạn và khẳng định nguyên tắc con người nắm quyền quyết định cuối cùng.
+4. 🛡️ **[Kiểm Toán An Toàn Thông Tin & Bảo Mật (docs/SECURITY.md)](SECURITY.md)**:
+   - Bảng ma trận 13 biện pháp kiểm soát an ninh đối ứng với 13 mối đe dọa thực tế.
+   - Chi tiết về chống IDOR, bảo vệ phiên cookie HTTP-only, bảo vệ Last-Admin qua Transaction Advisory Lock, và an toàn giải nén Zip Slip.
+5. 📜 **[Thông Cáo Cấu Phần Bên Thứ Ba (docs/THIRD_PARTY_NOTICES.md)](THIRD_PARTY_NOTICES.md)**:
+   - Phân loại chi tiết Framework, Library, AI Service, Cloud Hosting, Database, Storage, và Fonts.
+   - Xác minh tính tương thích 100% của các giấy phép thành phần với giấy phép MIT của dự án.
 
 ---
 
-## 4. Build From Source (Cài đặt/Dịch từ mã nguồn — 10/10đ)
+## 4. Bằng Chứng Kiểm Thử Tự Động (Continuous Integration Evidence)
 
-- **Trạng thái:** **PASS** (Đạt điểm tối đa)
-- **Bằng chứng:**
-  - Tệp [README.md](../README.md) mô tả chi tiết, mạch lạc từng bước cài đặt môi trường và biên dịch từ mã nguồn cho cả hai phân hệ:
-    - **Nền tảng Web (`web/site`):** Hỗ trợ đầy đủ các lệnh tiêu chuẩn `npm ci`, `npm run dev`, `npm run build`, `npm run start`, `npm run type-check`, `npm run lint`, `npm test`.
-    - **Ứng dụng Android (`app/`):** Biên dịch qua Gradle Wrapper tiêu chuẩn `.\gradlew.bat assembleDebug` và `.\gradlew.bat testDebugUnitTest`.
-  - **Cấu hình môi trường qua `.env.example`:** Mẫu biến môi trường [.env.example](../.env.example) và [web/site/.env.example](../web/site/.env.example) cung cấp đầy đủ danh mục biến cấu hình (Supabase URL/Key, JWT Secret, Gemini API Key, SMTP). Không yêu cầu người dùng sửa cứng giá trị vào tệp mã nguồn hay header.
-  - **Kiểm chứng thực tế:**
-    - `npm run type-check`: 0 lỗi TypeScript (`tsc --noEmit`).
+Hệ thống tích hợp liên tục (CI) được tự động kích hoạt trên GitHub Actions:
+- **Web CI Workflow (`.github/workflows/web-ci.yml`):**
+  - Môi trường: Ubuntu, Node.js 22 LTS.
+  - Cổng chất lượng:
+    - `npm ci`: Cài đặt gói phụ thuộc nguyên bản.
     - `npm run lint`: 0 lỗi ESLint.
-    - `npm run build`: Đóng gói thành công toàn bộ 53 dynamic & static routes trong Next.js App Router.
-    - `./gradlew testDebugUnitTest`: Toàn bộ 64 kiểm thử Android đơn vị hoàn thành thành công.
-    - `./gradlew lintDebug`: Rà soát mã nguồn Android thành công.
-    - `./gradlew assembleDebug`: Đóng gói thành công tệp APK thử nghiệm.
-
----
-
-## 5. Dependencies (Thư viện/Gói đính kèm — 10/10đ)
-
-- **Trạng thái:** **PASS** (Đạt điểm tối đa)
-- **Bằng chứng:**
-  - Toàn bộ gói phụ thuộc được khai báo tường minh qua `package.json`, `package-lock.json` (phía Web) và `gradle/libs.versions.toml`, `build.gradle.kts` (phía Android).
-  - Không commit thư mục `node_modules` hay các thư viện đã biên dịch sẵn vào kho Git.
-  - Toàn bộ mã nguồn bên ngoài (như dữ liệu tham khảo từ paper) được cách ly trong thư mục riêng `web/project-files/` và được dẫn nguồn rõ ràng trong [NOTICE.md](../NOTICE.md).
-
----
-
-## 6. Documentation and Communication (Tài liệu và Giao tiếp — 10/10đ)
-
-- **Trạng thái:** **PASS** (Đạt điểm tối đa)
-- **Bằng chứng:**
-  - **Lịch sử thay đổi chuẩn:** Tệp [CHANGELOG.md](../CHANGELOG.md) tuân thủ chặt chẽ định dạng *Keep a Changelog* và *Semantic Versioning*.
-  - **Hệ thống theo dõi lỗi (Bug Tracker) thực tế:**
-    - Sử dụng **GitHub Issues** với các mẫu chuẩn YAML trong [../.github/ISSUE_TEMPLATE/](../.github/ISSUE_TEMPLATE/) (`bug_report.yml`, `feature_request.yml`, `config.yml`).
-    - Quy trình xử lý lỗi thực tế được lưu vết rõ ràng: tạo Issue, đính kèm commit giải quyết (`Fixes #X`), chạy kiểm thử xác nhận và đóng Issue (ví dụ: Issue [#12](https://github.com/truong256/UIGrade-AI/issues/12), [#13](https://github.com/truong256/UIGrade-AI/issues/13), [#14](https://github.com/truong256/UIGrade-AI/issues/14)).
-  - **Kênh thảo luận:** Bật tính năng **GitHub Discussions** nhằm hỗ trợ hỏi đáp và giao lưu cộng đồng.
-  - **Tài liệu đóng góp & quy tắc ứng xử:** File [CONTRIBUTING.md](../CONTRIBUTING.md), [CODE_OF_CONDUCT.md](../CODE_OF_CONDUCT.md) và [SECURITY.md](../SECURITY.md) định hình rõ quy trình gửi PR, tiêu chuẩn đạo đức và chính sách tiếp nhận lỗ hổng bảo mật.
-  - **Tài liệu kiến trúc chuyên sâu:**
-    - [ARCHITECTURE.md](ARCHITECTURE.md): Sơ đồ kiến trúc tổng thể, phân tầng hệ thống, cơ chế bảo mật sandbox giải nén và phân quyền dữ liệu RLS.
-    - [AI_ARCHITECTURE.md](AI_ARCHITECTURE.md): Kiến trúc AI v2.0 Grader-Critic, cơ chế neo bằng chứng (Evidence Grounding), nguyên tắc con người kiểm soát (Human-in-the-Loop) và kết quả thực nghiệm mô hình.
-
----
-
-## CI Evidence (Bằng chứng Kiểm thử Tự động CI)
-
-Quy trình tích hợp liên tục (CI) được cấu hình tự động trên GitHub Actions:
-
-- **Web CI Workflow ([../.github/workflows/web-ci.yml](../.github/workflows/web-ci.yml)):**
-  - Tự động chạy trên mỗi lần `push` và `pull_request` vào nhánh `main`.
-  - Các bước thực hiện: Checkout -> Cài đặt Node.js 22 -> `npm ci` -> `npm run lint` -> `npm run type-check` -> `npm test` -> `npm run build`.
-  - Trạng thái kiểm tra gần nhất: **PASSED (Xanh)** trên GitHub Actions.
-- **Android CI Workflow ([../.github/workflows/android-ci.yml](../.github/workflows/android-ci.yml)):**
-  - Cấu hình môi trường JDK 17, Android SDK 35, Gradle setup.
-  - Các bước thực hiện: Unit tests -> Android lint -> Compile Compose UI tests -> Assemble debug APK.
-  - Trạng thái kiểm tra gần nhất: **PASSED (Xanh)** trên GitHub Actions.
-
----
-
-## Remaining Risks (Rủi ro và Giới hạn Kỹ thuật được Công bố Minh bạch)
-
-1. **Khóa API bên ngoài:** Để tính năng phân tích giao diện bằng AI hoạt động đầy đủ, hệ thống yêu cầu một khóa `GEMINI_API_KEY` hợp lệ. Trong trường hợp không có khóa hoặc mất kết nối, hệ thống kích hoạt cơ chế Fallback an toàn (giữ nguyên kết quả chấm tất định từ Runner và chuyển sang trạng thái chờ giáo viên duyệt).
-2. **Độ chính xác của mô hình AI nhỏ:** Các thử nghiệm độc lập trên mô hình ngôn ngữ nhỏ (SLM dưới 3B tham số) chỉ ra tỉ lệ lỗi còn đáng kể trên các bố cục giao diện phức tạp; do đó UIGrade AI kiên định áp dụng nguyên tắc **Human-in-the-Loop**: điểm số AI chỉ là gợi ý tham khảo, giáo viên là người duyệt cuối cùng.
+    - `npm run type-check`: 0 lỗi TypeScript compiler (`tsc --noEmit`).
+    - `npm test`: 51/51 test suites, 444/444 tests hoàn thành thành công (bao gồm Unit test, RBAC test, Security migration test, UI regression test).
+    - `npm run build`: Đóng gói thành công toàn bộ 53 static và dynamic routes trên Next.js App Router.
+- **Tính toàn vẹn tài liệu:**
+  - Lệnh kiểm tra `node scripts/check-doc-links.js` xác nhận 100% liên kết nội bộ hợp lệ, không tồn tại đường dẫn rò rỉ máy cá nhân.
