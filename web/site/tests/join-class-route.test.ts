@@ -78,15 +78,30 @@ describe("join class route security matrix", () => {
         expect(mocks.rpc).not.toHaveBeenCalled();
     });
 
-    it("returns the RPC's already-active result without creating a client-side duplicate", async () => {
+    it("rejects an RPC result that does not confirm a pending membership", async () => {
         mocks.rpc.mockResolvedValue({
             data: { membershipStatus: "active", message: "Đã là thành viên" },
             error: null,
         });
         const response = await POST(request());
-        expect(response.status).toBe(200);
-        expect((await response.json()).data.membershipStatus).toBe("active");
+        expect(response.status).toBe(502);
+        expect(await response.json()).toMatchObject({
+            success: false,
+            message: "Máy chủ chưa xác nhận yêu cầu đang chờ giảng viên duyệt.",
+        });
         expect(mocks.rpc).toHaveBeenCalledTimes(1);
+    });
+
+    it("rejects a malformed array-valued pending status", async () => {
+        mocks.rpc.mockResolvedValue({
+            data: { membershipStatus: ["pending"] },
+            error: null,
+        });
+
+        const response = await POST(request());
+
+        expect(response.status).toBe(502);
+        expect(await response.json()).toMatchObject({ success: false });
     });
 
     it("returns exact Vietnamese error 'Mã lớp không tồn tại.' when class code does not exist", async () => {

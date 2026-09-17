@@ -58,9 +58,14 @@ export function JoinClassDialog({
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ code: trimmedCode }),
                 });
-                const result = await response.json();
-                if (!response.ok) {
+                const result = await response.json().catch(() => ({}));
+                if (!response.ok || result.success !== true) {
                     throw new Error(result.message || "Không thể tham gia lớp học");
+                }
+                if (result.data?.membershipStatus !== "pending") {
+                    throw new Error(
+                        "Máy chủ chưa xác nhận yêu cầu đang chờ giảng viên duyệt."
+                    );
                 }
                 setCode("");
                 onClose();

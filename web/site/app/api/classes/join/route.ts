@@ -38,6 +38,21 @@ export async function POST(request: NextRequest) {
             );
         }
 
+        const membershipStatus =
+            data && typeof data === "object" && !Array.isArray(data) && "membershipStatus" in data
+                ? data.membershipStatus
+                : null;
+
+        if (membershipStatus !== "pending") {
+            return NextResponse.json(
+                {
+                    success: false,
+                    message: "Máy chủ chưa xác nhận yêu cầu đang chờ giảng viên duyệt.",
+                },
+                { status: 502 }
+            );
+        }
+
         return NextResponse.json({
             success: true,
             message:

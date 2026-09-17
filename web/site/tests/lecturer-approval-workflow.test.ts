@@ -2,7 +2,7 @@
 // Copyright (c) 2026 UIGrade AI contributors
 
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { readFileSync } from "node:fs";
+import { readFileSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 import { SupabaseWebClassService, SupabaseWebAssignmentService } from "@/services/supabase/web-mvp.supabase";
 import type { CurrentUserPayload } from "@/lib/current-user";
@@ -400,5 +400,31 @@ describe("Lecturer Approval Workflow Specification & Tests", () => {
             // Assert no duplicate helper definitions in public
             expect(content).not.toMatch(/CREATE\s+(OR\s+REPLACE\s+)?FUNCTION\s+public\.(is_active_user|is_active_student|is_lecturer|is_admin|owns_class|is_active_class_member)\b/i);
         }
+    });
+
+    it("11. preserves the membership lookup result across later SQL statements", () => {
+        const migrationsDirectory = resolve(__dirname, "../supabase/migrations");
+        const migrationFiles = readdirSync(migrationsDirectory)
+            .filter((fileName) => fileName.endsWith(".sql"))
+            .sort();
+
+        let effectiveJoinFunction = "";
+        for (const fileName of migrationFiles) {
+            const content = readFileSync(resolve(migrationsDirectory, fileName), "utf-8");
+            const functionStart = content.lastIndexOf(
+                "CREATE OR REPLACE FUNCTION public.join_class_by_code"
+            );
+            if (functionStart >= 0) {
+                effectiveJoinFunction = content.slice(functionStart);
+            }
+        }
+
+        expect(effectiveJoinFunction).toMatch(
+            /existing_membership_found\s+BOOLEAN\s*:=\s*FALSE/i
+        );
+        expect(effectiveJoinFunction).toMatch(
+            /student_id\s*=\s*auth\.uid\(\)\s*FOR UPDATE;\s*existing_membership_found\s*:=\s*FOUND;/i
+        );
+        expect(effectiveJoinFunction.match(/IF existing_membership_found THEN/gi)).toHaveLength(2);
     });
 });

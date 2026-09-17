@@ -11,6 +11,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.4] - 2026-09-17
+
+### Fixed
+- **Persisted class join requests**: Preserved the membership lookup result inside `join_class_by_code(TEXT)` so a first-time student join inserts a real `class_members` row with `status = 'pending'` instead of returning a false-positive success after a zero-row update.
+- **Join response validation**: The API and student dialog now report success only when the RPC response explicitly confirms `membershipStatus = 'pending'`; malformed or contradictory 2xx responses remain visible as errors.
+- **Regression coverage**: Added tests for the PL/pgSQL `FOUND` overwrite regression and for false-positive join responses in the API and UI.
+
+---
+
 ## [1.0.3] - 2026-09-17
 
 ### Added

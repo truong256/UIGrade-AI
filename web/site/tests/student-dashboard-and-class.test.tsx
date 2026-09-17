@@ -100,7 +100,53 @@ describe("student dashboard and class workflow", () => {
         fireEvent.submit(form!);
 
         await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
-        resolveJoin(jsonResponse({ data: { membershipStatus: "pending" } }));
+        resolveJoin(jsonResponse({
+            success: true,
+            data: { membershipStatus: "pending" },
+        }));
+    });
+
+    it("keeps the join dialog open when a 2xx response does not confirm success", async () => {
+        const onClose = vi.fn();
+        const onSuccess = vi.fn();
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({
+            success: false,
+            message: "Không thể ghi nhận yêu cầu tham gia lớp.",
+            data: null,
+        })));
+
+        render(<JoinClassDialog open onClose={onClose} onSuccess={onSuccess} />);
+        fireEvent.change(screen.getByLabelText(/mã tham gia lớp học/i), {
+            target: { value: "ABC1" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: /ghi danh vào lớp/i }));
+
+        expect((await screen.findByRole("alert")).textContent).toContain(
+            "Không thể ghi nhận yêu cầu tham gia lớp."
+        );
+        expect(onClose).not.toHaveBeenCalled();
+        expect(onSuccess).not.toHaveBeenCalled();
+    });
+
+    it("requires the API to confirm a pending membership before reporting success", async () => {
+        const onClose = vi.fn();
+        const onSuccess = vi.fn();
+        vi.stubGlobal("fetch", vi.fn().mockResolvedValue(jsonResponse({
+            success: true,
+            data: { membershipStatus: "active" },
+        })));
+
+        render(<JoinClassDialog open onClose={onClose} onSuccess={onSuccess} />);
+        fireEvent.change(screen.getByLabelText(/mã tham gia lớp học/i), {
+            target: { value: "ABC1" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: /ghi danh vào lớp/i }));
+
+        expect((await screen.findByRole("alert")).textContent).toContain(
+            "Máy chủ chưa xác nhận yêu cầu đang chờ giảng viên duyệt."
+        );
+        expect(onClose).not.toHaveBeenCalled();
+        expect(onSuccess).not.toHaveBeenCalled();
     });
 
     it("shows the join action only to students", async () => {
