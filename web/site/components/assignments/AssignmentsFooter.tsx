@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 export function AssignmentsFooter() {
     return (
         <footer className="mt-auto border-t border-slate-200 bg-white py-8 text-center">

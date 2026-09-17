@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { AnyObj } from "@/app/ui/grading_detail/type/grading_detail.type";
 import { formatDateTime, isPdf, toNum, toText } from "@/app/ui/grading_detail/type/grading_detail.unit";
 

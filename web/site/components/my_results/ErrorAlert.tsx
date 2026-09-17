@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 type ErrorAlertProps = { message: string };
 
 export function ErrorAlert({ message }: ErrorAlertProps) {

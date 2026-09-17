@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { useState, type FormEvent } from "react";
 import type { ClassroomSemester } from "@/app/ui/my_classes/type/classroom.type";
 

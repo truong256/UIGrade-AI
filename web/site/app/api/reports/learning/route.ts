@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { errorResponse, successResponse } from "@/lib/api-response";
 import { getCurrentUserFromCookie } from "@/lib/current-user";
 import { learningReportService } from "@/services/learning-report.service";

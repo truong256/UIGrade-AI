@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { successResponse } from "@/lib/api-response";
 import { requireActiveRequestActor } from "@/lib/current-user";
 import { webMvpErrorResponse } from "@/lib/web-mvp-route";

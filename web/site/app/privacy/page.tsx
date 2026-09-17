@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { LoginTopBar } from "@/components/auth/LoginTopBar";
 import { LoginFooter } from "@/components/auth/LoginFooter";
 import { topBarData, footerLinks } from "@/lib/login-data";

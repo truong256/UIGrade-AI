@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { createClient } from "@supabase/supabase-js";
 import type { RuntimeDatabase } from "@/types/database-runtime.types";
 

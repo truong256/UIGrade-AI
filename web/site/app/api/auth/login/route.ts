@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { NextRequest, NextResponse } from "next/server";
 import { dashboardForRole, isAuthenticatedRole } from "@/lib/auth-routing";
 import { AuthProfileUnavailableError, SupabaseAuthService } from "@/services/supabase/auth.supabase";

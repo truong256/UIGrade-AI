@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 

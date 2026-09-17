@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import Link from "next/link";
 import type { AssignmentDetail, AssignmentOption } from "@/app/ui/grading_detail/type/grading_detail.type";
 import { formatDate, formatDateTime } from "@/app/ui/grading_detail/type/grading_detail.unit";

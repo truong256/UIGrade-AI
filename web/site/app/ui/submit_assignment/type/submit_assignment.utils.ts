@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { MAX_SUBMISSION_FILE_SIZE_MB } from "@/lib/submission-limits";
 import type { AssignmentItem, LatestSubmission, SubmitAction } from "./submit_assignment.type";
 

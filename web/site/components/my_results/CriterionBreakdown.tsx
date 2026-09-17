@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { ScoreCriterion } from "@/app/ui/my_results/type/my_results.type";
 import { formatScore } from "@/app/ui/my_results/type/my_results.utils";
 

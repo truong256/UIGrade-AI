@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { useState } from "react";
 import type { ChangePasswordPayload } from "@/app/ui/account/type/account.types";
 

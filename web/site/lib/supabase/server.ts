@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { createServerClient } from "@supabase/ssr";
 import type { CookieMethodsServer, CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";

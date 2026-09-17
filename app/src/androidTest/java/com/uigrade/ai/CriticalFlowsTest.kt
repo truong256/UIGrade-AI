@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 package com.uigrade.ai
 
 import androidx.compose.ui.test.assertIsDisplayed

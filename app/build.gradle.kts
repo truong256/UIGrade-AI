@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { useState, type FC, type Dispatch, type SetStateAction } from "react";
 
 type SemesterFiltersProps = {

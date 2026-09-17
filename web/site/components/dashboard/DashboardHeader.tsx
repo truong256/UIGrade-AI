@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { DashboardData, RangeDays } from "@/app/ui/dashboard/type/dashboard.type";
 import { downloadCsv, formatDateTime } from "@/app/ui/dashboard/type/dashboard.utils";
 

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 /**
  * Chuyển đổi mã lỗi Supabase sang thông báo tiếng Việt thân thiện, rõ ràng.
  */

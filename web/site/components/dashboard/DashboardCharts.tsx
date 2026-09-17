@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import dynamic from "next/dynamic";
 import type { DashboardData } from "@/app/ui/dashboard/type/dashboard.type";
 

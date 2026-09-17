@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 package com.uigrade.ai.data.mock
 
 import com.uigrade.ai.domain.model.*
@@ -267,7 +270,7 @@ object MockData {
             id = "a2",
             title = "UI Assignment 02 – Navigation",
             description = "Implement a multi-screen app using Jetpack Navigation Component. Demonstrate proper back stack management, argument passing, and deep links.",
-            deadline = LocalDateTime.of(2026, 9, 5, 23, 59),
+            deadline = LocalDateTime.of(2026, 10, 15, 23, 59),
             rubricId = "rubric2",
             lecturerId = "l1",
             courseId = "CS401",

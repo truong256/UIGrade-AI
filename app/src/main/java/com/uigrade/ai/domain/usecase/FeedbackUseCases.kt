@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 package com.uigrade.ai.domain.usecase
 
 import com.uigrade.ai.domain.model.Feedback

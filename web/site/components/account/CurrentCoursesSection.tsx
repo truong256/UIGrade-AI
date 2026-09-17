@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { CourseCard } from "./CourseCard";
 import type { AccountCourseItem } from "@/app/ui/account/type/account.types";
 

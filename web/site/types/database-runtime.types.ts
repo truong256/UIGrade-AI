@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { Database, Json } from "@/types/database.types";
 
 type BaseTables = Database["public"]["Tables"];

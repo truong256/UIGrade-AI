@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { DashboardData, Trend } from "./dashboard.type";
 
 export function formatDateTime(value?: string | null) {

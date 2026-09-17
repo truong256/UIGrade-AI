@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { AlertMessages } from "@/components/submit_assignment/AlertMessages";
 import { AssignmentSubmitPanel } from "@/components/submit_assignment/AssignmentSubmitPanel";
 import { SubmitAssignmentHeader } from "@/components/submit_assignment/SubmitAssignmentHeader";

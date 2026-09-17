@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { LoginFooter } from "@/components/auth/LoginFooter";

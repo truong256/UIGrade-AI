@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { SupabaseAuthService } from "@/services/supabase/auth.supabase";

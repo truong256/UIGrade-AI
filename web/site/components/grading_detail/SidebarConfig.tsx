@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { useEffect, useMemo, useState } from "react";
 import type { AnyObj, AssignmentDetail } from "@/app/ui/grading_detail/type/grading_detail.type";
 import { toText } from "@/app/ui/grading_detail/type/grading_detail.unit";

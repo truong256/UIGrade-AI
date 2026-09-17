@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { AnyObj, AssignmentDetail, GradingFilter, GradingTab, SidebarStudent } from "@/app/ui/grading_detail/type/grading_detail.type";
 import { formatDateTime } from "@/app/ui/grading_detail/type/grading_detail.unit";
 import { SidebarConfig } from "./SidebarConfig";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { DashboardData } from "@/app/ui/dashboard/type/dashboard.type";
 import { formatRelativeTime } from "@/app/ui/dashboard/type/dashboard.utils";
 import EmptyState from "./EmptyState";

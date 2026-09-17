@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { createBrowserClient } from "@supabase/ssr";
 import { Database } from "@/types/database.types";
 

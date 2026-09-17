@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { CurrentUser } from "@/app/ui/my_results/type/my_results.type";
 
 type ResultsHeaderProps = { currentUser: CurrentUser | null };

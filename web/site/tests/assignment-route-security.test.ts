@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {

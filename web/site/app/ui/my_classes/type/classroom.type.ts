@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 export type ClassroomSemester = "HK1" | "HK2" | "HK3";
 export type ClassroomStatus = "active" | "archived";
 

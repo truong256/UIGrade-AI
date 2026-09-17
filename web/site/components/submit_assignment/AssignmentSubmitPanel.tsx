@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { AssignmentItem, SubmitAction } from "@/app/ui/submit_assignment/type/submit_assignment.type";
 import { AssignmentDetails } from "./AssignmentDetails";
 import { AssignmentSelector } from "./AssignmentSelector";

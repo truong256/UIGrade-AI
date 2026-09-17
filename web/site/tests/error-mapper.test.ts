@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { describe, it, expect } from "vitest";
 import { mapSupabaseErrorToVietnamese } from "@/lib/supabase/errors";
 

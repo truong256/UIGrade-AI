@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 // @vitest-environment jsdom
 
 import { cleanup, render, renderHook, screen, waitFor } from "@testing-library/react";

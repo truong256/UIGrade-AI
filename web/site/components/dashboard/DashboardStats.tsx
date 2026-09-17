@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import StatCard, { type StatCardProps } from "./StatCard";
 
 type DashboardStatsProps = {

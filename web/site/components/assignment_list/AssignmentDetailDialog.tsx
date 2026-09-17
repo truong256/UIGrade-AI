@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import Link from "next/link";
 import Dialog from "./Dialog";
 import type { AssignmentItem } from "@/app/ui/assignment_list/type/assignment_list.type";

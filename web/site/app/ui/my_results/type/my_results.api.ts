@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { fetchCurrentUserClient } from "@/lib/auth-client";
 import type { CurrentUser, ResultItem } from "./my_results.type";
 import { normalizeResult, pickLatestByAssignment } from "./my_results.utils";

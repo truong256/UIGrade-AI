@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { useEffect, useMemo, useState } from "react";
 import DashboardBottomSection from "@/components/dashboard/DashboardBottomSection";
 import DashboardCharts from "@/components/dashboard/DashboardCharts";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 export type Trend = {
     delta: number;
     direction: "up" | "down" | "flat";

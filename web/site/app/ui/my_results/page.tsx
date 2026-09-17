@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { ErrorAlert } from "@/components/my_results/ErrorAlert";
 import { LoadingState } from "@/components/my_results/LoadingState";
 import { ResultDetailPanel } from "@/components/my_results/ResultDetailPanel";

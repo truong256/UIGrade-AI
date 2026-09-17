@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { useEffect, useMemo, useState } from "react";
 import { fetchCurrentUser, fetchMyResults } from "../type/my_results.api";
 import type { CurrentUser, ResultItem } from "../type/my_results.type";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { AssignmentItem } from "@/app/ui/submit_assignment/type/submit_assignment.type";
 import { formatDateTime, formatTimeRemaining } from "@/app/ui/submit_assignment/type/submit_assignment.utils";
 

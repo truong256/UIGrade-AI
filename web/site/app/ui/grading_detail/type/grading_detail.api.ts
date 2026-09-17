@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { AssignmentDetail, NormalizedSubmission } from "./grading_detail.type";
 import { asObj, toNum, toText } from "./grading_detail.unit";
 

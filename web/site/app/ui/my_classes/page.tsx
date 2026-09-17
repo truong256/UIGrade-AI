@@ -1,5 +1,8 @@
 "use client";
 
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ClassesHeader } from "@/components/my_classes/ClassesHeader";
 import { SemesterFilters } from "@/components/my_classes/SemesterFilters";

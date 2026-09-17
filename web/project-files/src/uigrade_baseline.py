@@ -1,3 +1,6 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 UIGrade AI contributors
+
 """Validate UI grading comparisons and measure agreement with instructor scores."""
 import argparse,json
 from collections import defaultdict

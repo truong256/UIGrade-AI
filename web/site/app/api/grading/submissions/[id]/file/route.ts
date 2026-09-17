@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { NextResponse } from "next/server";
 import { gradingFailure, routeId } from "@/lib/grading-route";
 import { SupabaseGradingService } from "@/services/supabase/grading.supabase";

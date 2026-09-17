@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { AnyObject, ResultItem, ResultsStats, SelectOption } from "./my_results.type";
 
 export function asObject(value: unknown): AnyObject {
