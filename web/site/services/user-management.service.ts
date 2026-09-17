@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import type { CurrentUserPayload } from "@/lib/current-user";
 import { requireAdmin, validateRoleInput } from "@/lib/authorization";
 import { createSupabaseAdminClient } from "@/lib/supabase/admin";

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { emailService } from "@/services/email.service";
 import { systemConfigService } from "@/services/system-config.service";

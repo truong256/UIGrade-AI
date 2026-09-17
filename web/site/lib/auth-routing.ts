@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 export const AUTHENTICATED_ROLES = ["student", "lecturer", "admin"] as const;
 
 export type AuthenticatedRole = (typeof AUTHENTICATED_ROLES)[number];

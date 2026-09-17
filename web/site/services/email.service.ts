@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import nodemailer from "nodemailer";
 import { systemConfigService } from "@/services/system-config.service";
 

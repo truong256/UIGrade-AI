@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 import { createHash } from "node:crypto";
 import path from "node:path";
 import AdmZip from "adm-zip";

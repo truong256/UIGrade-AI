@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 export const libraryHeaderData = {
     title: "Kho bài tập",
     description: "Quản lý và theo dõi tiến độ các bài tập của học sinh.",

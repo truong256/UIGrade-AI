@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 const STORAGE_OBJECT_MARKER = "/storage/v1/object/";
 
 function validateObjectPath(path: string): string {

@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 export const registerFormData = {
     title: "Tạo tài khoản",
     description: "Bắt đầu với UIGrade AI",

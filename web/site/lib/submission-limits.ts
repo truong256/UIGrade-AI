@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 export const MAX_SUBMISSION_ATTEMPTS = 100;
 export const MAX_SUBMISSION_FILES = 10;
 export const MAX_SUBMISSION_FILE_SIZE_MB = 100;

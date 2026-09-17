@@ -1,3 +1,6 @@
+// SPDX-License-Identifier: MIT
+// Copyright (c) 2026 UIGrade AI contributors
+
 export type SettingsSidebarMatchMode = "exact" | "prefix";
 
 export type SettingsSidebarItem = {
