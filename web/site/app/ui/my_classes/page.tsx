@@ -305,7 +305,10 @@ export default function MyClassesPage() {
             <JoinClassDialog
                 open={openJoin}
                 onClose={() => setOpenJoin(false)}
-                onSuccess={fetchClasses}
+                onSuccess={async () => {
+                    setNotice("Yêu cầu tham gia lớp đã được gửi và đang chờ giảng viên phê duyệt.");
+                    await fetchClasses();
+                }}
             />
         </div>
     );

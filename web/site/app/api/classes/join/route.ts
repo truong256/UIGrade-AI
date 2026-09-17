@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
 
         if (error) {
             const forbidden = /active student|not active|not allowed|chỉ sinh viên/i.test(error.message);
-            const notFound = /not found|không tồn tại|inactive/i.test(error.message);
+            const notFound = /not found|không tồn tại/i.test(error.message);
             return NextResponse.json(
                 { success: false, message: mapSupabaseErrorToVietnamese(error) },
                 { status: forbidden ? 403 : notFound ? 404 : 400 }

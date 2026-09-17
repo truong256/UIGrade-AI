@@ -38,8 +38,8 @@ describe("join class route security matrix", () => {
         mocks.rpc.mockResolvedValue({
             data: {
                 classId: "class-a",
-                membershipStatus: "active",
-                message: "Tham gia lớp học thành công",
+                membershipStatus: "pending",
+                message: "Yêu cầu tham gia lớp đã được gửi và đang chờ giảng viên phê duyệt.",
             },
             error: null,
         });
@@ -112,6 +112,19 @@ describe("join class route security matrix", () => {
         expect(await response.json()).toMatchObject({
             success: false,
             message: "Bạn đã tham gia lớp học này.",
+        });
+    });
+
+    it("returns exact Vietnamese error 'Yêu cầu tham gia lớp đang chờ giảng viên duyệt.' when already pending", async () => {
+        mocks.rpc.mockResolvedValue({
+            data: null,
+            error: { message: "Yêu cầu tham gia lớp đang chờ giảng viên duyệt." },
+        });
+        const response = await POST(request("CLASS-01"));
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+            success: false,
+            message: "Yêu cầu tham gia lớp đang chờ giảng viên duyệt.",
         });
     });
 

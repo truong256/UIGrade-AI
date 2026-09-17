@@ -101,7 +101,13 @@ function validateSubmissionAssets(
     // intentionally not sent back to this server as trusted storage paths.
 }
 
-function classDto(row: AnyRecord, lecturer: AnyRecord | null, memberCount: number, assignmentCount: number) {
+function classDto(
+    row: AnyRecord,
+    lecturer: AnyRecord | null,
+    memberCount: number,
+    assignmentCount: number,
+    membershipStatus?: string | null
+) {
     const teacher = {
         _id: String(row.lecturer_id || ""),
         name: String(lecturer?.full_name || "Giảng viên"),
@@ -117,6 +123,7 @@ function classDto(row: AnyRecord, lecturer: AnyRecord | null, memberCount: numbe
         semester: row.semester || "HK1",
         academicYear: row.academic_year || "",
         status: row.status === "active" ? "active" : "archived",
+        membershipStatus: membershipStatus || null,
         approvedStudentCount: memberCount,
         studentCount: memberCount,
         teacher,
@@ -127,25 +134,33 @@ function classDto(row: AnyRecord, lecturer: AnyRecord | null, memberCount: numbe
     };
 }
 
-async function enrichClasses(db: SupabaseClient<any>, classRows: AnyRecord[]) {
+async function enrichClasses(db: SupabaseClient<any>, classRows: AnyRecord[], actor?: CurrentUserPayload) {
     if (!classRows.length) return [];
     const classIds = classRows.map((item) => item.id);
     const lecturerIds = [...new Set(classRows.map((item) => item.lecturer_id))];
-    const [membersResult, assignmentsResult, profilesResult] = await Promise.all([
+    const isStudent = actor?.role === "student";
+    const [membersResult, assignmentsResult, profilesResult, studentMembershipResult] = await Promise.all([
         db.from("class_members").select("class_id,status").in("class_id", classIds).eq("status", "active"),
         db.from("assignments").select("class_id").in("class_id", classIds),
         db.from("profiles").select("id,full_name,email").in("id", lecturerIds),
+        isStudent
+            ? db.from("class_members").select("class_id,status").in("class_id", classIds).eq("student_id", actor!.userId)
+            : Promise.resolve({ data: [], error: null }),
     ]);
     if (membersResult.error) fail(membersResult.error, "Không thể tải thành viên lớp");
     if (assignmentsResult.error) fail(assignmentsResult.error, "Không thể tải bài tập lớp");
     if (profilesResult.error) fail(profilesResult.error, "Không thể tải hồ sơ giảng viên");
+    if (studentMembershipResult?.error) fail(studentMembershipResult.error, "Không thể tải trạng thái tham gia lớp");
 
     const profiles = new Map(rows(profilesResult.data).map((item) => [item.id, item]));
+    const studentMemberships = new Map(rows(studentMembershipResult?.data).map((item) => [item.class_id, item.status]));
+
     return classRows.map((item) => classDto(
         item,
         profiles.get(item.lecturer_id) || null,
         rows(membersResult.data).filter((member) => member.class_id === item.id).length,
-        rows(assignmentsResult.data).filter((assignment) => assignment.class_id === item.id).length
+        rows(assignmentsResult.data).filter((assignment) => assignment.class_id === item.id).length,
+        isStudent ? studentMemberships.get(item.id) || null : null
     ));
 }
 
@@ -158,7 +173,7 @@ export const SupabaseWebClassService = {
         if (actor.role === "lecturer") query = query.eq("lecturer_id", actor.userId);
         const { data, error } = await query.order("created_at", { ascending: false });
         if (error) fail(error, "Không thể tải danh sách lớp học");
-        return enrichClasses(db, rows(data));
+        return enrichClasses(db, rows(data), actor);
     },
 
     async detail(actor: CurrentUserPayload, classId: string) {
@@ -166,7 +181,7 @@ export const SupabaseWebClassService = {
         const { data, error } = await db.from("classes").select(CLASS_SELECT).eq("id", classId).maybeSingle();
         if (error) fail(error, "Không thể tải lớp học");
         if (!data) throw new WebMvpError("Không tìm thấy lớp học hoặc bạn không có quyền truy cập", 404);
-        return (await enrichClasses(db, [record(data)]))[0];
+        return (await enrichClasses(db, [record(data)], actor))[0];
     },
 
     async create(actor: CurrentUserPayload, input: AnyRecord) {
@@ -262,8 +277,36 @@ export const SupabaseWebClassService = {
 
     async updateMember(actor: CurrentUserPayload, classId: string, studentId: string, action: string) {
         requireRole(actor, "lecturer");
-        if (action !== "approve") throw new WebMvpError("MVP chỉ hỗ trợ duyệt sinh viên; không đổi vai trò trong lớp", 400);
+        if (action !== "approve" && action !== "reject") {
+            throw new WebMvpError("MVP chỉ hỗ trợ duyệt hoặc từ chối sinh viên; không đổi vai trò trong lớp", 400);
+        }
         const db = await client();
+        const { data: classroom, error: classError } = await db.from("classes")
+            .select("id,lecturer_id").eq("id", classId).maybeSingle();
+        if (classError) fail(classError, "Không thể kiểm tra quyền quản lý lớp");
+        if (!classroom || classroom.lecturer_id !== actor.userId) {
+            throw new WebMvpError("Bạn không phải chủ lớp", 403);
+        }
+
+        if (action === "reject") {
+            const { data, error } = await db.from("class_members").update({ status: "dropped" })
+                .eq("class_id", classId).eq("student_id", studentId).select("id").maybeSingle();
+            if (error) fail(error, "Không thể từ chối sinh viên");
+            if (!data) throw new WebMvpError("Không tìm thấy yêu cầu chờ duyệt hoặc bạn không phải chủ lớp", 404);
+            return data;
+        }
+
+        // action === "approve"
+        // Enforce active student capacity limit of 50
+        const { count, error: countError } = await db.from("class_members")
+            .select("id", { count: "exact", head: true })
+            .eq("class_id", classId)
+            .eq("status", "active");
+        if (countError) fail(countError, "Không thể kiểm tra sĩ số lớp");
+        if ((count || 0) >= 50) {
+            throw new WebMvpError("Lớp học đã đạt số lượng thành viên tối đa (50 sinh viên).", 400);
+        }
+
         const { data, error } = await db.from("class_members").update({ status: "active" })
             .eq("class_id", classId).eq("student_id", studentId).eq("status", "pending")
             .select("id").maybeSingle();
@@ -275,6 +318,12 @@ export const SupabaseWebClassService = {
     async removeMember(actor: CurrentUserPayload, classId: string, studentId: string) {
         requireRole(actor, "lecturer");
         const db = await client();
+        const { data: classroom, error: classError } = await db.from("classes")
+            .select("id,lecturer_id").eq("id", classId).maybeSingle();
+        if (classError) fail(classError, "Không thể kiểm tra quyền quản lý lớp");
+        if (!classroom || classroom.lecturer_id !== actor.userId) {
+            throw new WebMvpError("Bạn không phải chủ lớp", 403);
+        }
         const { data, error } = await db.from("class_members").update({ status: "dropped" })
             .eq("class_id", classId).eq("student_id", studentId).select("id").maybeSingle();
         if (error) fail(error, "Không thể xóa sinh viên khỏi lớp");

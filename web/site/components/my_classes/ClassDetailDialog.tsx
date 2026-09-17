@@ -372,6 +372,25 @@ export function ClassDetailDialog({
                         </div>
                     ) : null}
 
+                    {classroom.membershipStatus === "pending" ? (
+                        <div
+                            role="status"
+                            className="mt-4 flex items-start gap-3 rounded-2xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-800"
+                        >
+                            <span className="material-symbols-outlined text-amber-600 text-[22px] shrink-0 mt-0.5">
+                                hourglass_top
+                            </span>
+                            <div>
+                                <p className="font-bold text-amber-900">
+                                    Đang chờ giảng viên phê duyệt
+                                </p>
+                                <p className="mt-1 text-xs text-amber-700 leading-relaxed">
+                                    Yêu cầu tham gia lớp học của bạn đang được giảng viên xem xét. Bạn sẽ có thể xem bài tập và tham gia học tập sau khi yêu cầu được phê duyệt.
+                                </p>
+                            </div>
+                        </div>
+                    ) : null}
+
                     {!canManageMembers ? (
                         <div className="mt-4 rounded-2xl bg-slate-50 p-4">
                             <p className="text-sm text-slate-500">Thông tin thành viên</p>

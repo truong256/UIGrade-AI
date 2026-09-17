@@ -11,6 +11,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [1.0.3] - 2026-09-17
+
+### Added
+- **Lecturer Approval Workflow for Class Joining**:
+  - Refactored student class joining mechanism from immediate activation to a multi-stage approval workflow.
+  - Students entering a valid join code receive `status = 'pending'` membership.
+  - Lecturers view pending student requests in the class's "Yêu cầu chờ duyệt" (Waiting List) with student details (name, email, student code).
+  - Lecturers can approve (`status = 'active'`) or reject (`status = 'dropped'`) student requests.
+- **Supabase Migration (`20260917000002_lecturer_approval_join_workflow.sql`)**:
+  - Updated `public.join_class_by_code(TEXT)` RPC to set `status = 'pending'` and enforce 50-student capacity limit.
+  - Updated RLS on `class_members` to allow students to read their own membership status.
+  - Updated RLS on `classes` to allow students with pending status to view basic class metadata.
+  - Maintained strict RLS on `assignments` and `submissions` so pending students are blocked at database level.
+- **Comprehensive Test Suite**:
+  - Added `tests/lecturer-approval-workflow.test.ts` covering all 9 required verification scenarios including valid join $\rightarrow$ pending, lecturer approval/rejection, RLS assignment lockout, non-owning lecturer 403, duplicate join protection, and capacity 50 limits.
+
+### Fixed
+- **Duplicate Join Prevention**: Provided clear, distinct Vietnamese feedback for already active (`Bạn đã tham gia lớp học này.`) and pending (`Yêu cầu tham gia lớp đang chờ giảng viên duyệt.`) memberships.
+- **Capacity Limits**: Hardened 50 active students limit during both join request submission and lecturer approval action.
+- **Access Control & Anti-Tamper**: Enforced ownership check ensuring only the class teacher can approve/reject, and students cannot self-upgrade from pending to active.
+- **Student UI Presentation**: Added amber "Đang chờ giảng viên phê duyệt" badge on class cards and informative dialog notice for pending classes.
+
+---
+
 ## [1.0.2] - 2026-09-17
 
 ### Fixed

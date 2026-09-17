@@ -65,7 +65,8 @@ export function mapSupabaseErrorToVietnamese(error: unknown): string {
     [/repository url is not allowed/i, "Bài tập này không cho phép đường dẫn repository hoặc đường dẫn không an toàn."],
     [/file or repository url is required/i, "Vui lòng tải tệp hoặc cung cấp repository trước khi nộp."],
     [/mã lớp không tồn tại|class not found/i, "Mã lớp không tồn tại."],
-    [/bạn đã tham gia lớp học này|already (joined|requested)|membership.*active/i, "Bạn đã tham gia lớp học này."],
+    [/bạn đã tham gia lớp học này|already (joined|active)|membership.*active/i, "Bạn đã tham gia lớp học này."],
+    [/yêu cầu tham gia lớp đang chờ|already pending|yêu cầu.*chờ duyệt/i, "Yêu cầu tham gia lớp đang chờ giảng viên duyệt."],
     [/lớp học đã đạt số lượng thành viên tối đa|capacity.*reached|class.*full/i, "Lớp học đã đạt số lượng thành viên tối đa."],
     [/lớp học hiện không nhận thêm sinh viên|class.*inactive/i, "Lớp học hiện không nhận thêm sinh viên."],
   ];

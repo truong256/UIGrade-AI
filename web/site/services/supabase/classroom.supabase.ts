@@ -18,6 +18,7 @@ export interface ClassItem {
   cover_color?: string | null;
   students_count?: number;
   assignments_count?: number;
+  membership_status?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -36,16 +37,21 @@ export class SupabaseClassroomService {
       assignments(count)
     `);
 
+    const memberStatusMap = new Map<string, string>();
+
     if (userRole === "lecturer" || userRole === "teacher") {
       query = query.eq("lecturer_id", userId);
     } else if (userRole === "student") {
       // Tìm các lớp mà sinh viên đã tham gia
       const { data: memberships } = await (supabase as any)
         .from("class_members")
-        .select("class_id")
+        .select("class_id, status")
         .eq("student_id", userId);
 
-      const classIds = (memberships || []).map((m: any) => m.class_id);
+      const classIds = (memberships || []).map((m: any) => {
+        if (m.class_id && m.status) memberStatusMap.set(m.class_id, m.status);
+        return m.class_id;
+      });
       if (classIds.length === 0) return [];
       query = query.in("id", classIds);
     }
@@ -70,6 +76,7 @@ export class SupabaseClassroomService {
       cover_color: c.cover_color,
       students_count: c.class_members?.[0]?.count || 0,
       assignments_count: c.assignments?.[0]?.count || 0,
+      membership_status: memberStatusMap.get(c.id) || null,
       created_at: c.created_at,
       updated_at: c.updated_at,
     }));

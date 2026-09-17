@@ -49,6 +49,7 @@ export type Classroom = {
     semester: ClassroomSemester;
     academicYear: string;
     status: ClassroomStatus;
+    membershipStatus?: "active" | "pending" | "dropped" | null;
 
     approvedStudentCount?: number;
     studentCount?: number;

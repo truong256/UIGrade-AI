@@ -115,6 +115,8 @@ export function ClassCard({
         };
     }, []);
 
+    const isPending = classroom.membershipStatus === "pending";
+
     return (
         <div
             role="button"
@@ -126,14 +128,26 @@ export function ClassCard({
                     onOpenDetail(classroom);
                 }
             }}
-            className="group relative flex h-full cursor-pointer flex-col justify-between rounded-2xl border border-slate-200/80 bg-white p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:border-blue-300 hover:shadow-md"
+            className={`group relative flex h-full cursor-pointer flex-col justify-between rounded-2xl border bg-white p-5 shadow-xs transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md ${
+                isPending
+                    ? "border-amber-200/90 hover:border-amber-300"
+                    : "border-slate-200/80 hover:border-blue-300"
+            }`}
         >
             <div>
                 <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0 flex-1">
-                        <h3 className="truncate text-base font-bold text-[#172033] group-hover:text-blue-600 transition-colors">
-                            {classroom.name}
-                        </h3>
+                        <div className="flex flex-wrap items-center gap-2">
+                            <h3 className="truncate text-base font-bold text-[#172033] group-hover:text-blue-600 transition-colors">
+                                {classroom.name}
+                            </h3>
+                            {isPending ? (
+                                <span className="inline-flex items-center gap-1 rounded-lg bg-amber-50 border border-amber-200/80 px-2 py-0.5 text-[11px] font-semibold text-amber-700">
+                                    <span className="material-symbols-outlined text-[13px]">hourglass_top</span>
+                                    Đang chờ giảng viên phê duyệt
+                                </span>
+                            ) : null}
+                        </div>
                         <p className="mt-0.5 truncate text-xs font-medium text-[#4A5568]">
                             Mã lớp: <span className="font-semibold text-blue-700 font-mono">{classroom.code}</span>
                         </p>
@@ -211,10 +225,17 @@ export function ClassCard({
                         </span>
                     </div>
 
-                    <span className="text-xs font-semibold text-slate-400 group-hover:text-blue-600 transition-colors flex items-center gap-0.5">
-                        Xem lớp
-                        <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
-                    </span>
+                    {isPending ? (
+                        <span className="text-xs font-semibold text-amber-600 flex items-center gap-1">
+                            <span className="material-symbols-outlined text-[14px]">hourglass_empty</span>
+                            Đang chờ duyệt
+                        </span>
+                    ) : (
+                        <span className="text-xs font-semibold text-slate-400 group-hover:text-blue-600 transition-colors flex items-center gap-0.5">
+                            Xem lớp
+                            <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
+                        </span>
+                    )}
                 </div>
             </div>
         </div>
