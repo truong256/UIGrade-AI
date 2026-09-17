@@ -158,7 +158,6 @@ export function RegisterFormCard({ data }: Props) {
                 <AuthInput
                     id="register-name"
                     type="text"
-                    icon="person"
                     label={data?.fullNameLabel || "Họ và tên"}
                     placeholder={data?.fullNamePlaceholder || "Nhập họ và tên"}
                     autoComplete="name"
@@ -175,7 +174,6 @@ export function RegisterFormCard({ data }: Props) {
                 <AuthInput
                     id="register-email"
                     type="email"
-                    icon="mail"
                     label={data?.emailLabel || "Email"}
                     placeholder={data?.emailPlaceholder || "student@university.edu.vn"}
                     autoComplete="email"
@@ -218,7 +216,6 @@ export function RegisterFormCard({ data }: Props) {
                     <AuthInput
                         id="register-student-code"
                         type="text"
-                        icon="badge"
                         label={data?.studentCodeLabel || "Mã sinh viên / MSSV (nếu có)"}
                         placeholder={data?.studentCodePlaceholder || "Ví dụ: SV2026001"}
                         autoComplete="off"

@@ -136,7 +136,6 @@ export function LoginFormCard({
                 <AuthInput
                     id="login-email"
                     type="email"
-                    icon="mail"
                     label={data?.emailLabel || "Email"}
                     placeholder={data?.emailPlaceholder || "Nhập địa chỉ email"}
                     autoComplete="email"
