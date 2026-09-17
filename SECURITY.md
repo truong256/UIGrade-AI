@@ -89,3 +89,5 @@ accidentally committed to this repository:
   SECURITY DEFINER RPC, which enforces attempt limits and ownership checks.
 - Google OAuth is the primary external authentication provider; sessions are
   managed by Supabase Auth.
+- For a comprehensive technical audit of all 13 security controls, RLS policies,
+  and advisory locks, see **[docs/SECURITY.md](docs/SECURITY.md)**.
