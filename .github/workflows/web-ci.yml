@@ -25,6 +25,8 @@ jobs:
     env:
       NEXT_PUBLIC_SUPABASE_URL: "https://placeholder-project.supabase.co"
       NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder-anon-key"
+      SUPABASE_SERVICE_ROLE_KEY: "placeholder-service-role-key"
+      JWT_SECRET: "placeholder-jwt-secret-at-least-32-characters-long"
 
     steps:
       - name: Checkout repository
@@ -44,7 +46,7 @@ jobs:
         run: npm run lint
 
       - name: Run TypeScript typecheck
-        run: npx tsc --noEmit
+        run: npm run type-check
 
       - name: Run Unit & RBAC tests
         run: npm test
