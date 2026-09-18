@@ -17,6 +17,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Persisted class join requests**: Preserved the membership lookup result inside `join_class_by_code(TEXT)` so a first-time student join inserts a real `class_members` row with `status = 'pending'` instead of returning a false-positive success after a zero-row update.
 - **Join response validation**: The API and student dialog now report success only when the RPC response explicitly confirms `membershipStatus = 'pending'`; malformed or contradictory 2xx responses remain visible as errors.
 - **Regression coverage**: Added tests for the PL/pgSQL `FOUND` overwrite regression and for false-positive join responses in the API and UI.
+- **AI rubric score parsing**: Numbers inside criterion descriptions are no longer interpreted as scores; only explicit score expressions and validated structured `points` fields are accepted.
+- **Rubric total metadata**: `Total`, `Total points`, `Tổng`, and `Tổng điểm` lines are excluded from criteria.
+- **Strict AI rubric validation**: Structured AI criteria now require positive, finite `points` values.
+- **Explicit score precedence**: Scores written explicitly in the original rubric take precedence over misleading numbers in AI-generated descriptions.
+- **Conditional normalization**: Rubrics whose criteria already sum to the assignment maximum retain their original points.
+- **Fallback provenance**: AI failures now report `source: "fallback"` and mark fallback criteria with `gradingSource: "manual"`.
 
 ---
 

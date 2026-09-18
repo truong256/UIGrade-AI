@@ -5,10 +5,17 @@ import { GoogleGenAI } from "@google/genai";
 import { z } from "zod";
 import type { RubricCriterion } from "@/lib/grading-contract";
 import { safeParseAiJson } from "@/lib/ai-json";
+import {
+    createRubricCriterion,
+    inferRubricGradingSource,
+    isRubricTotalMetadata,
+    normalizeRubricTotal,
+    parseRubricTextFallback,
+} from "@/lib/rubric-parsing";
 
 export type ParsedRubricResult = {
     rubric: RubricCriterion[];
-    source: "gemini" | "heuristic";
+    source: "gemini" | "fallback";
     warnings: string[];
 };
 
@@ -20,20 +27,15 @@ type ParseRubricInput = {
 };
 
 const RubricCriterionAiSchema = z.object({
-    code: z.string().optional(),
-    title: z.string().min(1, "Tiêu chí phải có tiêu đề"),
-    description: z.string().optional(),
-    maxPoints: z.number().or(z.string().transform(Number)),
-    gradingSource: z.enum(["runner", "ai", "hybrid", "manual"]).optional(),
-    requiredEvidence: z.array(z.string()).optional(),
-    passThreshold: z.number().nullable().optional(),
-    notes: z.string().optional(),
-});
+    title: z.string().trim().min(1, "Tiêu chí phải có tiêu đề"),
+    description: z.string().trim().min(1, "Tiêu chí phải có mô tả"),
+    points: z.number().finite().positive("Điểm tiêu chí phải lớn hơn 0"),
+}).strict();
 
 const RubricAiResponseSchema = z.object({
     criteria: z.array(RubricCriterionAiSchema).min(1, "Rubric phải chứa ít nhất 1 tiêu chí"),
     warnings: z.array(z.string()).optional(),
-});
+}).strict();
 
 function classifyGeminiError(error: unknown): string {
     if (!error) return "Không thể tạo nội dung bằng AI lúc này. Bạn vẫn có thể tiếp tục tạo bài tập thủ công.";
@@ -54,172 +56,6 @@ function classifyGeminiError(error: unknown): string {
     }
 
     return "Không thể tạo nội dung bằng AI lúc này. Bạn vẫn có thể tiếp tục tạo bài tập thủ công.";
-}
-
-function slugifyCriterionCode(value: string) {
-    return value
-        .toLowerCase()
-        .normalize("NFD")
-        .replace(/[\u0300-\u036f]/g, "")
-        .replace(/[^a-z0-9]+/g, "_")
-        .replace(/^_+|_+$/g, "") || "criterion";
-}
-
-function inferGradingSource(text: string): RubricCriterion["gradingSource"] {
-    const normalized = text.toLowerCase();
-
-    if (
-        /(build|test|runner|required file|readme|cấu trúc|structure|gradle|manifest)/i.test(
-            normalized
-        )
-    ) {
-        return "hybrid";
-    }
-
-    return "ai";
-}
-
-function normalizeRubricCriterion(item: any, index: number): RubricCriterion {
-    const title = String(item?.title || item?.name || `Tiêu chí ${index + 1}`).trim();
-    const description = String(item?.description || title).trim();
-    const maxPoints = Number(item?.maxPoints || item?.points || 0);
-
-    return {
-        code: String(item?.code || slugifyCriterionCode(title)),
-        title,
-        description,
-        maxPoints: Number.isFinite(maxPoints) && maxPoints > 0 ? maxPoints : 1,
-        gradingSource:
-            item?.gradingSource === "runner" ||
-            item?.gradingSource === "ai" ||
-            item?.gradingSource === "hybrid" ||
-            item?.gradingSource === "manual"
-                ? item.gradingSource
-                : inferGradingSource(`${title} ${description}`),
-        requiredEvidence: Array.isArray(item?.requiredEvidence)
-            ? item.requiredEvidence.map(String)
-            : [],
-        passThreshold:
-            item?.passThreshold === null || item?.passThreshold === undefined
-                ? null
-                : Number(item.passThreshold),
-        notes: String(item?.notes || ""),
-    };
-}
-
-function rebalanceRubricPoints(
-    rubric: RubricCriterion[],
-    expectedMaxScore: number
-): RubricCriterion[] {
-    if (!rubric.length) return rubric;
-
-    const total = rubric.reduce((sum, item) => sum + Number(item.maxPoints || 0), 0);
-    if (!Number.isFinite(total) || total <= 0) return rubric;
-
-    if (Math.abs(total - expectedMaxScore) < 0.001) {
-        return rubric;
-    }
-
-    const factor = expectedMaxScore / total;
-    const scaled = rubric.map((item) => ({
-        ...item,
-        maxPoints: Number((item.maxPoints * factor).toFixed(2)),
-    }));
-
-    const scaledTotal = scaled.reduce((sum, item) => sum + item.maxPoints, 0);
-    const delta = Number((expectedMaxScore - scaledTotal).toFixed(2));
-    scaled[scaled.length - 1].maxPoints = Number(
-        (scaled[scaled.length - 1].maxPoints + delta).toFixed(2)
-    );
-
-    return scaled;
-}
-
-function heuristicParseRubricText(
-    rubricText: string,
-    maxScore: number
-): RubricCriterion[] {
-    const rawLines = rubricText
-        .split(/\n|;/g)
-        .map((line) => line.trim())
-        .filter(Boolean);
-
-    if (!rawLines.length) {
-        return [
-            {
-                code: "overall",
-                title: "Chấm tổng thể",
-                description: "Chấm tổng thể theo yêu cầu bài tập.",
-                maxPoints: maxScore,
-                gradingSource: "ai",
-                requiredEvidence: [],
-                passThreshold: null,
-                notes: "",
-            },
-        ];
-    }
-
-    const criteria: RubricCriterion[] = [];
-    let currentQuestion = "";
-    let pendingQuestionPoints: number | null = null;
-
-    for (let index = 0; index < rawLines.length; index++) {
-        const line = rawLines[index];
-        const nextLine = rawLines[index + 1] || "";
-
-        const questionMatch = line.match(/^câu\s*(\d+)\s*\(([\d.,]+)\s*điểm\)\s*:?\s*$/i);
-        if (questionMatch) {
-            currentQuestion = `Câu ${questionMatch[1]}`;
-            pendingQuestionPoints = Number(questionMatch[2].replace(",", "."));
-            continue;
-        }
-
-        if (
-            /^hoàn thành các yêu cầu/i.test(line) &&
-            /^[a-z][.)]\s*\(([\d.,]+)\s*điểm\)/i.test(nextLine)
-        ) {
-            continue;
-        }
-
-        const subMatch = line.match(/^([a-z])[.)]\s*\(([\d.,]+)\s*điểm\)\s*(.+)$/i);
-        if (subMatch) {
-            const title = `${currentQuestion} - ${subMatch[1].toLowerCase()}`;
-            const description = subMatch[3].trim();
-
-            criteria.push({
-                code: slugifyCriterionCode(title),
-                title,
-                description,
-                maxPoints: Number(subMatch[2].replace(",", ".")),
-                gradingSource: inferGradingSource(description),
-                requiredEvidence: [],
-                passThreshold: null,
-                notes: "",
-            });
-            continue;
-        }
-
-        const title = currentQuestion ? `${currentQuestion}` : `Tiêu chí ${criteria.length + 1}`;
-        const pointsMatch = line.match(/(\d+(?:[.,]\d+)?)\s*(điểm|đ|pts|point|points)?/i);
-        const parsedPoints = pointsMatch
-            ? Number(String(pointsMatch[1]).replace(",", "."))
-            : pendingQuestionPoints ?? 1;
-
-        criteria.push({
-            code: slugifyCriterionCode(`${title}_${criteria.length + 1}`),
-            title,
-            description: line,
-            maxPoints: parsedPoints && parsedPoints > 0 ? parsedPoints : 1,
-            gradingSource: inferGradingSource(line),
-            requiredEvidence: [],
-            passThreshold: null,
-            notes: "",
-        });
-
-        pendingQuestionPoints = null;
-    }
-
-    return rebalanceRubricPoints(criteria, maxScore);
 }
 
 function validateRubric(rubric: RubricCriterion[]) {
@@ -243,22 +79,23 @@ function validateRubric(rubric: RubricCriterion[]) {
 export async function parseRubricTextWithAI(
     input: ParseRubricInput
 ): Promise<ParsedRubricResult> {
-    const fallbackRubric = heuristicParseRubricText(input.rubricText, input.maxScore);
+    const fallback = parseRubricTextFallback(input.rubricText, input.maxScore);
 
     if (!input.rubricText.trim()) {
         return {
-            rubric: fallbackRubric,
-            source: "heuristic",
-            warnings: ["Rubric text đang trống, dùng rubric fallback."],
+            rubric: fallback.rubric,
+            source: "fallback",
+            warnings: [...fallback.warnings, "Rubric text đang trống, dùng rubric fallback."],
         };
     }
 
     const apiKey = process.env.GEMINI_API_KEY;
     if (!apiKey) {
         return {
-            rubric: fallbackRubric,
-            source: "heuristic",
+            rubric: fallback.rubric,
+            source: "fallback",
             warnings: [
+                ...fallback.warnings,
                 "Không thể tạo nội dung bằng AI lúc này do chưa cấu hình GEMINI_API_KEY. Bạn vẫn có thể tiếp tục tạo bài tập thủ công.",
             ],
         };
@@ -274,24 +111,22 @@ NHIỆM VỤ:
 - Đọc rubric text thô của giáo viên.
 - Tách rubric thành các tiêu chí chấm độc lập.
 - Giữ nguyên ý nghĩa và điểm số.
+- Giữ nguyên thứ tự các tiêu chí như rubric gốc.
 - Chuẩn hóa cho bài lập trình, đặc biệt phù hợp Android Kotlin Compose nếu ngữ cảnh liên quan.
 - Nếu rubric có cấu trúc kiểu "Câu 2" rồi mới có "a, b, c" thì KHÔNG tạo tiêu chí thừa cho dòng mô tả trung gian.
-- Nếu đề nói RecyclerView nhưng ngữ cảnh là Compose thì có thể ghi chú chấp nhận LazyColumn trong notes.
-- Tổng maxPoints sau khi parse phải bằng ${input.maxScore}.
+- Mỗi criterion chỉ có title, description và points.
+- points phải là số dương thể hiện điểm tối đa của criterion; không lấy các số trong nội dung mô tả.
+- Không tạo criterion từ dòng Tổng/Total.
+- Tổng points sau khi parse nên bằng ${input.maxScore}.
 - Trả về DUY NHẤT JSON hợp lệ, không markdown code fences.
 
 JSON phải có dạng:
 {
   "criteria": [
     {
-      "code": "string",
       "title": "string",
       "description": "string",
-      "maxPoints": 1,
-      "gradingSource": "runner|ai|hybrid|manual",
-      "requiredEvidence": ["string"],
-      "passThreshold": null,
-      "notes": "string"
+      "points": 1
     }
   ],
   "warnings": ["string"]
@@ -326,35 +161,78 @@ JSON phải có dạng:
 
         if (!parseResult.success) {
             return {
-                rubric: fallbackRubric,
-                source: "heuristic",
+                rubric: fallback.rubric,
+                source: "fallback",
                 warnings: [
+                    ...fallback.warnings,
                     parseResult.error,
                     "Không thể tạo nội dung bằng AI lúc này. Bạn vẫn có thể tiếp tục tạo bài tập thủ công.",
                 ],
             };
         }
 
-        const items = parseResult.data.criteria;
-        const normalized = items.map((item, index) =>
-            normalizeRubricCriterion(item, index)
+        const items = parseResult.data.criteria.filter(
+            (item) => !isRubricTotalMetadata(item.title, item.description)
         );
-        const validated = validateRubric(normalized);
-        const rubric = rebalanceRubricPoints(validated, input.maxScore);
+        if (!items.length) {
+            return {
+                rubric: fallback.rubric,
+                source: "fallback",
+                warnings: [
+                    ...fallback.warnings,
+                    "AI không trả về tiêu chí hợp lệ, dùng rubric fallback.",
+                ],
+            };
+        }
+
+        let parsedCriteria = items.map((item, index) =>
+            createRubricCriterion({
+                title: item.title,
+                description: item.description,
+                points: item.points,
+                index,
+                gradingSource: inferRubricGradingSource(`${item.title} ${item.description}`),
+            })
+        );
+
+        if (fallback.usedExplicitPoints && fallback.complete) {
+            if (fallback.rubric.length !== parsedCriteria.length) {
+                return {
+                    rubric: fallback.rubric,
+                    source: "fallback",
+                    warnings: [
+                        ...fallback.warnings,
+                        "Số tiêu chí AI không khớp rubric gốc, giữ kết quả parser an toàn.",
+                    ],
+                };
+            }
+
+            parsedCriteria = fallback.rubric.map((criterion) => ({
+                ...criterion,
+                gradingSource: inferRubricGradingSource(
+                    `${criterion.title} ${criterion.description || ""}`
+                ),
+            }));
+        }
+
+        const validated = validateRubric(parsedCriteria);
+        const normalized = normalizeRubricTotal(validated, input.maxScore);
 
         return {
-            rubric,
+            rubric: normalized.rubric,
             source: "gemini",
-            warnings: Array.isArray(parseResult.data.warnings)
-                ? parseResult.data.warnings
-                : [],
+            warnings: [
+                ...(Array.isArray(parseResult.data.warnings) ? parseResult.data.warnings : []),
+                ...(fallback.usedExplicitPoints && fallback.complete ? fallback.warnings : []),
+                ...normalized.warnings,
+            ],
         };
     } catch (error) {
         const errorMsg = classifyGeminiError(error);
         return {
-            rubric: fallbackRubric,
-            source: "heuristic",
-            warnings: [errorMsg],
+            rubric: fallback.rubric,
+            source: "fallback",
+            warnings: [...fallback.warnings, errorMsg],
         };
     }
 }

@@ -21,7 +21,7 @@ const rubricCriterionSchema = z.object({
     code: z.string().trim().min(1, "Mỗi tiêu chí phải có mã code").max(100),
     title: z.string().trim().min(1, "Mỗi tiêu chí phải có tiêu đề").max(300),
     description: z.string().trim().max(10_000).default(""),
-    maxPoints: z.number().min(0.5, "Điểm tối đa mỗi tiêu chí phải lớn hơn 0"),
+    maxPoints: z.number().positive("Điểm tối đa mỗi tiêu chí phải lớn hơn 0"),
     gradingSource: gradingSourceSchema.default("manual"),
     requiredEvidence: z.array(z.string().trim().max(500)).max(50).default([]),
     passThreshold: z.number().min(0).optional().nullable(),

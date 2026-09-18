@@ -6,12 +6,17 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { fetchCurrentUserClient } from "@/lib/auth-client";
+import type { RubricCriterion } from "@/lib/grading-contract";
 import {
     MAX_SUBMISSION_ATTEMPTS,
     MAX_SUBMISSION_FILE_SIZE_MB,
 } from "@/lib/submission-limits";
 import UiScenarioEditor from "@/components/grading_detail/UiScenarioEditor";
 import { safeParseAiJson } from "@/lib/ai-json";
+import {
+    normalizeRubricTotal,
+    parseRubricTextFallback,
+} from "@/lib/rubric-parsing";
 import {
     DEFAULT_ANDROID_UI_RUNNER_CONFIG,
     EMPTY_RUNNER_CONFIG,
@@ -51,17 +56,6 @@ type FormState = {
     latePenaltyPercent: string;
     maxScore: string;
 };
-type RubricCriterion = {
-    code: string;
-    title: string;
-    description: string;
-    maxPoints: number;
-    gradingSource: "runner" | "ai" | "hybrid" | "manual";
-    requiredEvidence: string[];
-    passThreshold: number | null;
-    notes: string;
-};
-
 const LANGUAGES = [
     { value: "kotlin", label: "kotlin" },
     { value: "java", label: "Java 17" },
@@ -189,85 +183,6 @@ function normalizeRubricCriterion(
     };
 }
 
-function rebalanceRubricPoints(
-    rubric: RubricCriterion[],
-    expectedMaxScore: number
-) {
-    if (!rubric.length) return rubric;
-
-    const total = rubric.reduce((sum, item) => sum + Number(item.maxPoints || 0), 0);
-    if (!Number.isFinite(total) || total <= 0) return rubric;
-
-    if (Math.abs(total - expectedMaxScore) < 0.001) {
-        return rubric;
-    }
-
-    const factor = expectedMaxScore / total;
-    const scaled = rubric.map((item) => ({
-        ...item,
-        maxPoints: Number((item.maxPoints * factor).toFixed(2)),
-    }));
-
-    const scaledTotal = scaled.reduce((sum, item) => sum + item.maxPoints, 0);
-    const delta = Number((expectedMaxScore - scaledTotal).toFixed(2));
-    scaled[scaled.length - 1].maxPoints = Number(
-        (scaled[scaled.length - 1].maxPoints + delta).toFixed(2)
-    );
-
-    return scaled;
-}
-
-function parseRubricTextToCriteria(
-    rubricText: string,
-    maxScore: number
-): RubricCriterion[] {
-    const rawLines = rubricText
-        .split(/\n|;/g)
-        .map((line) => line.trim())
-        .filter(Boolean);
-
-    if (!rawLines.length) {
-        return [
-            {
-                code: "overall",
-                title: "Chấm tổng thể",
-                description: "Chấm tổng thể theo yêu cầu bài tập, file đề bài và starter code.",
-                maxPoints: maxScore,
-                gradingSource: "ai",
-                requiredEvidence: [],
-                passThreshold: null,
-                notes: "",
-            },
-        ];
-    }
-
-    const criteria = rawLines.map((line, index) => {
-        const match = line.match(/(\d+(?:[.,]\d+)?)\s*(điểm|đ|pts|point|points)?/i);
-        const parsedPoint = match ? Number(String(match[1]).replace(",", ".")) : null;
-
-        const cleanedTitle = line
-            .replace(/(\d+(?:[.,]\d+)?)\s*(điểm|đ|pts|point|points)?/i, "")
-            .replace(/^[-:–•\s]+/, "")
-            .replace(/[-:–•\s]+$/, "")
-            .trim();
-
-        const title = cleanedTitle || `Tiêu chí ${index + 1}`;
-
-        return {
-            code: slugifyCriterionCode(title),
-            title,
-            description: line,
-            maxPoints: parsedPoint && parsedPoint > 0 ? parsedPoint : 1,
-            gradingSource: inferGradingSource(line),
-            requiredEvidence: [],
-            passThreshold: null,
-            notes: "",
-        } satisfies RubricCriterion;
-    });
-
-    return rebalanceRubricPoints(criteria, maxScore);
-}
-
 async function requestRubricParse(params: {
     rubricText: string;
     maxScore: number;
@@ -290,7 +205,7 @@ async function requestRubricParse(params: {
 
     return json.data as {
         rubric: RubricCriterion[];
-        source: "gemini" | "heuristic";
+        source: "gemini" | "fallback";
         warnings: string[];
     };
 }
@@ -323,11 +238,12 @@ async function buildRubricPayload(
                 const normalized = items.map((item: any, index: number) =>
                     normalizeRubricCriterion(item, index)
                 );
+                const normalizedTotal = normalizeRubricTotal(normalized, maxScore);
 
                 return {
-                    rubric: rebalanceRubricPoints(normalized, maxScore),
+                    rubric: normalizedTotal.rubric,
                     source: "file_json",
-                    warnings: [],
+                    warnings: normalizedTotal.warnings,
                 };
             }
         } catch {
@@ -343,10 +259,14 @@ async function buildRubricPayload(
             language,
         });
     } catch {
+        const fallback = parseRubricTextFallback(rubricText, maxScore);
         return {
-            rubric: parseRubricTextToCriteria(rubricText, maxScore),
-            source: "heuristic",
-            warnings: ["API parse rubric lỗi, dùng parser fallback phía client."],
+            rubric: fallback.rubric,
+            source: "fallback",
+            warnings: [
+                ...fallback.warnings,
+                "API parse rubric lỗi, dùng parser fallback phía client.",
+            ],
         };
     }
 }

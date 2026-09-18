@@ -85,6 +85,33 @@ describe("lecturer assignment lifecycle", () => {
         expect(() => extractAssignmentPayload(form)).toThrow(/hạn nộp phải sau/i);
     });
 
+    it("accepts every positive rubric point value before persistence", () => {
+        const form = validAssignmentForm();
+        form.set(
+            "rubric",
+            JSON.stringify([
+                {
+                    code: "detail",
+                    title: "Chi tiết nhỏ",
+                    description: "Tiêu chí có trọng số nhỏ",
+                    maxPoints: 0.25,
+                    gradingSource: "manual",
+                },
+                {
+                    code: "main",
+                    title: "Tiêu chí chính",
+                    description: "Phần điểm còn lại",
+                    maxPoints: 9.75,
+                    gradingSource: "manual",
+                },
+            ])
+        );
+
+        const payload = extractAssignmentPayload(form);
+
+        expect(payload.rubric.map((criterion) => criterion.maxPoints)).toEqual([0.25, 9.75]);
+    });
+
     it("keeps an invalid schedule on the form without sending a create request", async () => {
         const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
             const url = String(input);
@@ -155,6 +182,41 @@ describe("lecturer assignment lifecycle", () => {
         });
         expect(dateInputs[0].value).toBe("2026-09-20T10:00");
         expect(dateInputs[1].value).toBe("2026-09-20T09:00");
+    });
+
+    it("shows a fallback source and manual criteria when the rubric API fails", async () => {
+        const fetchMock = vi.fn((input: RequestInfo | URL) => {
+            const url = String(input);
+
+            if (url === "/api/classes") {
+                return Promise.resolve({
+                    ok: true,
+                    json: async () => ({ data: [] }),
+                });
+            }
+
+            if (url === "/api/rubric/parse") {
+                return Promise.resolve({
+                    ok: false,
+                    json: async () => ({ success: false, message: "AI unavailable" }),
+                });
+            }
+
+            throw new Error(`Unexpected request: ${url}`);
+        });
+        vi.stubGlobal("fetch", fetchMock);
+
+        render(<AssignmentFormPage />);
+        await screen.findByText("Tạo bài tập");
+
+        fireEvent.change(screen.getByLabelText(/rubric \/ thang điểm mô tả/i), {
+            target: { value: "Đúng yêu cầu >= 5.0 và làm tròn 2 chữ số: 10 điểm\nTổng: 10 điểm" },
+        });
+        fireEvent.click(screen.getByRole("button", { name: /phân tích rubric bằng ai/i }));
+
+        expect(await screen.findByText("Nguồn: fallback")).toBeTruthy();
+        expect(screen.getByText(/source: manual/i)).toBeTruthy();
+        expect(screen.getByText("10đ")).toBeTruthy();
     });
 
     it("allows only one assignment deletion at a time", async () => {
