@@ -101,7 +101,7 @@ describe("Supabase grading service boundaries", () => {
             summary: "suggestion",
             metadata: {
                 provider: "gemini",
-                model: "gemini-3.8-flash",
+                model: "gemini-2.5-flash",
                 promptVersion: "v2.0",
                 schemaVersion: "v2",
                 contentHash: "hash",

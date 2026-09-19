@@ -16,6 +16,8 @@ import {
 } from "@/services/grading-evidence.service";
 import type { GeminiInlinePart } from "@/services/grading-context.service";
 
+const DEFAULT_GEMINI_MODEL = "gemini-2.5-flash";
+
 export const AI_GRADING_PROMPT_VERSION = "v2.0";
 export const AI_GRADING_SCHEMA_VERSION = "v2";
 export const AI_GRADING_PROVIDER = "gemini" as const;
@@ -471,7 +473,7 @@ export async function generateAiGradingRecommendation(params: {
 }): Promise<AiFeedbackResult> {
     const rubric = params.bundle.assignment.rubric;
     if (!rubric.length) throw new AiGradingError("Bài tập chưa có rubric hợp lệ.", "invalid_output");
-    const model = params.model || process.env.GEMINI_MODEL || "gemini-3.8-flash";
+    const model = params.model || process.env.GEMINI_MODEL || DEFAULT_GEMINI_MODEL;
     const timeoutMs = Math.min(Math.max(params.timeoutMs || Number(process.env.AI_GRADING_TIMEOUT_MS) || 30_000, 5_000), 60_000);
     const maxOutputTokens = Math.min(Math.max(params.maxOutputTokens || Number(process.env.AI_GRADING_MAX_OUTPUT_TOKENS) || 8192, 1024), 16384);
     const provider = params.provider || defaultGeminiProvider;

@@ -18,7 +18,7 @@ flowchart TD
 - **Web Frontend & API Routes**: Chạy trên **Vercel Serverless Functions**.
 - **Dữ liệu, xác thực và phân quyền**: **Supabase PostgreSQL**, Supabase Auth và RLS cho hồ sơ, lớp học, bài tập, bài nộp, điểm số và cấu hình.
 - **Lưu trữ tập tin**: **Supabase Storage** cho avatar, tài liệu bài tập và file bài nộp; quyền truy cập được kiểm soát bằng Storage policies.
-- **AI Đánh giá giao diện**: **Google Gemini API** (`gemini-3.8-flash`).
+- **AI Đánh giá giao diện**: **Google Gemini API** (`gemini-2.5-flash`).
 - **Android Runtime Runner (Grading Worker)**: Chạy trên máy chủ chuyên dụng (có Android SDK, ADB, Emulator / AVD). **Không chạy trực tiếp bên trong Vercel Serverless Functions**.
 
 ---
@@ -59,7 +59,7 @@ Các biến này chỉ được truy cập trong môi trường Server / Serverl
 | :--- | :---: | :--- |
 | `SUPABASE_SERVICE_ROLE_KEY` | **Có cho chức năng quản trị người dùng** | Chỉ đặt trong Vercel server; tuyệt đối không thêm tiền tố `NEXT_PUBLIC_`, không đưa vào client hoặc commit Git |
 | `GEMINI_API_KEY` | **Có** | API Key từ Google AI Studio / Google Cloud |
-| `GEMINI_MODEL` | Tùy chọn | Mặc định là `gemini-3.8-flash` |
+| `GEMINI_MODEL` | Tùy chọn | Mặc định là `gemini-2.5-flash` |
 | `NOTIFICATION_CRON_TOKEN` | Tùy chọn | Token bảo vệ endpoint trigger reminder tự động |
 | `SMTP_HOST` | Tùy chọn | Host SMTP gửi email thông báo |
 | `SMTP_PORT` | Tùy chọn | Port SMTP (587 hoặc 465) |

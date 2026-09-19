@@ -736,7 +736,7 @@ export const SupabaseGradingService = {
             const aiConfig = object(assignment.ai_config);
             const aiFeedback = await generateAiGradingRecommendation({
                 bundle: evidence,
-                model: String(aiConfig.model || process.env.GEMINI_MODEL || "gemini-3.8-flash"),
+                model: String(aiConfig.model || process.env.GEMINI_MODEL || "gemini-2.5-flash"),
                 timeoutMs: numberOrNull(aiConfig.timeoutMs) || undefined,
                 maxOutputTokens: numberOrNull(aiConfig.maxOutputTokens) || undefined,
             });
@@ -749,7 +749,7 @@ export const SupabaseGradingService = {
                 prompt_version: String(metadata.promptVersion || "v2.0"),
                 schema_version: String(metadata.schemaVersion || "v2"),
                 provider: String(metadata.provider || "gemini"),
-                model: String(metadata.model || process.env.GEMINI_MODEL || "gemini-3.8-flash"),
+                model: String(metadata.model || process.env.GEMINI_MODEL || "gemini-2.5-flash"),
                 content_hash: String(metadata.contentHash || ""),
                 submission_version: metadata.submissionVersion || null,
                 assignment_version: metadata.assignmentVersion || null,

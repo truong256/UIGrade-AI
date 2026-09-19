@@ -165,7 +165,7 @@ CẤU TRÚC JSON:
         });
 
         const generatePromise = ai.models.generateContent({
-            model: input.model || process.env.GEMINI_MODEL || "gemini-3.8-flash",
+            model: input.model || process.env.GEMINI_MODEL || "gemini-2.5-flash",
             contents: [
                 {
                     role: "user",

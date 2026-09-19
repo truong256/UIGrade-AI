@@ -65,7 +65,7 @@ export const runnerConfigSchema = z.object({
 
 const aiConfigSchema = z.object({
     enabled: z.boolean().default(true),
-    model: z.string().trim().default("gemini-3.8-flash"),
+    model: z.string().trim().default("gemini-2.5-flash"),
     temperature: z.number().min(0).max(2).default(0.2),
     feedbackLanguage: z.string().trim().default("vi"),
 });
@@ -94,7 +94,7 @@ const DEFAULT_RUNNER_CONFIG = {
 
 const DEFAULT_AI_CONFIG = {
     enabled: true,
-    model: "gemini-3.8-flash",
+    model: "gemini-2.5-flash",
     temperature: 0.2,
     feedbackLanguage: "vi",
 } satisfies z.input<typeof aiConfigSchema>;

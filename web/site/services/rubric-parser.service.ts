@@ -139,7 +139,7 @@ JSON phải có dạng:
         });
 
         const generatePromise = ai.models.generateContent({
-            model: process.env.GEMINI_MODEL || "gemini-3.8-flash",
+            model: process.env.GEMINI_MODEL || "gemini-2.5-flash",
             contents: [
                 {
                     role: "user",
